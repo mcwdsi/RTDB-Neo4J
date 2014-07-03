@@ -235,7 +235,7 @@ public class App
             ptop2.setAuthoringTimeIui(t.getReferentIui());
             ptop2.addParticular(wh);
             ptop2.setTemplateIui(Iui.createRandomIui());
-            ptop2.setTemporalEntityIui(t4.getReferentIui());    
+            ptop2.setTemporalEntityIui(t3.getReferentIui());    
             
             /*
              * W. Hogan's name's digital representation
@@ -254,6 +254,23 @@ public class App
 			}
             ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-16"));
             
+            /*
+             * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
+             */
+            PtoPTemplate ptop3 = new PtoPTemplate();
+            ptop3.setTemplateIui(Iui.createRandomIui());
+            ptop3.setAuthorIui(wh);
+            ptop3.setAuthoringTimeIui(t.getReferentIui());
+            ptop3.setReferentIui(t4.getReferentIui());
+            ptop3.addParticular(t3.getReferentIui());
+            try {
+				ptop3.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptop3.setTemporalEntityIui(maxTimeIntervalIui);
+            
             rpm.addTemplate(a1);
             rpm.addTemplate(a2);
             rpm.addTemplate(a3);
@@ -263,6 +280,7 @@ public class App
             rpm.addTemplate(t4);
             rpm.addTemplate(ptop);
             rpm.addTemplate(ptop2);
+            rpm.addTemplate(ptop3);
             rpm.addTemplate(ptou);
             rpm.addTemplate(ten);
             rpm.addTemplate(ten2);
