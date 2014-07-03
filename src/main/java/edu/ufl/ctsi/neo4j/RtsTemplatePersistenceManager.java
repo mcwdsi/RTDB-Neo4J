@@ -1,10 +1,12 @@
 package edu.ufl.ctsi.neo4j;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import neo4jtest.test.App;
 
@@ -30,7 +32,11 @@ import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.ATemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDRTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.TeTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.TenTemplatePersister;
 
 public class RtsTemplatePersistenceManager {
 	
@@ -56,17 +62,26 @@ public class RtsTemplatePersistenceManager {
 	HashMap<Iui, Node> iuiNode;
 	HashMap<String, Node> uiNode;
 	HashMap<String, RtsTemplate> iuiToAssignmentTemplate;
+	HashSet<String> iuisInPtoPTemplates;
+	HashMap<String, String> iuiToNodeLabel;
 	
 	Iso8601DateTimeFormatter dttmFormatter;
 	
 	ATemplatePersister atp;
 	TeTemplatePersister tep;
+	TenTemplatePersister tenp;
+	PtoUTemplatePersister pup;
+	PtoPTemplatePersister ppp;
+	PtoLackUTemplatePersister plup;
+	PtoDRTemplatePersister pdrp;
 	
 	public RtsTemplatePersistenceManager() {
 		templates = new HashSet<RtsTemplate>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
 		iuiToAssignmentTemplate = new HashMap<String, RtsTemplate>();
+		iuisInPtoPTemplates = new HashSet<String>();
+		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( App.DB_PATH );
 		setupSchema();
@@ -75,11 +90,59 @@ public class RtsTemplatePersistenceManager {
 		tep = new TeTemplatePersister(graphDb, ee);
 	}
 	
+	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
+	
 	public void addTemplate(RtsTemplate t) {
-		if ( (t instanceof ATemplate) || 
-			 (t instanceof TeTemplate) ) {
+		if (t instanceof ATemplate) {
 			iuiToAssignmentTemplate.put(t.getReferentIui().toString(), t);
-		} 
+			iuiToNodeLabel.put(t.getReferentIui().toString(), "instance");
+		} else if  (t instanceof TeTemplate)  {
+			iuiToAssignmentTemplate.put(t.getReferentIui().toString(), t);
+			iuiToNodeLabel.put(t.getReferentIui().toString(), "temporal_region");
+		} else if ( (t instanceof PtoPTemplate) ) {
+			/*
+			 * When we build PtoPTemplates, the iuip as well as the p parameter
+			 *   could refer to temporal regions or instances (node labels 
+			 *   temporal_region and instance, respecively).  
+			 *   
+			 *   If the iui is already there in the database, no problem.  If not
+			 *     we need to know whether to create an instance or temporal region
+			 *     node.
+			 *     
+			 *  So, for each iui, set a status of "p" (already persisted), "t" 
+			 *    (temporal_region), or "i" (instance).
+			 * 			
+			 */
+			PtoPTemplate ptop = (PtoPTemplate)t;
+			Iterable<Iui> p = ptop.getParticulars();
+			for (Iui i : p) {
+				iuisInPtoPTemplates.add(i.toString());
+			}
+			
+			/*ArrayList<String> pStatus = new ArrayList<String>();
+			for (Iui iui : p) {
+				HashMap<String, Object> params = new HashMap<String, Object>();
+				params.put("value", p.toString());
+				ResourceIterator<Node> rin = ee.execute(queryInstanceNode, params).columnAs("n");
+				if (rin.hasNext()) {
+					Node n = rin.next();
+					Iterable<Label> labels = n.getLabels();
+					for (Label l : labels) {
+						if (l.name().equals("instance")) {
+							pStatus.add("i");
+							break;
+						} else if (l.name().equals("temporal_region")) {
+							pStatus.add("t");
+							break;
+						}
+					}
+				} else {
+					
+				}
+			}*/
+			
+			
+		}
 		templates.add(t);
 			
 			/*
@@ -150,11 +213,20 @@ public class RtsTemplatePersistenceManager {
 	public void commitTemplates() {
 		try (Transaction tx = graphDb.beginTx() ) {
 			
+			/*
+			 * Before we begin, let's be sure that we either have assignment templates
+			 *  for each IUI that a PtoP template references or that the IUI node 
+			 *  exists in the database already.  
+			 */
+			checkIuisInPtoP();
+			
 			for (RtsTemplate t : templates) {
 				if (t instanceof ATemplate) {
 					atp.persistTemplate(t);
 				} else if (t instanceof TeTemplate) {
 					tep.persistTemplate(t);
+				} else if (t instanceof TenTemplate) {
+					tenp.persistTemplate(t);
 				}
 			}
 			
@@ -171,6 +243,22 @@ public class RtsTemplatePersistenceManager {
 		}
 	}
 	
+	private void checkIuisInPtoP() {
+		for (String iui : iuisInPtoPTemplates) {
+			if (!iuiToNodeLabel.containsKey(iui)) {
+				HashMap<String, Object> params = new HashMap<String, Object>();
+				params.put("value", iui);
+				ResourceIterator<Node> rin = ee.execute(queryInstanceNode, params).columnAs("n");
+				if (!rin.hasNext()) {
+					System.err.println("Iui " + iui + " is referenced in a PtoP template but has " +
+							"no assignment template in the cache and a node for it is not already "
+							+ "in the database.");
+				}
+			}
+		}
+		
+	}
+
 	void commitTemplate(RtsTemplate t) {
 		/*
 		 * First, create all entities (instances, universals, relations, temporal

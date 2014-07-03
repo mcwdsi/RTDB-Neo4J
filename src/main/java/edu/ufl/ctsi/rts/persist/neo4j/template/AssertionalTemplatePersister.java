@@ -4,7 +4,7 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.PtoDETemplate;
+import edu.uams.dbmi.rts.template.PtoDRTemplate;
 import edu.uams.dbmi.rts.template.PtoLackUTemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
@@ -55,8 +55,8 @@ public abstract class AssertionalTemplatePersister extends
 			taIui = ptolacku.getAuthoringTimeIui().toString();
 			trIui = ptolacku.getTemporalEntityIui().toString();
 			rui = ptolacku.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoDETemplate) {
-			PtoDETemplate ptodr = (PtoDETemplate)templateToPersist;
+		} else if (templateToPersist instanceof PtoDRTemplate) {
+			PtoDRTemplate ptodr = (PtoDRTemplate)templateToPersist;
 			taIui = ptodr.getAuthoringTimeIui().toString();
 			rui = ptodr.getRelationshipURI().toString();
 		} //add PtoCo once it exists in RTDB

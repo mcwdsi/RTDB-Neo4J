@@ -6,7 +6,7 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.PtoDETemplate;
+import edu.uams.dbmi.rts.template.PtoDRTemplate;
 import edu.ufl.ctsi.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.DataNodeCreator;
@@ -53,14 +53,14 @@ public class PtoDRTemplatePersister extends AssertionalTemplatePersister {
 	}
 
 	private void connectToUniversalNode() {
-		PtoDETemplate ptodr = (PtoDETemplate)templateToPersist;
+		PtoDRTemplate ptodr = (PtoDRTemplate)templateToPersist;
 		Node target = unc.persistEntity(ptodr.getDatatypeUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
 	
 	
 	private void connectToDataNode() {
-		PtoDETemplate ptodr = (PtoDETemplate)templateToPersist;
+		PtoDRTemplate ptodr = (PtoDRTemplate)templateToPersist;
 		String dataAsString = new String(ptodr.getData(), Charset.forName("UTF-16"));
 		Node target = unc.persistEntity(dataAsString);
 		n.createRelationshipTo(target, RtsRelationshipType.dr);

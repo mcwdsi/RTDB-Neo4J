@@ -42,7 +42,7 @@ public enum RtsRelationshipType implements RelationshipType {
 	 *  These relationship types are for Ten templates 
 	 */
 	iuite,
-	ns,
+	iuins,
 	
 	/**
 	 * These relationship types are for PtoCo templates
