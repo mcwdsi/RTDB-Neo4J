@@ -5,19 +5,14 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
-import edu.ufl.ctsi.neo4j.RtsNodeLabel;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 
 public class ATemplatePersister extends RepresentationalTemplatePersister {
 
-	InstanceNodeCreator inc;
 	Iso8601DateTimeFormatter dtf;
 	
 	public ATemplatePersister(GraphDatabaseService db, ExecutionEngine ee)
 			 {
-		super(db, ee, RtsNodeLabel.INSTANCE);
-		inc = new InstanceNodeCreator(this.ee);
+		super(db, ee);
 		dtf = new Iso8601DateTimeFormatter();
 	}
 
@@ -36,10 +31,4 @@ public class ATemplatePersister extends RepresentationalTemplatePersister {
 	protected void setTemplateTypeProperty() {
 		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "a");
 	}
-
-	@Override
-	public EntityNodePersister getReferentNodeCreator() {
-		return inc;
-	}
-
 }

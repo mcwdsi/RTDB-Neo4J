@@ -8,15 +8,12 @@ import edu.uams.dbmi.rts.template.PtoDRTemplate;
 import edu.uams.dbmi.rts.template.PtoLackUTemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
-import edu.ufl.ctsi.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.RelationNodeCreator;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalRegionNodeCreator;
 
 public abstract class AssertionalTemplatePersister extends
 		RepresentationalTemplatePersister {
 
-	TemporalRegionNodeCreator trnc;
 	RelationNodeCreator rnc;
 	
 	String taIui;
@@ -24,9 +21,8 @@ public abstract class AssertionalTemplatePersister extends
 	String rui;
 	
 	public AssertionalTemplatePersister(GraphDatabaseService db,
-			ExecutionEngine ee, RtsNodeLabel referentLabel) {
-		super(db, ee, referentLabel);
-		trnc = new TemporalRegionNodeCreator(this.ee);
+			ExecutionEngine ee) {
+		super(db, ee);
 		rnc = new RelationNodeCreator(this.ee);
 		taIui = trIui = rui = null;
 	}
@@ -64,7 +60,7 @@ public abstract class AssertionalTemplatePersister extends
 	}
 
 	private void connectToTimeOfAssertion() {
-		Node target = trnc.persistEntity(taIui);
+		Node target = inc.persistEntity(taIui);
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
 
@@ -74,7 +70,7 @@ public abstract class AssertionalTemplatePersister extends
 		 *   doesn't have a tr parameter.		
 		 */
 		if (trIui != null) {
-			Node target = trnc.persistEntity(trIui);
+			Node target = inc.persistEntity(trIui);
 			n.createRelationshipTo(target, RtsRelationshipType.tr);
 		}
 	}

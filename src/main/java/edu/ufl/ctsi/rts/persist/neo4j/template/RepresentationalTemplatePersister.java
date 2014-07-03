@@ -5,20 +5,16 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.RtsTemplate;
-import edu.ufl.ctsi.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 
 public abstract class RepresentationalTemplatePersister extends
 		RtsTemplatePersister {
 	
-	RtsNodeLabel referentLabel;
-	
 	InstanceNodeCreator inc;
 
 	public RepresentationalTemplatePersister(GraphDatabaseService db,
-			ExecutionEngine ee, RtsNodeLabel referentLabel) {
+			ExecutionEngine ee) {
 		super(db, ee);
 		inc = new InstanceNodeCreator(this.ee);
 	}
@@ -34,8 +30,8 @@ public abstract class RepresentationalTemplatePersister extends
 	}
 	
 	protected void connectToReferent() {
-		EntityNodePersister enp = getReferentNodeCreator();
-		Node referentNode = enp.persistEntity(templateToPersist.getReferentIui().toString());
+		InstanceNodeCreator inc = new InstanceNodeCreator(ee);
+		Node referentNode = inc.persistEntity(templateToPersist.getReferentIui().toString());
 		n.createRelationshipTo(referentNode, RtsRelationshipType.iuip);
 	}
 	
@@ -45,6 +41,4 @@ public abstract class RepresentationalTemplatePersister extends
 	}
 	
 	public abstract void handleTemplateSpecificParameters();
-	public abstract EntityNodePersister getReferentNodeCreator();
-
 }

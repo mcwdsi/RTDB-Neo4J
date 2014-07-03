@@ -1,6 +1,8 @@
 package neo4jtest.test;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,9 +22,14 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.template.ATemplate;
+import edu.uams.dbmi.rts.template.PtoDRTemplate;
+import edu.uams.dbmi.rts.template.PtoPTemplate;
+import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.template.TeTemplate;
+import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
+import edu.ufl.ctsi.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.neo4j.RtsTemplatePersistenceManager;
 
 /**
@@ -82,29 +89,184 @@ public class App
             
             Iui wh = Iui.createRandomIui();
             Iui wh_chair = Iui.createRandomIui();
+            Iui wh_name = Iui.createRandomIui();
             
+            /*
+             * W. Hogan
+             */
             ATemplate a1 = new ATemplate();
             a1.setAuthorIui(wh);
             a1.setReferentIui(wh);
             a1.setAuthoringTimestamp(new Iso8601DateTime());
             a1.setTemplateIui(Iui.createRandomIui());
             
+            /*
+             * W. Hogan's chair
+             */
             ATemplate a2 = new ATemplate();
             a2.setAuthorIui(wh);
             a2.setReferentIui(wh_chair);
             a2.setAuthoringTimestamp(new Iso8601DateTime());
             a2.setTemplateIui(Iui.createRandomIui());
             
+            /*
+             * W. Hogan's full name
+             */
+            ATemplate a3 = new ATemplate();
+            a3.setAuthorIui(wh);
+            a3.setReferentIui(wh_name);
+            a3.setAuthoringTimestamp(new Iso8601DateTime());
+            a3.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * Time of assertion of this set of templates
+             */
             TeTemplate t = new TeTemplate();
             t.setAuthoringTimestamp(new Iso8601DateTime());
             t.setReferentIui(Iui.createRandomIui());
             t.setAuthorIui(wh);
-            t.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInstant"));
             t.setTemplateIui(Iui.createRandomIui());
+            
+            
+            Iui gregorianIui = Iui.createFromString("D4AF5C9A-47BA-4BF4-9BAE-F13A8ED6455E");
+            Iui maxTimeIntervalIui = Iui.createFromString("26F1052B-311D-43B1-9ABC-B4E2EDD1B283");
+            
+            /*
+             * Name of time of assertion of this set of templates
+             */
+            TenTemplate ten = new TenTemplate();
+            ten.setTemplateIui(Iui.createRandomIui());
+            ten.setAuthorIui(wh);
+            ten.setName("2014-07-03T15:49:37.543");
+            ten.setNamingSystemIui(gregorianIui);
+            ten.setReferentIui(Iui.createRandomIui());
+            ten.setTemporalEntityIui(t.getReferentIui());
+            ten.setAuthoringTimeIui(t.getReferentIui());   
+            
+            /*
+             * Time during which W. Hogan has been owner of his char
+             */
+            TeTemplate t2 = new TeTemplate();
+            t2.setAuthoringTimestamp(new Iso8601DateTime());
+            t2.setReferentIui(Iui.createRandomIui());
+            t2.setAuthorIui(wh);
+            t2.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t2.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * Time during which W. Hogan has been instance of human being
+             */
+            TeTemplate t3 = new TeTemplate();
+            t3.setAuthoringTimestamp(new Iso8601DateTime());
+            t3.setReferentIui(Iui.createRandomIui());
+            t3.setAuthorIui(wh);
+            t3.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t3.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * Day of W. Hogan's birth
+             */
+            TeTemplate t4 = new TeTemplate();
+            t4.setAuthoringTimestamp(new Iso8601DateTime());
+            t4.setReferentIui(Iui.createRandomIui());
+            t4.setTemplateIui(Iui.createRandomIui());
+            t4.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t4.setAuthorIui(wh);
+            
+            /*
+             * Name of day of W. Hogan's birth
+             */
+            TenTemplate ten2 = new TenTemplate();
+            ten2.setTemplateIui(Iui.createRandomIui());
+            ten2.setTemporalEntityIui(t4.getReferentIui());
+            ten2.setAuthoringTimeIui(t.getReferentIui());
+            ten2.setAuthorIui(wh);
+            ten2.setName("1969-04-20");
+            ten2.setNamingSystemIui(gregorianIui);
+            ten2.setReferentIui(Iui.createRandomIui());
+            
+            /*
+             * W. Hogan's chair owned by W. Hogan
+             */
+            PtoPTemplate ptop = new PtoPTemplate();
+            ptop.setReferentIui(wh_chair);
+            ptop.setAuthorIui(wh);
+            try {
+				ptop.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/OMIABIS_0000048"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptop.setAuthoringTimeIui(t.getReferentIui());
+            ptop.addParticular(wh);
+            ptop.setTemplateIui(Iui.createRandomIui());
+            ptop.setTemporalEntityIui(t2.getReferentIui());
+            
+            /*
+             * W. Hogan instance of human being
+             */
+            PtoUTemplate ptou = new PtoUTemplate();
+            ptou.setTemplateIui(Iui.createRandomIui());
+            ptou.setReferentIui(wh);
+            try {
+				ptou.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/ro.owl#instance_of"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptou.setAuthoringTimeIui(t.getReferentIui());
+            ptou.setAuthorIui(wh);
+            ptou.setTemporalEntityIui(t3.getReferentIui());
+            ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
+            
+            /*
+             * W. Hogan's name designates W. Hogan
+             */
+            PtoPTemplate ptop2 = new PtoPTemplate();
+            ptop2.setReferentIui(wh_name);
+            ptop2.setAuthorIui(wh);
+            try {
+				ptop2.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/IAO_0000219"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptop2.setAuthoringTimeIui(t.getReferentIui());
+            ptop2.addParticular(wh);
+            ptop2.setTemplateIui(Iui.createRandomIui());
+            ptop2.setTemporalEntityIui(t4.getReferentIui());    
+            
+            /*
+             * W. Hogan's name's digital representation
+             */
+            PtoDRTemplate ptodr = new PtoDRTemplate();
+            ptodr.setTemplateIui(Iui.createRandomIui());
+            ptodr.setAuthorIui(wh);
+            ptodr.setAuthoringTimeIui(t.getReferentIui());
+            ptodr.setReferentIui(wh_name);
+            ptodr.setData("William Hogan".getBytes());
+            try {
+				ptodr.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-16"));
             
             rpm.addTemplate(a1);
             rpm.addTemplate(a2);
+            rpm.addTemplate(a3);
             rpm.addTemplate(t);
+            rpm.addTemplate(t2);
+            rpm.addTemplate(t3);
+            rpm.addTemplate(t4);
+            rpm.addTemplate(ptop);
+            rpm.addTemplate(ptop2);
+            rpm.addTemplate(ptou);
+            rpm.addTemplate(ten);
+            rpm.addTemplate(ten2);
+            rpm.addTemplate(ptodr);
             rpm.commitTemplates();
             
             hello.graphDb = rpm.graphDb;
@@ -115,7 +277,7 @@ public class App
             hello.queryRts();
             
             Charset c = Charset.forName("UTF-16");
-            System.out.println(c + "\t" + c.displayName() + "\t" + c.name() + "\tis registered: " + c.isRegistered() + "\t:can encode: " + c.canEncode());
+            System.out.println(c + "\t" + c.displayName() + "\t" + c.name() + "\tis registered: " + c.isRegistered() + "\tcan encode: " + c.canEncode());
 
 	    }
 
@@ -245,7 +407,10 @@ public class App
             			if (label.equals("instance") || label.equals("temporal_region") || label.equals("template")) {
             				System.out.print("\t"+ n.getProperty("iui"));
             			} else if (label.equals("universal")) {
+            				n.addLabel(DynamicLabel.label("universal"));  //what happens if we try to add a label that is already there?
             				System.out.print("\t" + n.getProperty("uui"));
+            			} else if (label.equals("relation")) {
+            				System.out.print("\t" + n.getProperty("rui"));
             			}
             			
             			if (n.hasLabel(DynamicLabel.label("template"))) {
@@ -255,6 +420,15 @@ public class App
             				if (type.equals("a") || type.equals("te")) {
             					String tap = (String) n.getProperty("tap");
             					System.out.print("\t" + tap);
+            				} else if (type.equals("ten")) {
+            					String name = (String)n.getProperty("name");
+            					System.out.print("\t" + name);
+            				} else if (type.equals("ptodr")) {
+            					Iterable<Relationship> dataRels = n.getRelationships(RtsRelationshipType.dr);
+            					Relationship r = dataRels.iterator().next();
+            					Node dataNode = r.getEndNode();
+            					String data = (String)dataNode.getProperty("dr");
+            					System.out.print("\t" + data);
             				}
             			}
             			System.out.println();

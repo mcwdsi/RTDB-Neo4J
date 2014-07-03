@@ -34,6 +34,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.ATemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDRTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.PtoPTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.TeTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.TenTemplatePersister;
@@ -61,7 +62,7 @@ public class RtsTemplatePersistenceManager {
 	
 	HashMap<Iui, Node> iuiNode;
 	HashMap<String, Node> uiNode;
-	HashMap<String, RtsTemplate> iuiToAssignmentTemplate;
+	HashMap<String, RtsTemplate> iuiToItsAssignmentTemplate;
 	HashSet<String> iuisInPtoPTemplates;
 	HashMap<String, String> iuiToNodeLabel;
 	
@@ -79,7 +80,7 @@ public class RtsTemplatePersistenceManager {
 		templates = new HashSet<RtsTemplate>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
-		iuiToAssignmentTemplate = new HashMap<String, RtsTemplate>();
+		iuiToItsAssignmentTemplate = new HashMap<String, RtsTemplate>();
 		iuisInPtoPTemplates = new HashSet<String>();
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
@@ -88,82 +89,27 @@ public class RtsTemplatePersistenceManager {
 		setupExecutionEngine();
 		atp = new ATemplatePersister(graphDb, ee);
 		tep = new TeTemplatePersister(graphDb, ee);
+		tep = new TeTemplatePersister(graphDb, ee);
+		tenp = new TenTemplatePersister(graphDb, ee);
+		pup = new PtoUTemplatePersister(graphDb, ee);
+		ppp = new PtoPTemplatePersister(graphDb, ee);
+		plup = new PtoLackUTemplatePersister(graphDb, ee);
+		pdrp = new PtoDRTemplatePersister(graphDb, ee);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
 	
 	public void addTemplate(RtsTemplate t) {
-		if (t instanceof ATemplate) {
-			iuiToAssignmentTemplate.put(t.getReferentIui().toString(), t);
-			iuiToNodeLabel.put(t.getReferentIui().toString(), "instance");
-		} else if  (t instanceof TeTemplate)  {
-			iuiToAssignmentTemplate.put(t.getReferentIui().toString(), t);
-			iuiToNodeLabel.put(t.getReferentIui().toString(), "temporal_region");
+		if (t instanceof ATemplate || t instanceof TeTemplate) {
+			iuiToItsAssignmentTemplate.put(t.getReferentIui().toString(), t);
 		} else if ( (t instanceof PtoPTemplate) ) {
-			/*
-			 * When we build PtoPTemplates, the iuip as well as the p parameter
-			 *   could refer to temporal regions or instances (node labels 
-			 *   temporal_region and instance, respecively).  
-			 *   
-			 *   If the iui is already there in the database, no problem.  If not
-			 *     we need to know whether to create an instance or temporal region
-			 *     node.
-			 *     
-			 *  So, for each iui, set a status of "p" (already persisted), "t" 
-			 *    (temporal_region), or "i" (instance).
-			 * 			
-			 */
 			PtoPTemplate ptop = (PtoPTemplate)t;
 			Iterable<Iui> p = ptop.getParticulars();
 			for (Iui i : p) {
 				iuisInPtoPTemplates.add(i.toString());
 			}
-			
-			/*ArrayList<String> pStatus = new ArrayList<String>();
-			for (Iui iui : p) {
-				HashMap<String, Object> params = new HashMap<String, Object>();
-				params.put("value", p.toString());
-				ResourceIterator<Node> rin = ee.execute(queryInstanceNode, params).columnAs("n");
-				if (rin.hasNext()) {
-					Node n = rin.next();
-					Iterable<Label> labels = n.getLabels();
-					for (Label l : labels) {
-						if (l.name().equals("instance")) {
-							pStatus.add("i");
-							break;
-						} else if (l.name().equals("temporal_region")) {
-							pStatus.add("t");
-							break;
-						}
-					}
-				} else {
-					
-				}
-			}*/
-			
-			
 		}
 		templates.add(t);
-			
-			/*
-			 * If we have a PtoDR template, then we need to be sure we create a node for
-			 * 	its data before we can persist the template itself, to connect the template
-			 * 	to its data.
-			 
-			if (t instanceof PtoDRTemplate) {
-				PtoDRTemplate pdr = (PtoDRTemplate)t;
-				String s;
-				try {
-					s = new String(pdr.getData(), "UTF-16");
-
-				} catch (UnsupportedEncodingException e) {
-					System.err.println("I was trying to convert PtoDR data in byte[] "
-							+ "form to UTF-16-encoded string.  But something went "
-							+ "drastically wrong!");
-					e.printStackTrace();
-				}
-			}
-		}*/
 	} 
 	
 	public void addTemplates(Collection<RtsTemplate> t) {
@@ -227,6 +173,14 @@ public class RtsTemplatePersistenceManager {
 					tep.persistTemplate(t);
 				} else if (t instanceof TenTemplate) {
 					tenp.persistTemplate(t);
+				} else if (t instanceof PtoUTemplate) {
+					pup.persistTemplate(t);
+				} else if (t instanceof PtoLackUTemplate) {
+					plup.persistTemplate(t);
+				} else if (t instanceof PtoDRTemplate) {
+					pdrp.persistTemplate(t);
+				} else if (t instanceof PtoPTemplate) {
+					ppp.persistTemplate(t);
 				}
 			}
 			
@@ -245,15 +199,30 @@ public class RtsTemplatePersistenceManager {
 	
 	private void checkIuisInPtoP() {
 		for (String iui : iuisInPtoPTemplates) {
-			if (!iuiToNodeLabel.containsKey(iui)) {
+			if (!iuiToItsAssignmentTemplate.containsKey(iui)) {
 				HashMap<String, Object> params = new HashMap<String, Object>();
 				params.put("value", iui);
 				ResourceIterator<Node> rin = ee.execute(queryInstanceNode, params).columnAs("n");
 				if (!rin.hasNext()) {
 					System.err.println("Iui " + iui + " is referenced in a PtoP template but has " +
-							"no assignment template in the cache and a node for it is not already "
+							"no assignment template in the cache and there is no node for it already "
 							+ "in the database.");
 				}
+				/*else {
+					Node n = rin.next();
+					Iterable<Label> labels = n.getLabels();
+					for (Label l : labels) {
+						String name = l.name();
+						if (name.equals("instance")) {
+							iuiToNodeLabel.put(iui, name);
+							break;
+						} else if (name.equals("temporal_region")) {
+							iuiToNodeLabel.put(iui, name);
+							break;
+						}
+					}
+				}
+				*/
 			}
 		}
 		
@@ -394,7 +363,7 @@ public class RtsTemplatePersistenceManager {
 		
 		//Connect it to the naming system
 		//connectToNamingSystemNode(n, t.getNamingSystemIui());
-		connectNodeToNode(n, RtsRelationshipType.ns, RtsNodeLabel.INSTANCE,
+		connectNodeToNode(n, RtsRelationshipType.iuins, RtsNodeLabel.INSTANCE,
 				t.getNamingSystemIui().toString());
 		
 		//Connect it to the temporal region at which the name was asserted to
@@ -458,7 +427,7 @@ public class RtsTemplatePersistenceManager {
 	    //	should roll back
 	    if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ||
 	    		targetNodeLabel.equals(RtsNodeLabel.TEMPORAL_REGION) ) {
-	    	if ( !iuiToAssignmentTemplate.containsKey(targetNodeUi) ) {
+	    	if ( !iuiToItsAssignmentTemplate.containsKey(targetNodeUi) ) {
 		    	System.err.println("ERROR: creating new entity with IUI " + targetNodeUi +
 		    			" but this IUI has no corresponding assignment template!");
 	    	}

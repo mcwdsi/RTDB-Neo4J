@@ -1,14 +1,12 @@
 package edu.ufl.ctsi.rts.persist.neo4j.entity;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterator;
 
 public abstract class EntityNodePersister {
 	

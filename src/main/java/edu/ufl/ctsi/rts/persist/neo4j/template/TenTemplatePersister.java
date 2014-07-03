@@ -5,27 +5,19 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.TenTemplate;
-import edu.ufl.ctsi.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalRegionNodeCreator;
 
 public class TenTemplatePersister extends RepresentationalTemplatePersister {
-
-	InstanceNodeCreator inc;
-	TemporalRegionNodeCreator trnc;
 	
 	String taIui;
 	String nsIui;
 	String name;
 	String teIui;
 	
-	public TenTemplatePersister(GraphDatabaseService db, ExecutionEngine ee,
-			RtsNodeLabel referentLabel) {
-		super(db, ee, referentLabel);
-		inc = new InstanceNodeCreator(this.ee);
-		trnc = new TemporalRegionNodeCreator(this.ee);
+	public TenTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
+		super(db, ee);
 	}
 
 	@Override
@@ -44,9 +36,6 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 		connectToNamespace();
 		
 		addNameAsProperty();
-		
-		
-
 	}
 
 	private void getParametersFromTemplate() {
@@ -54,16 +43,16 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 		taIui = ten.getAuthoringTimeIui().toString();
 		nsIui = ten.getNamingSystemIui().toString();
 		teIui = ten.getTemporalEntityIui().toString();
-		
+		name = ten.getName();
 	}
 
 	private void connectToTimeOfAssertion() {
-		Node target = trnc.persistEntity(taIui);
+		Node target = inc.persistEntity(taIui);
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
 	
 	private void connectToTemporalEntity() {
-		Node target = trnc.persistEntity(teIui);
+		Node target = inc.persistEntity(teIui);
 		n.createRelationshipTo(target, RtsRelationshipType.iuite);
 	}
 	
@@ -74,11 +63,6 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 
 	private void addNameAsProperty() {
 		n.setProperty("name", name);
-	}
-
-	@Override
-	public EntityNodePersister getReferentNodeCreator() {
-		return inc;
 	}
 
 	@Override

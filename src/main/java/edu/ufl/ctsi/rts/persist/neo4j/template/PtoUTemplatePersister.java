@@ -5,28 +5,18 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.PtoUTemplate;
-import edu.ufl.ctsi.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class PtoUTemplatePersister extends AssertionalTemplatePersister {
 
-	InstanceNodeCreator inc;
 	UniversalNodeCreator unc;
 	
-	public PtoUTemplatePersister(GraphDatabaseService db, ExecutionEngine ee,
-			RtsNodeLabel referentLabel) {
-		super(db, ee, referentLabel);
-		inc = new InstanceNodeCreator(this.ee);
+	public PtoUTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
+		super(db, ee);
 		unc = new UniversalNodeCreator(this.ee);
 	}
 
-	@Override
-	public EntityNodePersister getReferentNodeCreator() {
-		return inc;
-	}
 
 	@Override
 	protected void setTemplateTypeProperty() {
@@ -45,7 +35,7 @@ public class PtoUTemplatePersister extends AssertionalTemplatePersister {
 
 	private void connectToUniversalNode() {
 		PtoUTemplate ptou = (PtoUTemplate)templateToPersist;
-		Node target = unc.persistEntity(ptou.getRelationshipURI().toString());
+		Node target = unc.persistEntity(ptou.getUniversalUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
 }
