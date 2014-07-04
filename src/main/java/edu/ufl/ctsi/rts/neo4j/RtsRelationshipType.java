@@ -1,4 +1,4 @@
-package edu.ufl.ctsi.neo4j;
+package edu.ufl.ctsi.rts.neo4j;
 
 import org.neo4j.graphdb.RelationshipType;
 

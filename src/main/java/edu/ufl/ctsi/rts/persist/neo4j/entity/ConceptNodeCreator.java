@@ -6,14 +6,13 @@ import org.neo4j.graphdb.Label;
 
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
-public class UniversalNodeCreator extends EntityNodePersister {
+public class ConceptNodeCreator extends EntityNodePersister {
 
-	static final String QUERY = "MERGE (n:universal { uui: {value} }) return n";
-
-	public UniversalNodeCreator(ExecutionEngine engine) {
+	public ConceptNodeCreator(ExecutionEngine engine) {
 		super(engine);
-		// TODO Auto-generated constructor stub
 	}
+
+	static final String QUERY = "MERGE (n:concept { cui: {value} }) return n";
 
 	@Override
 	protected String setupQuery() {
@@ -22,7 +21,6 @@ public class UniversalNodeCreator extends EntityNodePersister {
 
 	@Override
 	protected Label getLabel() {
-		return DynamicLabel.label(RtsNodeLabel.TYPE.getLabelText());
+		return DynamicLabel.label(RtsNodeLabel.CONCEPT.getLabelText());
 	}
-
 }

@@ -20,17 +20,19 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
+import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.template.ATemplate;
-import edu.uams.dbmi.rts.template.PtoDRTemplate;
+import edu.uams.dbmi.rts.template.PtoCTemplate;
+import edu.uams.dbmi.rts.template.PtoDETemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.template.TeTemplate;
 import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
-import edu.ufl.ctsi.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.neo4j.RtsTemplatePersistenceManager;
+import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplatePersistenceManager;
 
 /**
  * Hello world!
@@ -203,22 +205,37 @@ public class App
             ptop.setTemplateIui(Iui.createRandomIui());
             ptop.setTemporalEntityIui(t2.getReferentIui());
             
+            URI instance_of=null;
+			try {
+				instance_of = new URI("http://purl.obolibrary.org/obo/ro.owl#instance_of");
+			} catch (URISyntaxException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            
             /*
              * W. Hogan instance of human being
              */
             PtoUTemplate ptou = new PtoUTemplate();
             ptou.setTemplateIui(Iui.createRandomIui());
             ptou.setReferentIui(wh);
-            try {
-				ptou.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/ro.owl#instance_of"));
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            ptou.setRelationshipURI(instance_of);
             ptou.setAuthoringTimeIui(t.getReferentIui());
             ptou.setAuthorIui(wh);
             ptou.setTemporalEntityIui(t3.getReferentIui());
             ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
+            
+            /*
+             * W. Hogan's name instance of personal name
+             */
+            PtoUTemplate ptou3 = new PtoUTemplate();
+            ptou3.setTemplateIui(Iui.createRandomIui());
+            ptou3.setReferentIui(wh_name);
+            ptou3.setRelationshipURI(instance_of);
+            ptou3.setAuthoringTimeIui(t.getReferentIui());
+            ptou3.setAuthorIui(wh);
+            ptou3.setTemporalEntityIui(t3.getReferentIui());
+            ptou3.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/IAO_0020015"));
             
             /*
              * W. Hogan's name designates W. Hogan
@@ -240,7 +257,7 @@ public class App
             /*
              * W. Hogan's name's digital representation
              */
-            PtoDRTemplate ptodr = new PtoDRTemplate();
+            PtoDETemplate ptodr = new PtoDETemplate();
             ptodr.setTemplateIui(Iui.createRandomIui());
             ptodr.setAuthorIui(wh);
             ptodr.setAuthoringTimeIui(t.getReferentIui());
@@ -271,6 +288,19 @@ public class App
 			}
             ptop3.setTemporalEntityIui(maxTimeIntervalIui);
             
+            Iui snctCsIui = Iui.createFromString("59487A5D-C808-48A4-9DAE-894DCE866A96");        
+            /*
+             * PtoC that annotates W. Hogan with SNOMED-CT's "Father (person)" concept
+             */
+            PtoCTemplate ptoc = new PtoCTemplate();
+            ptoc.setTemplateIui(Iui.createRandomIui());
+            ptoc.setReferentIui(wh);
+            ptoc.setAuthoringTimeIui(t.getReferentIui());
+            ptoc.setAuthorIui(wh);
+            ptoc.setConceptCui(new Cui("66839005"));
+            ptoc.setTemporalEntityIui(t.getReferentIui());
+            ptoc.setConceptSystemIui(snctCsIui);            
+            
             rpm.addTemplate(a1);
             rpm.addTemplate(a2);
             rpm.addTemplate(a3);
@@ -282,9 +312,11 @@ public class App
             rpm.addTemplate(ptop2);
             rpm.addTemplate(ptop3);
             rpm.addTemplate(ptou);
+            rpm.addTemplate(ptou3);
             rpm.addTemplate(ten);
             rpm.addTemplate(ten2);
             rpm.addTemplate(ptodr);
+            rpm.addTemplate(ptoc);
             rpm.commitTemplates();
             
             hello.graphDb = rpm.graphDb;
@@ -442,13 +474,16 @@ public class App
             					String name = (String)n.getProperty("name");
             					System.out.print("\t" + name);
             				} else if (type.equals("ptodr")) {
-            					Iterable<Relationship> dataRels = n.getRelationships(RtsRelationshipType.dr);
-            					Relationship r = dataRels.iterator().next();
-            					Node dataNode = r.getEndNode();
-            					String data = (String)dataNode.getProperty("dr");
-            					System.out.print("\t" + data);
+            				
             				}
-            			}
+            			} else if (n.hasLabel(DynamicLabel.label("data"))) {
+        					String data = (String)n.getProperty("dr");
+        					System.out.print("\t" + data);
+        				} else if (n.hasLabel(DynamicLabel.label("concept"))) {
+        					String code = (String)n.getProperty("cui");
+        					System.out.print("\t" + code);
+        				}
+            			
             			System.out.println();
             			
             			

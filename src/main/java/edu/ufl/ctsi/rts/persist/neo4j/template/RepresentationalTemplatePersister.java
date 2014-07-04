@@ -5,7 +5,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.RtsTemplate;
-import edu.ufl.ctsi.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 
 public abstract class RepresentationalTemplatePersister extends

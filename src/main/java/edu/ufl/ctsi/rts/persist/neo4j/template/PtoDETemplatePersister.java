@@ -6,17 +6,17 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.PtoDRTemplate;
-import edu.ufl.ctsi.neo4j.RtsRelationshipType;
+import edu.uams.dbmi.rts.template.PtoDETemplate;
+import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.DataNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
-public class PtoDRTemplatePersister extends AssertionalTemplatePersister {
+public class PtoDETemplatePersister extends AssertionalTemplatePersister {
 
 	UniversalNodeCreator unc;
 	DataNodeCreator dnc;
 	
-	public PtoDRTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
+	public PtoDETemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
 		super(db, ee);
 		unc = new UniversalNodeCreator(this.ee);
 		dnc = new DataNodeCreator(this.ee);
@@ -42,13 +42,13 @@ public class PtoDRTemplatePersister extends AssertionalTemplatePersister {
 	}
 
 	private void connectToUniversalNode() {
-		PtoDRTemplate ptodr = (PtoDRTemplate)templateToPersist;
+		PtoDETemplate ptodr = (PtoDETemplate)templateToPersist;
 		Node target = unc.persistEntity(ptodr.getDatatypeUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
 
 	private void connectToDataNode() {
-		PtoDRTemplate ptodr = (PtoDRTemplate)templateToPersist;
+		PtoDETemplate ptodr = (PtoDETemplate)templateToPersist;
 		String dataAsString = new String(ptodr.getData(), Charset.forName("UTF-8"));
 		Node target = dnc.persistEntity(dataAsString);
 		n.createRelationshipTo(target, RtsRelationshipType.dr);

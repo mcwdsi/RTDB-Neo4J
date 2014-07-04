@@ -4,7 +4,7 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.Label;
 
-import edu.ufl.ctsi.neo4j.RtsNodeLabel;
+import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
 public class TemplateNodeCreator extends EntityNodePersister {
 

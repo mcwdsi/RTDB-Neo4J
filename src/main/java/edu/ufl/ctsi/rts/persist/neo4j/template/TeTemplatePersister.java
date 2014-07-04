@@ -6,7 +6,7 @@ import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.TeTemplate;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
-import edu.ufl.ctsi.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class TeTemplatePersister extends RepresentationalTemplatePersister {

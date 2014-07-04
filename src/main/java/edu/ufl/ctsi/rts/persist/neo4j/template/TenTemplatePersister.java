@@ -5,9 +5,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.TenTemplate;
-import edu.ufl.ctsi.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
+import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 
 public class TenTemplatePersister extends RepresentationalTemplatePersister {
 	

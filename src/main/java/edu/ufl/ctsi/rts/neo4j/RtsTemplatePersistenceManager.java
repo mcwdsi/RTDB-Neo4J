@@ -1,12 +1,10 @@
-package edu.ufl.ctsi.neo4j;
+package edu.ufl.ctsi.rts.neo4j;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import neo4jtest.test.App;
 
@@ -21,7 +19,8 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.template.MetadataTemplate;
-import edu.uams.dbmi.rts.template.PtoDRTemplate;
+import edu.uams.dbmi.rts.template.PtoCTemplate;
+import edu.uams.dbmi.rts.template.PtoDETemplate;
 import edu.uams.dbmi.rts.template.PtoLackUTemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
@@ -32,7 +31,8 @@ import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.ATemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDRTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.PtoCTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDETemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoPTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
@@ -74,7 +74,8 @@ public class RtsTemplatePersistenceManager {
 	PtoUTemplatePersister pup;
 	PtoPTemplatePersister ppp;
 	PtoLackUTemplatePersister plup;
-	PtoDRTemplatePersister pdrp;
+	PtoDETemplatePersister pdrp;
+	PtoCTemplatePersister pcp;
 	
 	public RtsTemplatePersistenceManager() {
 		templates = new HashSet<RtsTemplate>();
@@ -94,7 +95,8 @@ public class RtsTemplatePersistenceManager {
 		pup = new PtoUTemplatePersister(graphDb, ee);
 		ppp = new PtoPTemplatePersister(graphDb, ee);
 		plup = new PtoLackUTemplatePersister(graphDb, ee);
-		pdrp = new PtoDRTemplatePersister(graphDb, ee);
+		pdrp = new PtoDETemplatePersister(graphDb, ee);
+		pcp = new PtoCTemplatePersister(graphDb, ee);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
@@ -177,10 +179,12 @@ public class RtsTemplatePersistenceManager {
 					pup.persistTemplate(t);
 				} else if (t instanceof PtoLackUTemplate) {
 					plup.persistTemplate(t);
-				} else if (t instanceof PtoDRTemplate) {
+				} else if (t instanceof PtoDETemplate) {
 					pdrp.persistTemplate(t);
 				} else if (t instanceof PtoPTemplate) {
 					ppp.persistTemplate(t);
+				} else if (t instanceof PtoCTemplate) {
+					pcp.persistTemplate(t);
 				}
 			}
 			
@@ -285,9 +289,9 @@ public class RtsTemplatePersistenceManager {
 			} else if (t instanceof PtoLackUTemplate) {
 				PtoLackUTemplate p = (PtoLackUTemplate)t;
 				completePtoLackUTemplate(templateNode, p);
-			} else if (t instanceof PtoDRTemplate) {
-				PtoDRTemplate p = (PtoDRTemplate)t;
-				completePtoDRTemplate(templateNode, p);
+			} else if (t instanceof PtoDETemplate) {
+				PtoDETemplate p = (PtoDETemplate)t;
+				completePtoDETemplate(templateNode, p);
 			}
 		}
 	 
@@ -451,7 +455,7 @@ public class RtsTemplatePersistenceManager {
 		n.setProperty("type", "PtoLackU");
 	}
 
-	private void completePtoDRTemplate(Node n, PtoDRTemplate p) {
+	private void completePtoDETemplate(Node n, PtoDETemplate p) {
 		// TODO Auto-generated method stub
 		n.setProperty("type", "PtoDR");
 	}

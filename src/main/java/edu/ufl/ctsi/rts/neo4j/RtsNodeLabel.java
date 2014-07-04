@@ -1,4 +1,4 @@
-package edu.ufl.ctsi.neo4j;
+package edu.ufl.ctsi.rts.neo4j;
 
 public enum RtsNodeLabel {
 	INSTANCE("instance"),
@@ -6,7 +6,8 @@ public enum RtsNodeLabel {
 	RELATION("relation"),
 	TEMPORAL_REGION("temporal_region"),
 	DATA("data"),
-	TEMPLATE("template");
+	TEMPLATE("template"), 
+	CONCEPT("concept");
 	
 	String labelText;
 	
