@@ -454,34 +454,33 @@ public class App
             			
             			String label = n.getLabels().iterator().next().toString();
             			System.out.print("\t" + label);
-            			if (label.equals("instance") || label.equals("temporal_region") || label.equals("template")) {
-            				System.out.print("\t"+ n.getProperty("iui"));
+            			if (label.equals("instance") || label.equals("temporal_region") ) {
+            				System.out.print("\tiui = "+ n.getProperty("iui"));
             			} else if (label.equals("universal")) {
             				n.addLabel(DynamicLabel.label("universal"));  //what happens if we try to add a label that is already there?
-            				System.out.print("\t" + n.getProperty("uui"));
+            				System.out.print("\tuui = " + n.getProperty("uui"));
             			} else if (label.equals("relation")) {
-            				System.out.print("\t" + n.getProperty("rui"));
-            			}
-            			
-            			if (n.hasLabel(DynamicLabel.label("template"))) {
+            				System.out.print("\trui = " + n.getProperty("rui"));
+            			} else if (label.equals("template")) {
+            				System.out.print("\tiui = "+ n.getProperty("iui"));
             				String type = (String) n.getProperty("type");
             				System.out.print("\t" + type);
             				
             				if (type.equals("a") || type.equals("te")) {
             					String tap = (String) n.getProperty("tap");
-            					System.out.print("\t" + tap);
+            					System.out.print("\ttap =" + tap);
             				} else if (type.equals("ten")) {
             					String name = (String)n.getProperty("name");
-            					System.out.print("\t" + name);
+            					System.out.print("\tname = " + name);
             				} else if (type.equals("ptodr")) {
             				
             				}
-            			} else if (n.hasLabel(DynamicLabel.label("data"))) {
+            			} else if (label.equals("data")) {
         					String data = (String)n.getProperty("dr");
-        					System.out.print("\t" + data);
-        				} else if (n.hasLabel(DynamicLabel.label("concept"))) {
+        					System.out.print("\tdr = " + data);
+        				} else if (label.equals("concept")) {
         					String code = (String)n.getProperty("cui");
-        					System.out.print("\t" + code);
+        					System.out.print("\tcui = " + code);
         				}
             			
             			System.out.println();
