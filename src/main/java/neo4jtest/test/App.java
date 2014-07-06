@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,11 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
+import edu.uams.dbmi.rts.metadata.RtsChangeReason;
+import edu.uams.dbmi.rts.metadata.RtsChangeType;
+import edu.uams.dbmi.rts.metadata.RtsErrorCode;
 import edu.uams.dbmi.rts.template.ATemplate;
+import edu.uams.dbmi.rts.template.MetadataTemplate;
 import edu.uams.dbmi.rts.template.PtoCTemplate;
 import edu.uams.dbmi.rts.template.PtoDETemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
@@ -31,7 +36,6 @@ import edu.uams.dbmi.rts.template.TeTemplate;
 import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
-import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplatePersistenceManager;
 
 /**
@@ -269,7 +273,7 @@ public class App
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-16"));
+            ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
             
             /*
              * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
@@ -326,9 +330,48 @@ public class App
             //hello.createDb();
             hello.queryRts();
             
-            Charset c = Charset.forName("UTF-16");
+            /*
+             * Here's an interesting query:
+             * match (n:data)-[:dr]-(n2:template)-[:iuip]-(n3:instance)-[:p]-(n4:template)-[:p]-(n5:instance)-[:iuip]-(n6:template)-[:uui]-(n7:universal) where n2.type = 'ptodr' and n.dr = 'William Hogan' and n4.type = 'ptop' and n6.type = 'ptou' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' return n, n2, n3, n4,n5,n6,n7;
+             */
+            
+            Charset c = Charset.forName("UTF-8");
             System.out.println(c + "\t" + c.displayName() + "\t" + c.name() + "\tis registered: " + c.isRegistered() + "\tcan encode: " + c.canEncode());
-
+            
+            /*
+             * For all the templates we are inserting, we know all the parameters
+             *   except possibly iuid and change reason (C)
+             *   
+             *   iui of metadata template: assign a new one
+             *   iuit: iui of template this metadata template references
+             *   td: generate timestamp right before end of transaction
+             *   CT: I (inserting)
+             *   C: could be any value (change in relevance or reality or belief, or
+             *   		we recognized an error in an existing template and are
+             *   		inserting this one with the correct information.)
+             *   E: Null
+             *   S: empty (if the inserted template is replacing an existing template,
+             *      then the metadata template that invalidates the existing template
+             *      must have an S parameter that points to the template we're inserting
+             *      here). 
+             */
+            MetadataTemplate d1 = new MetadataTemplate();
+            d1.setTemplateIui(Iui.createRandomIui());
+            d1.setReferentIui(ptop.getTemplateIui());
+            d1.setAuthorIui(wh);
+            d1.setAuthoringTimestamp(new Iso8601DateTime());
+            d1.setChangeReason(RtsChangeReason.CR);
+            d1.setChangeType(RtsChangeType.I);
+            d1.setErrorCode(RtsErrorCode.Null);
+            Set<Iui> s = new HashSet<Iui>();
+            s.add(Iui.createRandomIui());
+            s.add(Iui.createRandomIui());
+            d1.setReplacementTemplateIuis(s);
+            
+            System.out.println(d1.toString());
+            System.out.println(ptop.toString());
+            
+            hello.shutDown();
 	    }
 
 	    void createDb()

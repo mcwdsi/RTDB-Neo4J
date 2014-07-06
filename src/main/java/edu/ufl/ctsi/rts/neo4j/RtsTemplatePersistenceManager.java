@@ -539,32 +539,27 @@ public class RtsTemplatePersistenceManager {
         {
             graphDb.schema()
                     .constraintFor( templateLabel )
-                    .assertPropertyIsUnique( "ui" )
+                    .assertPropertyIsUnique( "iui" )
                     .create();
             
             graphDb.schema()
             		.constraintFor( instanceLabel )
-            		.assertPropertyIsUnique( "ui" )
+            		.assertPropertyIsUnique( "iui" )
             		.create();
             
             graphDb.schema()
-    				.constraintFor( temporalRegionLabel )
-    				.assertPropertyIsUnique( "ui" )
-    				.create();
-            
-            graphDb.schema()
             		.constraintFor( typeLabel )
-            		.assertPropertyIsUnique( "ui" )
+            		.assertPropertyIsUnique( "uui" )
             		.create();
             
             graphDb.schema()
             		.constraintFor( relationLabel )
-            		.assertPropertyIsUnique( "ui" )
+            		.assertPropertyIsUnique( "rui" )
             		.create();
             
             graphDb.schema()
     				.constraintFor( dataLabel )
-    				.assertPropertyIsUnique( "data" )
+    				.assertPropertyIsUnique( "dr" )
     				.create();
                       	
             tx2.success();
