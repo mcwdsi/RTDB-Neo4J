@@ -6,6 +6,7 @@ import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.PtoLackUTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
@@ -26,7 +27,8 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptolacku");
+		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptolacku");
+		n.addLabel(RtsTemplateNodeLabel.ptolacku);
 	}
 	
 	@Override

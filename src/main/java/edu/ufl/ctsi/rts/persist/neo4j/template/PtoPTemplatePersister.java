@@ -9,6 +9,7 @@ import org.neo4j.graphdb.Relationship;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 
 public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 	
@@ -18,7 +19,8 @@ public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptop");
+		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptop");
+		n.addLabel(RtsTemplateNodeLabel.ptop);
 	}
 	
 	@Override

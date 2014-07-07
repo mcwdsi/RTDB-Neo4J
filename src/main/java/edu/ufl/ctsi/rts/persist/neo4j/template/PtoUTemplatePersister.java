@@ -6,6 +6,7 @@ import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class PtoUTemplatePersister extends AssertionalTemplatePersister {
@@ -20,7 +21,8 @@ public class PtoUTemplatePersister extends AssertionalTemplatePersister {
 
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptou");
+		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptou");
+		n.addLabel(RtsTemplateNodeLabel.ptou);
 	}
 	
 	@Override

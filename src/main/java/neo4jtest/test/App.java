@@ -14,6 +14,7 @@ import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
@@ -90,7 +91,7 @@ public class App
 	        hello.removeData();
 	        hello.shutDown();
 	        
-            
+	       
             RtsTemplatePersistenceManager rpm = new RtsTemplatePersistenceManager();
             
             Iui wh = Iui.createRandomIui();
@@ -501,7 +502,8 @@ public class App
             			
             			System.out.print("\t" + n.getId());
             			
-            			String label = n.getLabels().iterator().next().toString();
+            			Iterator<Label> labels = n.getLabels().iterator();
+            			String label =labels.next().toString();
             			System.out.print("\t" + label);
             			if (label.equals("instance") || label.equals("temporal_region") ) {
             				System.out.print("\tiui = "+ n.getProperty("iui"));
@@ -512,7 +514,7 @@ public class App
             				System.out.print("\trui = " + n.getProperty("rui"));
             			} else if (label.equals("template")) {
             				System.out.print("\tiui = "+ n.getProperty("iui"));
-            				String type = (String) n.getProperty("type");
+            				String type = labels.next().toString();
             				System.out.print("\t" + type);
             				
             				if (type.equals("a") || type.equals("te")) {

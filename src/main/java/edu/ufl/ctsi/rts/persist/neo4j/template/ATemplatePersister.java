@@ -5,6 +5,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 
 public class ATemplatePersister extends RepresentationalTemplatePersister {
 
@@ -29,6 +30,7 @@ public class ATemplatePersister extends RepresentationalTemplatePersister {
 
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "a");
+		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "a");
+		n.addLabel(RtsTemplateNodeLabel.a);
 	}
 }

@@ -7,6 +7,7 @@ import org.neo4j.graphdb.Node;
 import edu.uams.dbmi.rts.template.TeTemplate;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class TeTemplatePersister extends RepresentationalTemplatePersister {
@@ -42,7 +43,8 @@ public class TeTemplatePersister extends RepresentationalTemplatePersister {
 
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "te");		
+		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "te");	
+		n.addLabel(RtsTemplateNodeLabel.te);
 	}
 
 }

@@ -6,6 +6,7 @@ import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
+import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 
 public class TenTemplatePersister extends RepresentationalTemplatePersister {
 	
@@ -65,7 +66,8 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ten");
+		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ten");
+		n.addLabel(RtsTemplateNodeLabel.ten);
 	}
 
 }
