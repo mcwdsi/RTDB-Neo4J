@@ -342,6 +342,12 @@ public class App
              *   match (n:data)-[:dr]-(n2:template)-[:iuip]-(n3:instance)-[:p]-(n4:template)-[:p]-(n5:instance)-[:iuip]-(n6:template)-[:uui]-(n7:universal), n3-[:iuip]->(n8:template)-[:uui]->(n9:universal), n4-[:r]->(n10:relation) where n2.type = 'ptodr' and n.dr = 'William Hogan' and n4.type = 'ptop' and n6.type = 'ptou' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n8.type = 'ptou' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n,n2,n3,n4,n5,n6,n7,n8,n9,n10;
              */
             
+            /*
+             * after changing template types to labels, the query simplifies to:
+             * 
+             * match (n1:data)-[:dr]-(n2:ptode)-[:iuip]-(n3:instance)-[:p]-(n4:ptop)-[:p]-(n5:instance)-[:iuip]-(n6:ptou)-[:uui]-(n7:universal), n3-[:iuip]->(n8:ptou)-[:uui]->(n9:universal), n4-[:r]->(n10:relation) where n1.dr = 'William Hogan' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
+             */
+            
             Charset c = Charset.forName("UTF-8");
             System.out.println(c + "\t" + c.displayName() + "\t" + c.name() + "\tis registered: " + c.isRegistered() + "\tcan encode: " + c.canEncode());
             
