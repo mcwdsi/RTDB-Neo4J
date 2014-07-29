@@ -12,6 +12,7 @@ import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeType;
 import edu.uams.dbmi.rts.template.MetadataTemplate;
 import edu.uams.dbmi.rts.template.RtsTemplate;
+import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
@@ -30,16 +31,21 @@ public class MetadataTemplatePersister extends RtsTemplatePersister {
 	@Override
 	protected void completeTemplate(RtsTemplate t) {
 		d = (MetadataTemplate)t;
-		// TODO Auto-generated method stub
+
 		connectToTemplate();
 		
 		connectToActor();
+
+		//td
+		Iso8601DateTimeFormatter dtf = new Iso8601DateTimeFormatter();
+		String td = dtf.format(d.getAuthoringTimestamp());
+		n.setProperty("td", td);
 		
-		//change
-		n.setProperty("c", d.getChangeType().toString());
+		//change type
+		n.setProperty("ct", d.getChangeType().toString());
 		
 		//change reason
-		n.setProperty("ct", d.getChangeReason().toString());
+		n.setProperty("c", d.getChangeReason().toString());
 		
 		//error code
 		n.setProperty("e", d.getErrorCode().toString());
@@ -54,58 +60,79 @@ public class MetadataTemplatePersister extends RtsTemplatePersister {
 	 */
 	private void connectToTemplate() {
 		/*
-		 * The target node is the template node
+		 * The target node is the template node, which for metadata templates
+		 *   is the referent.
 		 */
 		Node target = tnc.persistEntity(d.getReferentIui().toString());
 		
+		/*
+		 * This is the td parameter.  This time either starts or ends 
+		 *   an interval during which the referent template is valid.
+		 */
 		long validMillis = d.getAuthoringTimestamp().getCalendar().getTimeInMillis();
 		
-		/*  
-		 * If we're inserting the template, then we just create the relationship
-		 *   and we're done.
-		 *   
-		 * Otherwise, we need to update the valid_to property on the most 
-		 *  recent about relationship.
-		 *  
-		 *  Hmmmm.  Right now, this violates the RTS paradigm of never changing 
-		 *    any data.  Dang.  However, not setting the valid_to property when
-		 *    it is indefinite complicates querying because of the null problem,
-		 *    and really we could look at Long.MAX_VALUE as not being real data.
+		/*
+		 * Get the change type
 		 */
-		if (!d.getChangeType().equals(RtsChangeType.I)) {
-			Iterator<Relationship> i = target.getRelationships(RtsRelationshipType.about).iterator();
-			while (i.hasNext()) {
-				Relationship ir = i.next();
-				if ((Long)ir.getProperty("valid_to") == Long.MAX_VALUE) {
-					ir.setProperty("valid_to", validMillis);
-					break;  //only one will have this problem.
-				}
-			}
-		}
+		RtsChangeType change = d.getChangeType();
 		
-		Relationship r = n.createRelationshipTo(target, RtsRelationshipType.about);
-		r.setProperty("valid_to", Long.MAX_VALUE);
-		r.setProperty("valid_from", validMillis);
-		
+		/*
+		 * Get all previous about (aka iuit) relationships.
+		 */
+		Iterator<Relationship> i = target.getRelationships(RtsRelationshipType.about).iterator();
 		
 		
 		/*
-		 * As an engineering solution for query purposes, checking all the metadata
-		 *   templates connected to a template to figure out if the template is
-		 *   valid seems like lots of overhead.  Therefore, we include a flag
-		 *   on the template node.
-		 *   
-		 *   But it isn't a general solution.  It's fine for querying current state
-		 *     of RTS, but querying RTS as it was at some arbitrary time t is not
-		 *     supported.
-		 
-		RtsChangeType ct = d.getChangeType();
-		if (ct.equals(RtsChangeType.X)) {
-			target.setProperty("valid", false);
+		 * If there are no previous about relationships, then the change type 
+		 *   must be I(nsert).
+		 */
+		if (!i.hasNext()) {
+			if (change.equals(RtsChangeType.I)) {
+				Relationship r = n.createRelationshipTo(target, RtsRelationshipType.about);
+				r.setProperty("valid_to", Long.MAX_VALUE);
+				r.setProperty("valid_from", validMillis);
+				r.setProperty("seq", 1);
+			} else {
+				throw new IllegalArgumentException("bad metadata template! no previous metadata, so change type should be insert but instead is " + change.toString());
+			}
 		} else {
-			target.setProperty("valid", true);
+			/*
+			 * compute the next sequence number to add for the new about (iuit) 
+			 *   relationship and what was the last action
+			 */
+			int seqMax = -1;
+			Relationship lastAbout = null;
+			while (i.hasNext()) {
+				Relationship ir = i.next();
+				int irSeq = (int) ir.getProperty("seq");
+				if (irSeq > seqMax) {
+					seqMax = irSeq;
+					lastAbout = ir;
+				}
+			}
+			Node irStart = lastAbout.getStartNode();
+			String lastChange = (String) irStart.getProperty("ct");
+			
+			/*
+			 * If the current action is invalidate and last action was insert or 
+			 *   revalidate, then invalidate, else if the current action is 
+			 *   revalidate and last action was invalidate, then add relationship
+			 *   and update parameters accordingly
+			 */
+			if (change.equals(RtsChangeType.X) && !lastChange.equals(RtsChangeType.X.toString())) {
+				lastAbout.setProperty("valid_to", validMillis);
+				Relationship r = n.createRelationshipTo(target, RtsRelationshipType.about);
+				r.setProperty("seq", ++seqMax);
+			} else if (change.equals(RtsChangeType.R) && lastChange.equals(RtsChangeType.X.toString())) {
+				Relationship r = n.createRelationshipTo(target, RtsRelationshipType.about);
+				r.setProperty("valid_to", Long.MAX_VALUE);
+				r.setProperty("valid_from", validMillis);
+				r.setProperty("seq", ++seqMax);
+			} else {
+				throw new IllegalArgumentException("bad metadata template!  last change was " + lastChange + " and current change is " + change.toString());
+			}
+			
 		}
-		*/
 	}
 
 	/*
