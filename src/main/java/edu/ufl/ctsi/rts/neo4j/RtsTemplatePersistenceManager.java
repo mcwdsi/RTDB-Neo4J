@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import neo4jtest.test.App;
 
 import org.neo4j.cypher.javacompat.ExecutionEngine;
+import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -18,6 +20,8 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.iui.Iui;
+import edu.uams.dbmi.rts.metadata.RtsChangeReason;
+import edu.uams.dbmi.rts.metadata.RtsChangeType;
 import edu.uams.dbmi.rts.template.MetadataTemplate;
 import edu.uams.dbmi.rts.template.PtoCTemplate;
 import edu.uams.dbmi.rts.template.PtoDETemplate;
@@ -28,9 +32,11 @@ import edu.uams.dbmi.rts.template.RtsTemplate;
 import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.template.TeTemplate;
 import edu.uams.dbmi.rts.template.TenTemplate;
+import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.ATemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.MetadataTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoCTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDETemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
@@ -40,6 +46,9 @@ import edu.ufl.ctsi.rts.persist.neo4j.template.TeTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.TenTemplatePersister;
 
 public class RtsTemplatePersistenceManager {
+
+	static String CNODE_QUERY = "MERGE (n:change_reason { c: {value} }) return n";
+	static String CTNODE_QUERY = "MERGE (n:change_type { ct: {value} }) return n";
 	
 	public GraphDatabaseService graphDb;
 	ExecutionEngine ee;
@@ -56,6 +65,7 @@ public class RtsTemplatePersistenceManager {
 	Label relationLabel;
 	Label dataLabel;
 	
+	Label metadataLabel;
 
 	HashSet<RtsTemplate> templates;
 	HashSet<MetadataTemplate> metadata;
@@ -76,9 +86,11 @@ public class RtsTemplatePersistenceManager {
 	PtoLackUTemplatePersister plup;
 	PtoDETemplatePersister pdrp;
 	PtoCTemplatePersister pcp;
+	MetadataTemplatePersister mp;
 	
 	public RtsTemplatePersistenceManager() {
 		templates = new HashSet<RtsTemplate>();
+		metadata = new HashSet<MetadataTemplate>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
 		iuiToItsAssignmentTemplate = new HashMap<String, RtsTemplate>();
@@ -88,6 +100,8 @@ public class RtsTemplatePersistenceManager {
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( App.DB_PATH );
 		setupSchema();
 		setupExecutionEngine();
+		setupMetadata();
+
 		atp = new ATemplatePersister(graphDb, ee);
 		tep = new TeTemplatePersister(graphDb, ee);
 		tep = new TeTemplatePersister(graphDb, ee);
@@ -97,6 +111,7 @@ public class RtsTemplatePersistenceManager {
 		plup = new PtoLackUTemplatePersister(graphDb, ee);
 		pdrp = new PtoDETemplatePersister(graphDb, ee);
 		pcp = new PtoCTemplatePersister(graphDb, ee);
+		mp = new MetadataTemplatePersister(graphDb, ee);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
@@ -111,7 +126,11 @@ public class RtsTemplatePersistenceManager {
 				iuisInPtoPTemplates.add(i.toString());
 			}
 		}
-		templates.add(t);
+		if (t instanceof MetadataTemplate) {
+			metadata.add((MetadataTemplate)t);
+		} else {
+			templates.add(t);
+		}
 	} 
 	
 	public void addTemplates(Collection<RtsTemplate> t) {
@@ -121,42 +140,6 @@ public class RtsTemplatePersistenceManager {
 		}
 	}
 	
-	/*
-	 * 
-	 * 
-	 * Initially I architected it as requiring all entity nodes (instance, temporal_region,
-	 *   concretization, relation, universal, etc.) to exist before creating template nodes.
-	 *   It quickly became obvious that this solution is too restrictive, and that just 
-	 *   creating/retrieving the necessary entity nodes on the fly is more flexible.  The 
-	 *   main thing is that it unnecessarily puts sequential ordering constraints on 
-	 *   something we may want to do in other/multiple threads, in parallel, etc.
-	 *   
-	 * We do, however, want to ensure that every instance node that we create here is 
-	 *   associated with an ATemplate and that every temporal region node we create 
-	 *   here is associated with a TeTemplate.
-	 *   
-	 */
-	public void commitTemplatesOld() {
-		try (Transaction tx = graphDb.beginTx() ) {
-			
-			for (RtsTemplate t : templates) {
-				//if a template with the template IUI does not exist already, commit it.
-				if (!isTemplateInDb(t)) {
-					commitTemplate(t);
-				}
-			}
-			
-			tx.success();
-			
-			/*
-			 * We've sent them all to db, so we can clear.  In the future, we will
-			 *  likely want to send them to some cache first.  But this class isn't the 
-			 *  cache, it is merely the thing that submits a chunk of related 
-			 *  templates as one transaction.
-			 */
-			templates.clear();
-		}
-	}
 	
 	public void commitTemplates() {
 		try (Transaction tx = graphDb.beginTx() ) {
@@ -167,6 +150,10 @@ public class RtsTemplatePersistenceManager {
 			 *  exists in the database already.  
 			 */
 			checkIuisInPtoP();
+			
+			Iso8601DateTime dt = new Iso8601DateTime();
+			//Iso8601DateTimeFormatter dtf = new Iso8601DateTimeFormatter();
+			//String iuid = dtf.format(dt);
 			
 			for (RtsTemplate t : templates) {
 				if (t instanceof ATemplate) {
@@ -185,7 +172,12 @@ public class RtsTemplatePersistenceManager {
 					ppp.persistTemplate(t);
 				} else if (t instanceof PtoCTemplate) {
 					pcp.persistTemplate(t);
-				}
+				} 
+			}
+			
+			for (MetadataTemplate d : metadata) {
+				d.setAuthoringTimestamp(dt);
+				mp.persistTemplate(d);
 			}
 			
 			tx.success();
@@ -232,70 +224,7 @@ public class RtsTemplatePersistenceManager {
 		
 	}
 
-	void commitTemplate(RtsTemplate t) {
-		/*
-		 * First, create all entities (instances, universals, relations, temporal
-		 *   regions, data, etc.) that this template references.
-		 *   
-		 * We'll be caching these along the way in a HashMap, so we'll check
-		 *   locally first, and if we can't find it in memory, then we'll 
-		 *   "get or create" using MERGE in the graph database and add to 
-		 *   the local, in-memory cache for possible future use.
-		 */
-		Node templateNode = createTemplateNode(t);
-		//connectToReferentNode(templateNode, t);
-		RtsNodeLabel referentNodeLabel = (t instanceof TeTemplate) ? 
-				RtsNodeLabel.TEMPORAL_REGION : RtsNodeLabel.INSTANCE;
-		connectNodeToNode(templateNode, RtsRelationshipType.iuip, 
-				referentNodeLabel, t.getReferentIui().toString());
-		//connectToAuthorNode(templateNode, t);
-		connectNodeToNode(templateNode, RtsRelationshipType.iuia, 
-				RtsNodeLabel.INSTANCE, t.getAuthorIui().toString());
-		
-		if (t instanceof ATemplate) {
-			completeATemplate(templateNode, (ATemplate)t);
-		} else if (t instanceof TeTemplate) {
-			completeTeTemplate(templateNode, (TeTemplate)t);
-		} else if (t instanceof TenTemplate) {
-			completeTenTemplate(templateNode, (TenTemplate)t);
-		} else if (t instanceof MetadataTemplate) {
-			/*
-			 * This is just a reminder. Metadata templates might not go here,
-			 *   mainly because we need to connect them to the templates
-			 *   they are about, so we need to finish creating templates in 
-			 *   general.  Also, there is the issue of time of insertion 
-			 *   of the templates.  Ideally setting that time would be the 
-			 *   last thing we did before ending the transaction.
-			 */
-		} else {
-			//else is PtoP, PtoU, PtoCo, PtoLackU, PtoDR
-			/*
-			 * All of these have ta and tr parameters. All but PtoCo have an 'r' 
-			 * 	or 'relation' parameter.  We could hard-code all PtoCo r values
-			 *  as 'annototed-by'.  But that relation not in IAO, and at this point, 
-			 *  I don't feel like updating the RTDB code, although I certainly think longer
-			 *  term, being explicit about what is the relation between the particular
-			 *  and the concept code is important.  But that could be done by documentation.
-			 *  
-			 *  It would only be important to code the annotation relation in PtoCo if we
-			 *   want to encode different subrelations of 'annotated-by'.
-			 */
-			if (t instanceof PtoUTemplate) {
-				PtoUTemplate p = (PtoUTemplate)t;
-				completePtoUTemplate(templateNode, p);
-			} else if (t instanceof PtoPTemplate) {
-				PtoPTemplate p = (PtoPTemplate)t;
-				completePtoPTemplate(templateNode, p);
-			} else if (t instanceof PtoLackUTemplate) {
-				PtoLackUTemplate p = (PtoLackUTemplate)t;
-				completePtoLackUTemplate(templateNode, p);
-			} else if (t instanceof PtoDETemplate) {
-				PtoDETemplate p = (PtoDETemplate)t;
-				completePtoDETemplate(templateNode, p);
-			}
-		}
-	 
-	}
+	
 
 	static String createTemplateQuery = "CREATE (n:template { iui : {value}})";
 	
@@ -353,27 +282,7 @@ public class RtsTemplatePersistenceManager {
 		n.setProperty("tap", dttmFormatter.format(t.getAuthoringTimestamp()));
 	}
 	
-	private void completeTenTemplate(Node n, TenTemplate t) {
-		// TODO Auto-generated method stub
-		n.setProperty("type", "TEN");
-		
-		//Connect it to the temporal region that it names
-		//connectToTemporalEntityNode(n, t.getTemporalEntityIui());
-		connectNodeToNode(n, RtsRelationshipType.iuite, RtsNodeLabel.TEMPORAL_REGION,
-				t.getTemporalEntityIui().toString());
-		
-		//Add the name itself 
-		n.setProperty("name", t.getName());
-		
-		//Connect it to the naming system
-		//connectToNamingSystemNode(n, t.getNamingSystemIui());
-		connectNodeToNode(n, RtsRelationshipType.iuins, RtsNodeLabel.INSTANCE,
-				t.getNamingSystemIui().toString());
-		
-		//Connect it to the temporal region at which the name was asserted to
-		// designate the temporal entity
-		t.getAuthoringTimeIui();
-	}
+
 	
 	/*
 	private void connectToTemporalEntityNode(Node templateNode, Iui teIui) {
@@ -429,8 +338,7 @@ public class RtsTemplatePersistenceManager {
 	    
 	    //TODO change this to also throw a new type of exception, and transaction 
 	    //	should roll back
-	    if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ||
-	    		targetNodeLabel.equals(RtsNodeLabel.TEMPORAL_REGION) ) {
+	    if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ) {
 	    	if ( !iuiToItsAssignmentTemplate.containsKey(targetNodeUi) ) {
 		    	System.err.println("ERROR: creating new entity with IUI " + targetNodeUi +
 		    			" but this IUI has no corresponding assignment template!");
@@ -438,26 +346,6 @@ public class RtsTemplatePersistenceManager {
 	    }
 		
 		return n;
-	}
-
-	private void completePtoUTemplate(Node n, PtoUTemplate p) {
-		// TODO Auto-generated method stub
-		n.setProperty("type", "PtoU");
-	}
-
-	private void completePtoPTemplate(Node n, PtoPTemplate p) {
-		// TODO Auto-generated method stub
-		n.setProperty("type", "PtoP");
-	}
-
-	private void completePtoLackUTemplate(Node n, PtoLackUTemplate p) {
-		// TODO Auto-generated method stub
-		n.setProperty("type", "PtoLackU");
-	}
-
-	private void completePtoDETemplate(Node n, PtoDETemplate p) {
-		// TODO Auto-generated method stub
-		n.setProperty("type", "PtoDR");
 	}
 
 	//static String templateByIuiQuery = "START n=node:nodes(iui = {value}) RETURN n";
@@ -534,7 +422,9 @@ public class RtsTemplatePersistenceManager {
     	relationLabel = DynamicLabel.label("relation");
     	temporalRegionLabel = DynamicLabel.label("temporal_region");
     	dataLabel = DynamicLabel.label("data");
+    	metadataLabel = DynamicLabel.label("metadata");
     	
+  	
         try ( Transaction tx2 = graphDb.beginTx() )
         {
             graphDb.schema()
@@ -561,9 +451,69 @@ public class RtsTemplatePersistenceManager {
     				.constraintFor( dataLabel )
     				.assertPropertyIsUnique( "dr" )
     				.create();
+            
+            graphDb.schema()
+            		.constraintFor( metadataLabel )
+            		.assertPropertyIsUnique("c")
+            		.create();
+            
+            graphDb.schema()
+    				.constraintFor( metadataLabel )
+    				.assertPropertyIsUnique("ct")
+    				.create();         
                       	
             tx2.success();
         }
+    }
+    
+    void setupMetadata() {
+    	/*
+    	 * Experimented with representing change types and reasons as nodes.  Seems like
+    	 * too much overhead.
+    	 * 
+    	 */
+    	/*
+    	try ( Transaction tx3 = graphDb.beginTx() ) {
+    		RtsChangeReason[] reasons = RtsChangeReason.values();
+    		for (RtsChangeReason r : reasons) {
+    			String value = r.toString();
+    			/*Set up parameters of query.  
+    			  *//*
+    			HashMap<String, Object> parameters = new HashMap<String, Object>();
+    			parameters.put("value", value);
+    			
+    			//run the query.
+    			ExecutionResult er = ee.execute( CNODE_QUERY, parameters );
+    			System.out.println(er.dumpToString());
+    			List<String> cs = er.columns();
+    			for (String c : cs) {
+    				System.out.println(c);
+    			}
+
+    		    //Node n = (Node) er.columnAs("n").next();
+    		}
+    		
+    		RtsChangeType[] types = RtsChangeType.values();
+    		for (RtsChangeType t : types) {
+    			String value = t.toString();
+    			/*Set up parameters of query.  
+    			  *//*
+    			HashMap<String, Object> parameters = new HashMap<String, Object>();
+    			parameters.put("value", value);
+    			
+    			//run the query.
+    			ExecutionResult er = ee.execute( CTNODE_QUERY, parameters );
+    			System.out.println(er.dumpToString());
+    			List<String> cs = er.columns();
+    			for (String c : cs) {
+    				System.out.println(c);
+    			}
+
+    		    //Node n = (Node) er.columnAs("n").next();
+    		}
+    		
+    		tx3.success();
+    	}*/
     }
     
     void setupExecutionEngine() {

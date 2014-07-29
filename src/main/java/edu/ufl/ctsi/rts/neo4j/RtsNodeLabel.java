@@ -4,7 +4,6 @@ public enum RtsNodeLabel {
 	INSTANCE("instance"),
 	TYPE("universal"),
 	RELATION("relation"),
-	TEMPORAL_REGION("temporal_region"),
 	DATA("data"),
 	TEMPLATE("template"), 
 	CONCEPT("concept");

@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,6 +34,7 @@ import edu.uams.dbmi.rts.template.PtoCTemplate;
 import edu.uams.dbmi.rts.template.PtoDETemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
+import edu.uams.dbmi.rts.template.RtsTemplate;
 import edu.uams.dbmi.rts.template.TeTemplate;
 import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.uams.dbmi.rts.uui.Uui;
@@ -98,6 +100,8 @@ public class App
             Iui wh_chair = Iui.createRandomIui();
             Iui wh_name = Iui.createRandomIui();
             
+            Set<RtsTemplate> tset = new HashSet<RtsTemplate>();
+            
             /*
              * W. Hogan
              */
@@ -152,7 +156,7 @@ public class App
             ten.setAuthoringTimeIui(t.getReferentIui());   
             
             /*
-             * Time during which W. Hogan has been owner of his char
+             * Time during which W. Hogan has been owner of his chair
              */
             TeTemplate t2 = new TeTemplate();
             t2.setAuthoringTimestamp(new Iso8601DateTime());
@@ -303,8 +307,25 @@ public class App
             ptoc.setAuthoringTimeIui(t.getReferentIui());
             ptoc.setAuthorIui(wh);
             ptoc.setConceptCui(new Cui("66839005"));
-            ptoc.setTemporalEntityIui(t.getReferentIui());
-            ptoc.setConceptSystemIui(snctCsIui);            
+            ptoc.setTemporalEntityIui(t.getReferentIui());  //the temporal region when a concept annotation "holds" is fairly meaningless
+            ptoc.setConceptSystemIui(snctCsIui);
+            
+            tset.add(a1);
+            tset.add(a2);
+            tset.add(a3);
+            tset.add(t);
+            tset.add(t2);
+            tset.add(t3);
+            tset.add(t4);
+            tset.add(ptop);
+            tset.add(ptop2);
+            tset.add(ptop3);
+            tset.add(ptou);
+            tset.add(ptou3);
+            tset.add(ten);
+            tset.add(ten2);
+            tset.add(ptodr);
+            tset.add(ptoc);
             
             rpm.addTemplate(a1);
             rpm.addTemplate(a2);
@@ -322,6 +343,21 @@ public class App
             rpm.addTemplate(ten2);
             rpm.addTemplate(ptodr);
             rpm.addTemplate(ptoc);
+            
+            Iterator<RtsTemplate> it = tset.iterator();
+            while (it.hasNext()) {
+            	RtsTemplate tnext = it.next();
+            	MetadataTemplate d = new MetadataTemplate();
+                d.setTemplateIui(Iui.createRandomIui());
+                d.setReferentIui(tnext.getTemplateIui());
+                d.setAuthorIui(wh);
+                //d.setAuthoringTimestamp(new Iso8601DateTime());
+                d.setChangeReason(RtsChangeReason.CR);
+                d.setChangeType(RtsChangeType.I);
+                d.setErrorCode(RtsErrorCode.Null);
+                rpm.addTemplate(d);
+            }
+            
             rpm.commitTemplates();
             
             hello.graphDb = rpm.graphDb;
@@ -383,6 +419,10 @@ public class App
             
             System.out.println(d1.toString());
             System.out.println(ptop.toString());
+            
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(Long.MAX_VALUE);
+            System.out.println(cal);
             
             hello.shutDown();
 	    }
@@ -546,10 +586,11 @@ public class App
             			Iterator<Relationship> iRel = n.getRelationships().iterator();
             			while (iRel.hasNext()) {
             				Relationship r = iRel.next();
+            				String direction = (n.getId() == r.getStartNode().getId()) ? "outgoing" : "incoming";
             				Node en = r.getEndNode();
             				Node sn = r.getStartNode();
             				RelationshipType rt = r.getType();
-            				System.out.println("\t\t" + r.getId() + "\t" + sn.getId() + "\t" + rt.name() + "\t" + en.getId());// + "\t" + en.getProperty("type"));
+            				System.out.println("\t\t" + r.getId() + "\t" + sn.getId() + "\t" + rt.name() + "\t" + en.getId() + "\t" + direction);// + "\t" + en.getProperty("type"));
             			}//*/
             			
             		}

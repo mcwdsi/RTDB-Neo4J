@@ -34,7 +34,7 @@ public enum RtsRelationshipType implements RelationshipType {
 	p,	
 	
 	/**
-	 * This relationship type is for PtoDR templates
+	 * This relationship type is for PtoDE templates
 	 */
 	dr,
 	
@@ -54,7 +54,8 @@ public enum RtsRelationshipType implements RelationshipType {
 	 * These relationship types are for D templates (metadata).
 	 */
 	iuid,		//HAS_AGENT
-	about;
+	about,
+	s;
 	
 	/**
 	 * Note that the tap and td parameters (A and D templates, respectively), are
