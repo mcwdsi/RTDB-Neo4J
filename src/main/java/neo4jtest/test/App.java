@@ -235,6 +235,21 @@ public class App
             ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
             
             /*
+             * W. Hogan instance of canis lupis familiaris (and hopefully a lucky one :-)
+             * 
+             * seriously, though, this is for testing purposes, I'm going to invalidate
+             *   this template after the original commit
+             */
+            PtoUTemplate ptouBad = new PtoUTemplate();
+            ptouBad.setTemplateIui(Iui.createRandomIui());
+            ptouBad.setReferentIui(wh);
+            ptouBad.setRelationshipURI(instance_of);
+            ptouBad.setAuthoringTimeIui(t.getReferentIui());
+            ptouBad.setAuthorIui(wh);
+            ptouBad.setTemporalEntityIui(t3.getReferentIui());
+            ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
+            
+            /*
              * W. Hogan's name instance of personal name
              */
             PtoUTemplate ptou3 = new PtoUTemplate();
@@ -321,6 +336,7 @@ public class App
             tset.add(ptop2);
             tset.add(ptop3);
             tset.add(ptou);
+            tset.add(ptouBad);
             tset.add(ptou3);
             tset.add(ten);
             tset.add(ten2);
@@ -338,6 +354,7 @@ public class App
             rpm.addTemplate(ptop2);
             rpm.addTemplate(ptop3);
             rpm.addTemplate(ptou);
+            rpm.addTemplate(ptouBad);
             rpm.addTemplate(ptou3);
             rpm.addTemplate(ten);
             rpm.addTemplate(ten2);
@@ -382,6 +399,22 @@ public class App
              * after changing template types to labels, the query simplifies to:
              * 
              * match (n1:data)-[:dr]-(n2:ptode)-[:iuip]-(n3:instance)-[:p]-(n4:ptop)-[:p]-(n5:instance)-[:iuip]-(n6:ptou)-[:uui]-(n7:universal), n3-[:iuip]->(n8:ptou)-[:uui]->(n9:universal), n4-[:r]->(n10:relation) where n1.dr = 'William Hogan' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
+             * 
+             * match (n1:data)-[:dr]-(n2:ptode)-[:iuip]-(n3:instance)-[:p]-(n4:ptop)-[:p]-(n5:instance)-[:iuip]-(n6:ptou)-[:uui]-(n7:universal), 
+             * 		  n3-[:iuip]->(n8:ptou)-[:uui]->(n9:universal), 
+             *        n4-[:r]->(n10:relation)
+             *  where n1.dr = 'William Hogan' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
+             *  
+             *  This query is equivalent to above:
+               
+               match (n1:data {dr:'William Hogan'})-[:dr]-(n2:ptode)-[:iuip]-(n3:instance)-[:p]-(n4:ptop)-[:p]-(n5:instance)-[:iuip]-(n6:ptou)-[:uui]-(n7:universal {uui:'http://purl.obolibrary.org/obo/NCBITaxon_9606'}), 
+                      n3-[:iuip]->(n8:ptou)-[:uui]->(n9:universal {uui:'http://purl.obolibrary.org/obo/IAO_0020015'}), 
+                      n4-[:r]->(n10:relation {rui:'http://purl.obolibrary.org/obo/IAO_0000219'}),
+                      n2-[:about {valid_to:9223372036854775807}]-(),
+                      n4-[:about {valid_to:9223372036854775807}]-(),
+                      n6-[:about {valid_to:9223372036854775807}]-(),
+                      n8-[:about {valid_to:9223372036854775807}]-()
+              	return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
              */
             
             Charset c = Charset.forName("UTF-8");
@@ -417,12 +450,26 @@ public class App
             s.add(Iui.createRandomIui());
             d1.setReplacementTemplateIuis(s);
             
+            MetadataTemplate dCorrection = new MetadataTemplate();
+            dCorrection.setTemplateIui(Iui.createRandomIui());
+            dCorrection.setReferentIui(ptouBad.getTemplateIui());
+            dCorrection.setAuthoringTimestamp(new Iso8601DateTime());
+            dCorrection.setAuthorIui(wh);
+            dCorrection.setChangeReason(RtsChangeReason.XR);
+            dCorrection.setErrorCode(RtsErrorCode.U1);
+            dCorrection.setChangeType(RtsChangeType.X);
+            //we could also point it at ptou if we wanted
+            rpm.addTemplate(dCorrection);
+            rpm.commitTemplates();
+            
             System.out.println(d1.toString());
             System.out.println(ptop.toString());
+            System.out.println(dCorrection.toString());
             
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(Long.MAX_VALUE);
             System.out.println(cal);
+            System.out.println("Long.MAX_VALUE=" + Long.MAX_VALUE);
             
             hello.shutDown();
 	    }
