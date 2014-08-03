@@ -84,6 +84,10 @@ public class App
 	        KNOWS
 	    }
 	    // END SNIPPET: createReltype
+	    
+	    static URI instance_of;
+	    static Iui gregorianIui = Iui.createFromString("D4AF5C9A-47BA-4BF4-9BAE-F13A8ED6455E"),
+	    		maxTimeIntervalIui = Iui.createFromString("26F1052B-311D-43B1-9ABC-B4E2EDD1B283");
 
 	    public static void main( final String[] args )
 	    {
@@ -92,43 +96,20 @@ public class App
 	        hello.addData();
 	        hello.removeData();
 	        hello.shutDown();
-	        
+
+            instance_of = null;
+			try {
+				instance_of = new URI("http://purl.obolibrary.org/obo/ro.owl#instance_of");
+			} catch (URISyntaxException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            String ta_name = "2014-07-03T15:49:37.543";
+            String tb_name = "1969-04-20";
+            String wHoganNameTxt = "William Hogan";
+            Iui wh = Iui.createRandomIui();
 	       
             RtsTemplatePersistenceManager rpm = new RtsTemplatePersistenceManager();
-            
-            Iui wh = Iui.createRandomIui();
-            Iui wh_chair = Iui.createRandomIui();
-            Iui wh_name = Iui.createRandomIui();
-            
-            Set<RtsTemplate> tset = new HashSet<RtsTemplate>();
-            
-            /*
-             * W. Hogan
-             */
-            ATemplate a1 = new ATemplate();
-            a1.setAuthorIui(wh);
-            a1.setReferentIui(wh);
-            a1.setAuthoringTimestamp(new Iso8601DateTime());
-            a1.setTemplateIui(Iui.createRandomIui());
-            
-            /*
-             * W. Hogan's chair
-             */
-            ATemplate a2 = new ATemplate();
-            a2.setAuthorIui(wh);
-            a2.setReferentIui(wh_chair);
-            a2.setAuthoringTimestamp(new Iso8601DateTime());
-            a2.setTemplateIui(Iui.createRandomIui());
-            
-            /*
-             * W. Hogan's full name
-             */
-            ATemplate a3 = new ATemplate();
-            a3.setAuthorIui(wh);
-            a3.setReferentIui(wh_name);
-            a3.setAuthoringTimestamp(new Iso8601DateTime());
-            a3.setTemplateIui(Iui.createRandomIui());
-            
             /*
              * Time of assertion of this set of templates
              */
@@ -139,100 +120,69 @@ public class App
             t.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInstant"));
             t.setTemplateIui(Iui.createRandomIui());
             
-            
-            Iui gregorianIui = Iui.createFromString("D4AF5C9A-47BA-4BF4-9BAE-F13A8ED6455E");
-            Iui maxTimeIntervalIui = Iui.createFromString("26F1052B-311D-43B1-9ABC-B4E2EDD1B283");
-            
             /*
              * Name of time of assertion of this set of templates
              */
             TenTemplate ten = new TenTemplate();
             ten.setTemplateIui(Iui.createRandomIui());
             ten.setAuthorIui(wh);
-            ten.setName("2014-07-03T15:49:37.543");
+            ten.setName(ta_name);
             ten.setNamingSystemIui(gregorianIui);
             ten.setReferentIui(Iui.createRandomIui());
             ten.setTemporalEntityIui(t.getReferentIui());
             ten.setAuthoringTimeIui(t.getReferentIui());   
             
-            /*
-             * Time during which W. Hogan has been owner of his chair
-             */
-            TeTemplate t2 = new TeTemplate();
-            t2.setAuthoringTimestamp(new Iso8601DateTime());
-            t2.setReferentIui(Iui.createRandomIui());
-            t2.setAuthorIui(wh);
-            t2.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
-            t2.setTemplateIui(Iui.createRandomIui());
+            rpm.addTemplate(t);
+            rpm.addTemplate(ten);
             
-            /*
-             * Time during which W. Hogan has been instance of human being
-             */
-            TeTemplate t3 = new TeTemplate();
-            t3.setAuthoringTimestamp(new Iso8601DateTime());
-            t3.setReferentIui(Iui.createRandomIui());
-            t3.setAuthorIui(wh);
-            t3.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
-            t3.setTemplateIui(Iui.createRandomIui());
+            //Metadata templates for t and ten
+        	MetadataTemplate d = new MetadataTemplate();
+            d.setTemplateIui(Iui.createRandomIui());
+            d.setReferentIui(t.getTemplateIui());
+            d.setAuthorIui(wh);
+            //d.setAuthoringTimestamp(new Iso8601DateTime());
+            d.setChangeReason(RtsChangeReason.CR);
+            d.setChangeType(RtsChangeType.I);
+            d.setErrorCode(RtsErrorCode.Null);
+            rpm.addTemplate(d);
             
-            /*
-             * Day of W. Hogan's birth
-             */
-            TeTemplate t4 = new TeTemplate();
-            t4.setAuthoringTimestamp(new Iso8601DateTime());
-            t4.setReferentIui(Iui.createRandomIui());
-            t4.setTemplateIui(Iui.createRandomIui());
-            t4.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
-            t4.setAuthorIui(wh);
+        	MetadataTemplate d2 = new MetadataTemplate();
+        	d2.setTemplateIui(Iui.createRandomIui());
+        	d2.setReferentIui(ten.getTemplateIui());
+        	d2.setAuthorIui(wh);
+            //d.setAuthoringTimestamp(new Iso8601DateTime());
+        	d2.setChangeReason(RtsChangeReason.CR);
+        	d2.setChangeType(RtsChangeType.I);
+        	d2.setErrorCode(RtsErrorCode.Null);
+            rpm.addTemplate(d2);
             
-            /*
-             * Name of day of W. Hogan's birth
-             */
-            TenTemplate ten2 = new TenTemplate();
-            ten2.setTemplateIui(Iui.createRandomIui());
-            ten2.setTemporalEntityIui(t4.getReferentIui());
-            ten2.setAuthoringTimeIui(t.getReferentIui());
-            ten2.setAuthorIui(wh);
-            ten2.setName("1969-04-20");
-            ten2.setNamingSystemIui(gregorianIui);
-            ten2.setReferentIui(Iui.createRandomIui());
             
-            /*
-             * W. Hogan's chair owned by W. Hogan
-             */
-            PtoPTemplate ptop = new PtoPTemplate();
-            ptop.setReferentIui(wh_chair);
-            ptop.setAuthorIui(wh);
-            try {
-				ptop.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/OMIABIS_0000048"));
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            ptop.setAuthoringTimeIui(t.getReferentIui());
-            ptop.addParticular(wh);
-            ptop.setTemplateIui(Iui.createRandomIui());
-            ptop.setTemporalEntityIui(t2.getReferentIui());
+            TeTemplate t3 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+					tb_name, wHoganNameTxt,	wh, wh, rpm, t, ten, null);
             
-            URI instance_of=null;
-			try {
-				instance_of = new URI("http://purl.obolibrary.org/obo/ro.owl#instance_of");
-			} catch (URISyntaxException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-            
+            Iui snctCsIui = Iui.createFromString("59487A5D-C808-48A4-9DAE-894DCE866A96");        
             /*
-             * W. Hogan instance of human being
+             * PtoC that annotates W. Hogan with SNOMED-CT's "Father (person)" concept
              */
-            PtoUTemplate ptou = new PtoUTemplate();
-            ptou.setTemplateIui(Iui.createRandomIui());
-            ptou.setReferentIui(wh);
-            ptou.setRelationshipURI(instance_of);
-            ptou.setAuthoringTimeIui(t.getReferentIui());
-            ptou.setAuthorIui(wh);
-            ptou.setTemporalEntityIui(t3.getReferentIui());
-            ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
+            PtoCTemplate ptoc = new PtoCTemplate();
+            ptoc.setTemplateIui(Iui.createRandomIui());
+            ptoc.setReferentIui(wh);
+            ptoc.setAuthoringTimeIui(t.getReferentIui());
+            ptoc.setAuthorIui(wh);
+            ptoc.setConceptCui(new Cui("66839005"));
+            ptoc.setTemporalEntityIui(t.getReferentIui());  //the temporal region when a concept annotation "holds" is fairly meaningless
+            ptoc.setConceptSystemIui(snctCsIui);  
+            rpm.addTemplate(ptoc);
+            
+        	MetadataTemplate d3 = new MetadataTemplate();
+        	d3.setTemplateIui(Iui.createRandomIui());
+        	d3.setReferentIui(ptoc.getTemplateIui());
+        	d3.setAuthorIui(wh);
+            //d.setAuthoringTimestamp(new Iso8601DateTime());
+        	d3.setChangeReason(RtsChangeReason.CR);
+        	d3.setChangeType(RtsChangeType.I);
+        	d3.setErrorCode(RtsErrorCode.Null);
+            rpm.addTemplate(d3);
             
             /*
              * W. Hogan instance of canis lupis familiaris (and hopefully a lucky one :-)
@@ -248,132 +198,25 @@ public class App
             ptouBad.setAuthorIui(wh);
             ptouBad.setTemporalEntityIui(t3.getReferentIui());
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
-            
-            /*
-             * W. Hogan's name instance of personal name
-             */
-            PtoUTemplate ptou3 = new PtoUTemplate();
-            ptou3.setTemplateIui(Iui.createRandomIui());
-            ptou3.setReferentIui(wh_name);
-            ptou3.setRelationshipURI(instance_of);
-            ptou3.setAuthoringTimeIui(t.getReferentIui());
-            ptou3.setAuthorIui(wh);
-            ptou3.setTemporalEntityIui(t3.getReferentIui());
-            ptou3.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/IAO_0020015"));
-            
-            /*
-             * W. Hogan's name designates W. Hogan
-             */
-            PtoPTemplate ptop2 = new PtoPTemplate();
-            ptop2.setReferentIui(wh_name);
-            ptop2.setAuthorIui(wh);
-            try {
-				ptop2.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/IAO_0000219"));
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            ptop2.setAuthoringTimeIui(t.getReferentIui());
-            ptop2.addParticular(wh);
-            ptop2.setTemplateIui(Iui.createRandomIui());
-            ptop2.setTemporalEntityIui(t3.getReferentIui());    
-            
-            /*
-             * W. Hogan's name's digital representation
-             */
-            PtoDETemplate ptodr = new PtoDETemplate();
-            ptodr.setTemplateIui(Iui.createRandomIui());
-            ptodr.setAuthorIui(wh);
-            ptodr.setAuthoringTimeIui(t.getReferentIui());
-            ptodr.setReferentIui(wh_name);
-            ptodr.setData("William Hogan".getBytes());
-            try {
-				ptodr.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
-            
-            /*
-             * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
-             */
-            PtoPTemplate ptop3 = new PtoPTemplate();
-            ptop3.setTemplateIui(Iui.createRandomIui());
-            ptop3.setAuthorIui(wh);
-            ptop3.setAuthoringTimeIui(t.getReferentIui());
-            ptop3.setReferentIui(t4.getReferentIui());
-            ptop3.addParticular(t3.getReferentIui());
-            try {
-				ptop3.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-            ptop3.setTemporalEntityIui(maxTimeIntervalIui);
-            
-            Iui snctCsIui = Iui.createFromString("59487A5D-C808-48A4-9DAE-894DCE866A96");        
-            /*
-             * PtoC that annotates W. Hogan with SNOMED-CT's "Father (person)" concept
-             */
-            PtoCTemplate ptoc = new PtoCTemplate();
-            ptoc.setTemplateIui(Iui.createRandomIui());
-            ptoc.setReferentIui(wh);
-            ptoc.setAuthoringTimeIui(t.getReferentIui());
-            ptoc.setAuthorIui(wh);
-            ptoc.setConceptCui(new Cui("66839005"));
-            ptoc.setTemporalEntityIui(t.getReferentIui());  //the temporal region when a concept annotation "holds" is fairly meaningless
-            ptoc.setConceptSystemIui(snctCsIui);
-            
-            tset.add(a1);
-            tset.add(a2);
-            tset.add(a3);
-            tset.add(t);
-            tset.add(t2);
-            tset.add(t3);
-            tset.add(t4);
-            tset.add(ptop);
-            tset.add(ptop2);
-            tset.add(ptop3);
-            tset.add(ptou);
-            tset.add(ptouBad);
-            tset.add(ptou3);
-            tset.add(ten);
-            tset.add(ten2);
-            tset.add(ptodr);
-            tset.add(ptoc);
-            
-            rpm.addTemplate(a1);
-            rpm.addTemplate(a2);
-            rpm.addTemplate(a3);
-            rpm.addTemplate(t);
-            rpm.addTemplate(t2);
-            rpm.addTemplate(t3);
-            rpm.addTemplate(t4);
-            rpm.addTemplate(ptop);
-            rpm.addTemplate(ptop2);
-            rpm.addTemplate(ptop3);
-            rpm.addTemplate(ptou);
             rpm.addTemplate(ptouBad);
-            rpm.addTemplate(ptou3);
-            rpm.addTemplate(ten);
-            rpm.addTemplate(ten2);
-            rpm.addTemplate(ptodr);
-            rpm.addTemplate(ptoc);
             
-            Iterator<RtsTemplate> it = tset.iterator();
-            while (it.hasNext()) {
-            	RtsTemplate tnext = it.next();
-            	MetadataTemplate d = new MetadataTemplate();
-                d.setTemplateIui(Iui.createRandomIui());
-                d.setReferentIui(tnext.getTemplateIui());
-                d.setAuthorIui(wh);
-                //d.setAuthoringTimestamp(new Iso8601DateTime());
-                d.setChangeReason(RtsChangeReason.CR);
-                d.setChangeType(RtsChangeType.I);
-                d.setErrorCode(RtsErrorCode.Null);
-                rpm.addTemplate(d);
-            }
+        	MetadataTemplate d4 = new MetadataTemplate();
+        	d4.setTemplateIui(Iui.createRandomIui());
+        	d4.setReferentIui(ptouBad.getTemplateIui());
+        	d4.setAuthorIui(wh);
+            //d.setAuthoringTimestamp(new Iso8601DateTime());
+        	d4.setChangeReason(RtsChangeReason.CR);
+        	d4.setChangeType(RtsChangeType.I);
+        	d4.setErrorCode(RtsErrorCode.Null);
+            rpm.addTemplate(d4);
+             
+            
+            //create another William Hogan
+            tb_name = "1896-08-17";
+            String td_name = "1982-02";
+            Iui wfh = Iui.createRandomIui();
+            TeTemplate t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+					tb_name, wHoganNameTxt,	wfh, wh, rpm, t, ten, td_name);
             
             rpm.commitTemplates();
             
@@ -415,6 +258,17 @@ public class App
                       n6-[:about {valid_to:9223372036854775807}]-(),
                       n8-[:about {valid_to:9223372036854775807}]-()
               	return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
+              	
+              	1407029450000
+              	
+              match (n1:data {dr:'William Hogan'})-[:dr]-(n2:ptode)-[:iuip]-(n3:instance)-[:p]-(n4:ptop)-[:p]-(n5:instance)-[:iuip]-(n6:ptou)-[:uui]-(n7:universal {uui:'http://purl.obolibrary.org/obo/NCBITaxon_9615'}), 
+                      n3-[:iuip]->(n8:ptou)-[:uui]->(n9:universal {uui:'http://purl.obolibrary.org/obo/IAO_0020015'}), 
+                      n4-[:r]->(n10:relation {rui:'http://purl.obolibrary.org/obo/IAO_0000219'}),
+                      n2-[:about {valid_to:9223372036854775807}]-(),
+                      n4-[:about {valid_to:9223372036854775807}]-(),
+                      n6-[:about {valid_to:9223372036854775807}]-(),
+                      n8-[:about {valid_to:9223372036854775807}]-()
+              	return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
              */
             
             Charset c = Charset.forName("UTF-8");
@@ -437,18 +291,7 @@ public class App
              *      must have an S parameter that points to the template we're inserting
              *      here). 
              */
-            MetadataTemplate d1 = new MetadataTemplate();
-            d1.setTemplateIui(Iui.createRandomIui());
-            d1.setReferentIui(ptop.getTemplateIui());
-            d1.setAuthorIui(wh);
-            d1.setAuthoringTimestamp(new Iso8601DateTime());
-            d1.setChangeReason(RtsChangeReason.CR);
-            d1.setChangeType(RtsChangeType.I);
-            d1.setErrorCode(RtsErrorCode.Null);
-            Set<Iui> s = new HashSet<Iui>();
-            s.add(Iui.createRandomIui());
-            s.add(Iui.createRandomIui());
-            d1.setReplacementTemplateIuis(s);
+           
             
             MetadataTemplate dCorrection = new MetadataTemplate();
             dCorrection.setTemplateIui(Iui.createRandomIui());
@@ -462,8 +305,8 @@ public class App
             rpm.addTemplate(dCorrection);
             rpm.commitTemplates();
             
-            System.out.println(d1.toString());
-            System.out.println(ptop.toString());
+            //System.out.println(d1.toString());
+            System.out.println(ptouBad.toString());
             System.out.println(dCorrection.toString());
             
             Calendar cal = Calendar.getInstance();
@@ -473,6 +316,276 @@ public class App
             
             hello.shutDown();
 	    }
+
+		private static TeTemplate createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+				String tb_name,	String personsName, Iui wh, Iui authorIui, 
+				RtsTemplatePersistenceManager rpm, TeTemplate t, TenTemplate ten,
+				String td_name) {
+			
+			Iui wh_chair = Iui.createRandomIui();
+            Iui wh_name = Iui.createRandomIui();
+            
+            Set<RtsTemplate> tset = new HashSet<RtsTemplate>();
+            
+            /*
+             * W. Hogan
+             */
+            ATemplate a1 = new ATemplate();
+            a1.setAuthorIui(authorIui);
+            a1.setReferentIui(wh);
+            a1.setAuthoringTimestamp(new Iso8601DateTime());
+            a1.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * W. Hogan's chair
+             */
+            ATemplate a2 = new ATemplate();
+            a2.setAuthorIui(authorIui);
+            a2.setReferentIui(wh_chair);
+            a2.setAuthoringTimestamp(new Iso8601DateTime());
+            a2.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * W. Hogan's full name
+             */
+            ATemplate a3 = new ATemplate();
+            a3.setAuthorIui(authorIui);
+            a3.setReferentIui(wh_name);
+            a3.setAuthoringTimestamp(new Iso8601DateTime());
+            a3.setTemplateIui(Iui.createRandomIui());
+            
+            
+            /*
+             * Time during which W. Hogan has been owner of his chair
+             */
+            TeTemplate t2 = new TeTemplate();
+            t2.setAuthoringTimestamp(new Iso8601DateTime());
+            t2.setReferentIui(Iui.createRandomIui());
+            t2.setAuthorIui(authorIui);
+            t2.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t2.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * Time during which W. Hogan has been instance of human being
+             */
+            TeTemplate t3 = new TeTemplate();
+            t3.setAuthoringTimestamp(new Iso8601DateTime());
+            t3.setReferentIui(Iui.createRandomIui());
+            t3.setAuthorIui(authorIui);
+            t3.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t3.setTemplateIui(Iui.createRandomIui());
+            
+            /*
+             * Day of W. Hogan's birth
+             */
+            TeTemplate t4 = new TeTemplate();
+            t4.setAuthoringTimestamp(new Iso8601DateTime());
+            t4.setReferentIui(Iui.createRandomIui());
+            t4.setTemplateIui(Iui.createRandomIui());
+            t4.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            t4.setAuthorIui(authorIui);
+            
+            /*
+             * Name of day of W. Hogan's birth
+             */
+            TenTemplate ten2 = new TenTemplate();
+            ten2.setTemplateIui(Iui.createRandomIui());
+            ten2.setTemporalEntityIui(t4.getReferentIui());
+            ten2.setAuthoringTimeIui(t.getReferentIui());
+            ten2.setAuthorIui(authorIui);
+            ten2.setName(tb_name);
+            ten2.setNamingSystemIui(gregorianIui);
+            ten2.setReferentIui(Iui.createRandomIui());
+            
+            /*
+             * If we have a date of death, then create it and add it
+             */
+            TeTemplate t7 = null;
+            TenTemplate ten3 = null;
+            if (td_name != null) {
+                /*
+                 * Day of W. Hogan's death
+                 */
+            	t7 = new TeTemplate();
+            	t7.setAuthoringTimestamp(new Iso8601DateTime());
+            	t7.setReferentIui(Iui.createRandomIui());
+            	t7.setTemplateIui(Iui.createRandomIui());
+            	t7.setUniversalUui(new Uui("http://www.ifomis.org/bfo/1.1/span#TemporalInterval"));
+            	t7.setAuthorIui(authorIui);
+                
+                /*
+                 * Name of day of W. Hogan's death
+                 */
+                ten3 = new TenTemplate();
+                ten3.setTemplateIui(Iui.createRandomIui());
+                ten3.setTemporalEntityIui(t4.getReferentIui());
+                ten3.setAuthoringTimeIui(t.getReferentIui());
+                ten3.setAuthorIui(authorIui);
+                ten3.setName(tb_name);
+                ten3.setNamingSystemIui(gregorianIui);
+                ten3.setReferentIui(Iui.createRandomIui());
+                
+                /*
+                 * PtoP for day of W. Hogan's death to time during which W. Hogan has been a human being
+                 */
+                PtoPTemplate ptop4 = new PtoPTemplate();
+                ptop4.setTemplateIui(Iui.createRandomIui());
+                ptop4.setAuthorIui(authorIui);
+                ptop4.setAuthoringTimeIui(t.getReferentIui());
+                ptop4.setReferentIui(t3.getReferentIui());
+                ptop4.addParticular(t7.getReferentIui());
+                try {
+                	ptop4.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
+    			} catch (URISyntaxException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+                ptop4.setTemporalEntityIui(maxTimeIntervalIui);
+                
+                tset.add(t7);
+                tset.add(ten3);
+                tset.add(ptop4);
+                
+                rpm.addTemplate(t7);
+                rpm.addTemplate(ten3);
+                rpm.addTemplate(ptop4);
+            }
+            
+            /*
+             * W. Hogan's chair owned by W. Hogan
+             */
+            PtoPTemplate ptop = new PtoPTemplate();
+            ptop.setReferentIui(wh_chair);
+            ptop.setAuthorIui(authorIui);
+            try {
+				ptop.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/OMIABIS_0000048"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptop.setAuthoringTimeIui(t.getReferentIui());
+            ptop.addParticular(wh);
+            ptop.setTemplateIui(Iui.createRandomIui());
+            ptop.setTemporalEntityIui(t2.getReferentIui());
+          
+            /*
+             * W. Hogan instance of human being
+             */
+            PtoUTemplate ptou = new PtoUTemplate();
+            ptou.setTemplateIui(Iui.createRandomIui());
+            ptou.setReferentIui(wh);
+            ptou.setRelationshipURI(instance_of);
+            ptou.setAuthoringTimeIui(t.getReferentIui());
+            ptou.setAuthorIui(authorIui);
+            ptou.setTemporalEntityIui(t3.getReferentIui());
+            ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
+       
+            /*
+             * W. Hogan's name instance of personal name
+             */
+            PtoUTemplate ptou3 = new PtoUTemplate();
+            ptou3.setTemplateIui(Iui.createRandomIui());
+            ptou3.setReferentIui(wh_name);
+            ptou3.setRelationshipURI(instance_of);
+            ptou3.setAuthoringTimeIui(t.getReferentIui());
+            ptou3.setAuthorIui(authorIui);
+            ptou3.setTemporalEntityIui(t3.getReferentIui());
+            ptou3.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/IAO_0020015"));
+            
+            /*
+             * W. Hogan's name designates W. Hogan
+             */
+            PtoPTemplate ptop2 = new PtoPTemplate();
+            ptop2.setReferentIui(wh_name);
+            ptop2.setAuthorIui(authorIui);
+            try {
+				ptop2.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/IAO_0000219"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptop2.setAuthoringTimeIui(t.getReferentIui());
+            ptop2.addParticular(wh);
+            ptop2.setTemplateIui(Iui.createRandomIui());
+            ptop2.setTemporalEntityIui(t3.getReferentIui());    
+            
+            /*
+             * W. Hogan's name's digital representation
+             */
+            PtoDETemplate ptodr = new PtoDETemplate();
+            ptodr.setTemplateIui(Iui.createRandomIui());
+            ptodr.setAuthorIui(authorIui);
+            ptodr.setAuthoringTimeIui(t.getReferentIui());
+            ptodr.setReferentIui(wh_name);
+            ptodr.setData(personsName.getBytes());
+            try {
+				ptodr.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
+            
+            /*
+             * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
+             */
+            PtoPTemplate ptop3 = new PtoPTemplate();
+            ptop3.setTemplateIui(Iui.createRandomIui());
+            ptop3.setAuthorIui(authorIui);
+            ptop3.setAuthoringTimeIui(t.getReferentIui());
+            ptop3.setReferentIui(t4.getReferentIui());
+            ptop3.addParticular(t3.getReferentIui());
+            try {
+				ptop3.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            ptop3.setTemporalEntityIui(maxTimeIntervalIui);
+            
+            tset.add(a1);
+            tset.add(a2);
+            tset.add(a3);
+            tset.add(t2);
+            tset.add(t3);
+            tset.add(t4);
+            tset.add(ptop);
+            tset.add(ptop2);
+            tset.add(ptop3);
+            tset.add(ptou);
+            tset.add(ptou3);
+            tset.add(ten2);
+            tset.add(ptodr);
+                     
+            rpm.addTemplate(a1);
+            rpm.addTemplate(a2);
+            rpm.addTemplate(a3);
+            rpm.addTemplate(t2);
+            rpm.addTemplate(t3);
+            rpm.addTemplate(t4);
+            rpm.addTemplate(ptop);
+            rpm.addTemplate(ptop2);
+            rpm.addTemplate(ptop3);
+            rpm.addTemplate(ptou);
+            rpm.addTemplate(ptou3);
+            rpm.addTemplate(ten2);
+            rpm.addTemplate(ptodr);
+                        
+            Iterator<RtsTemplate> it = tset.iterator();
+            while (it.hasNext()) {
+            	RtsTemplate tnext = it.next();
+            	MetadataTemplate d = new MetadataTemplate();
+                d.setTemplateIui(Iui.createRandomIui());
+                d.setReferentIui(tnext.getTemplateIui());
+                d.setAuthorIui(authorIui);
+                //d.setAuthoringTimestamp(new Iso8601DateTime());
+                d.setChangeReason(RtsChangeReason.CR);
+                d.setChangeType(RtsChangeType.I);
+                d.setErrorCode(RtsErrorCode.Null);
+                rpm.addTemplate(d);
+            }
+			return t3;
+		}
 
 	    void createDb()
 	    {
