@@ -104,8 +104,18 @@ public class App
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+			/*
+			 * This is the name of the time of assignment and assertion we will use for all non-metadata
+			 *   templates
+			 */
             String ta_name = "2014-07-03T15:49:37.543";
+            /*
+             * This is the name of the date of birth of the person
+             */
             String tb_name = "1969-04-20";
+            /*
+             * This is the name of the person
+             */
             String wHoganNameTxt = "William Hogan";
             Iui wh = Iui.createRandomIui();
 	       
@@ -157,10 +167,19 @@ public class App
             rpm.addTemplate(d2);
             
             
+            /*
+             * This function creates the person with his/her name and the time of assignment/
+             *   assertion (t) and name of date of birth (tb_name), and returns a tetemplate
+             *   that references the moment of birth
+             */
             TeTemplate t3 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 					tb_name, wHoganNameTxt,	wh, wh, rpm, t, ten, null);
             
+            /*
+             * assign an IUI to the SNOMED-CT terminology
+             */
             Iui snctCsIui = Iui.createFromString("59487A5D-C808-48A4-9DAE-894DCE866A96");        
+            
             /*
              * PtoC that annotates W. Hogan with SNOMED-CT's "Father (person)" concept
              */
@@ -174,6 +193,9 @@ public class App
             ptoc.setConceptSystemIui(snctCsIui);  
             rpm.addTemplate(ptoc);
             
+            /*
+             * Metadata template for PtoC template
+             */
         	MetadataTemplate d3 = new MetadataTemplate();
         	d3.setTemplateIui(Iui.createRandomIui());
         	d3.setReferentIui(ptoc.getTemplateIui());
@@ -200,6 +222,9 @@ public class App
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
             rpm.addTemplate(ptouBad);
             
+            /*
+             * The original metadata template for the misinformed PtoU template
+             */
         	MetadataTemplate d4 = new MetadataTemplate();
         	d4.setTemplateIui(Iui.createRandomIui());
         	d4.setReferentIui(ptouBad.getTemplateIui());
@@ -218,6 +243,9 @@ public class App
             TeTemplate t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 					tb_name, wHoganNameTxt,	wfh, wh, rpm, t, ten, td_name);
             
+            /*
+             * Save all the templates accumulated thus far to Neo4J
+             */
             rpm.commitTemplates();
             
             hello.graphDb = rpm.graphDb;
@@ -293,6 +321,10 @@ public class App
              */
            
             
+            /*
+             * Now invalidate the template that says W. Hogan is instance of dog,
+             *   which per Ceusters' error coding is an error of type U1
+             */
             MetadataTemplate dCorrection = new MetadataTemplate();
             dCorrection.setTemplateIui(Iui.createRandomIui());
             dCorrection.setReferentIui(ptouBad.getTemplateIui());
