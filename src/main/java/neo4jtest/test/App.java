@@ -112,7 +112,7 @@ public class App
             /*
              * This is the name of the date of birth of the person
              */
-            String tb_name = "1969-04-20";
+            String tb_name = "1970-01-01";  //not my real birth date
             /*
              * This is the name of the person
              */
@@ -237,7 +237,7 @@ public class App
              
             
             //create another William Hogan
-            tb_name = "1896-08-17";
+            tb_name = "1895-01-01";  //not his real birth date, either
             String td_name = "1982-02";
             Iui wfh = Iui.createRandomIui();
             TeTemplate t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
