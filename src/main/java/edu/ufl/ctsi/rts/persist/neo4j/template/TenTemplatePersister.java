@@ -1,6 +1,5 @@
 package edu.ufl.ctsi.rts.persist.neo4j.template;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
@@ -16,8 +15,8 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 	String name;
 	String teRef;
 	
-	public TenTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
-		super(db, ee);
+	public TenTemplatePersister(GraphDatabaseService db) {
+		super(db);
 	}
 
 	@Override

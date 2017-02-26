@@ -22,14 +22,15 @@
       <scope>test</scope>
     </dependency>
    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j</artifactId>
-      <version>2.1.2</version>
-  </dependency>
-   <dependency>
    	<groupId>ufbmi</groupId>
    	<artifactId>rts_core</artifactId>
    	<version>0.0.1-SNAPSHOT</version>
+   </dependency>
+   <dependency>
+   	<groupId>org.neo4j</groupId>
+   	<artifactId>neo4j-community</artifactId>
+   	<version>3.2.0-alpha02</version>
+   	<type>pom</type>
    </dependency>
   </dependencies>
 </project>

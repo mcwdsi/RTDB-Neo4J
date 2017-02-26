@@ -3,7 +3,6 @@ package edu.ufl.ctsi.rts.persist.neo4j.template;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -23,9 +22,9 @@ public class MetadataTemplatePersister extends RtsTemplatePersister {
 	
 	InstanceNodeCreator inc;
 	
-	public MetadataTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
-		super(db, ee);
-		inc = new InstanceNodeCreator(ee);
+	public MetadataTemplatePersister(GraphDatabaseService db) {
+		super(db);
+		inc = new InstanceNodeCreator(graphDb);
 	}
 
 	@Override

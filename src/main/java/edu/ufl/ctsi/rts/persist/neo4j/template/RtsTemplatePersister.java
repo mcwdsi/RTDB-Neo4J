@@ -2,7 +2,6 @@ package edu.ufl.ctsi.rts.persist.neo4j.template;
 
 import java.util.HashMap;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
@@ -16,7 +15,6 @@ public abstract class RtsTemplatePersister {
 	static final String TEMPLATE_TYPE_PROPERTY_NAME = "type";
 	
 	GraphDatabaseService graphDb;
-	ExecutionEngine ee;
 	
 	RtsTemplate templateToPersist;
 	
@@ -24,10 +22,10 @@ public abstract class RtsTemplatePersister {
 	
 	Node n;
 	
-	public RtsTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
+	public RtsTemplatePersister(GraphDatabaseService db) {
 		graphDb = db;
-		this.ee = ee;
-		tnc = new TemplateNodeCreator(ee);
+
+		tnc = new TemplateNodeCreator(db);
 	}
 	
 	public void persistTemplate(RtsTemplate t) {
@@ -54,7 +52,7 @@ public abstract class RtsTemplatePersister {
 	protected boolean existsInDb(RtsTemplate t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", t.getTemplateIui().toString());
-		return ee.execute(TEMPLATE_BY_IUI_QUERY, parameters).iterator().hasNext();
+		return graphDb.execute(TEMPLATE_BY_IUI_QUERY, parameters).hasNext();
 	}
 
 	protected abstract void completeTemplate(RtsTemplate t);

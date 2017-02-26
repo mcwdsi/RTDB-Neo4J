@@ -1,12 +1,10 @@
 package edu.ufl.ctsi.rts.persist.neo4j.template;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
-import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.template.PtoCTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
@@ -20,9 +18,9 @@ public class PtoCTemplatePersister extends AssertionalTemplatePersister {
 	Cui cui;
 	Iui conceptSystemIui;
 	
-	public PtoCTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
-		super(db, ee);
-		cnc = new ConceptNodeCreator(this.ee);
+	public PtoCTemplatePersister(GraphDatabaseService db) {
+		super(db);
+		cnc = new ConceptNodeCreator(this.graphDb);
 	}
 	
 	@Override
@@ -63,7 +61,7 @@ public class PtoCTemplatePersister extends AssertionalTemplatePersister {
 	
 	@Override
 	protected void connectToReferent() {
-		InstanceNodeCreator inc = new InstanceNodeCreator(ee);
+		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
 		Node referentNode = inc.persistEntity(((PtoCTemplate)templateToPersist).getReferent().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);

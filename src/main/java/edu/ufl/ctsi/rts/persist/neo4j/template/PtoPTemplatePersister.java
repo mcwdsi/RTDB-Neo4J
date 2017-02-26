@@ -1,7 +1,6 @@
 package edu.ufl.ctsi.rts.persist.neo4j.template;
 
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -17,9 +16,9 @@ public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 	
 	TemporalReferencePersister trp;
 	
-	public PtoPTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
-		super(db, ee);
-		trp = new TemporalReferencePersister(this.graphDb, this.ee);
+	public PtoPTemplatePersister(GraphDatabaseService db) {
+		super(db);
+		trp = new TemporalReferencePersister(this.graphDb);
 	}
 
 	@Override

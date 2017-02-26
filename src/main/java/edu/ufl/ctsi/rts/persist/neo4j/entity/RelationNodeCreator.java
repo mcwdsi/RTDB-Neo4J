@@ -1,7 +1,6 @@
 package edu.ufl.ctsi.rts.persist.neo4j.entity;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
@@ -10,8 +9,8 @@ public class RelationNodeCreator extends EntityNodePersister {
 
 	static final String QUERY = "MERGE (n:relation { rui: {value} }) return n";
 
-	public RelationNodeCreator(ExecutionEngine engine) {
-		super(engine);
+	public RelationNodeCreator(GraphDatabaseService db) {
+		super(db);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -22,7 +21,7 @@ public class RelationNodeCreator extends EntityNodePersister {
 
 	@Override
 	protected Label getLabel() {
-		return DynamicLabel.label(RtsNodeLabel.RELATION.getLabelText());
+		return Label.label(RtsNodeLabel.RELATION.getLabelText());
 	}
 
 }

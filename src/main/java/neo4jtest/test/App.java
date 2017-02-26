@@ -11,16 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
@@ -73,7 +70,8 @@ public class App
 	 */
 
 
-	    public static final String DB_PATH = "target/neo4j-hello-db";
+	    //public static final String DB_PATH = "target/neo4j-hello-db";
+		public static final String DB_PATH = "/Users/hoganwr/Documents/Neo4j/default.graphdb";
 
 	    public String greeting;
 
@@ -246,7 +244,8 @@ public class App
             Iui wfh = Iui.createRandomIui();
             TemporalReference t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 					tb_name, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name);
-            
+
+            System.out.println("temporal reference t5: " + t5.getIdentifier());
             /*
              * Save all the templates accumulated thus far to Neo4J
              */
@@ -650,7 +649,7 @@ public class App
 	    {
 	        deleteFileOrDirectory( new File( DB_PATH ) );
 	        // START SNIPPET: startDb
-	        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( DB_PATH );
+	        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(DB_PATH) );
 	        registerShutdownHook( graphDb );
 	     // END SNIPPET: startDb
 	    }
@@ -749,15 +748,15 @@ public class App
 	    }
 	    
 	    void queryRts() {
-            ExecutionEngine ee = new ExecutionEngine(graphDb);
-            String query = "START n=node(*) RETURN n";
+   
+            String query = "MATCH (n) return n"; //"START n=node(*) RETURN n";
             
             try ( Transaction tx = graphDb.beginTx() ) {
             	
-            	ExecutionResult result = ee.execute(query);
-            	ResourceIterator<Map<String, Object>> i = result.iterator();
-            	while (i.hasNext()) {
-            		Map<String, Object> entry = i.next();
+            	Result result = graphDb.execute(query);
+            	//ResourceIterator<Map<String, Object>> i = result.iterator();
+            	while (result.hasNext()) {
+            		Map<String, Object> entry = result.next();
             		System.out.println(entry.size());
             		Set<String> keys = entry.keySet();
             		for (String key : keys) {
@@ -775,7 +774,7 @@ public class App
             			} else if (label.equals("temporal_region")) { 
             				System.out.print("\ttref = " + n.getProperty("tref"));
             			} else if (label.equals("universal")) {
-            				n.addLabel(DynamicLabel.label("universal"));  //what happens if we try to add a label that is already there?
+            				n.addLabel(Label.label("universal"));  //what happens if we try to add a label that is already there?
             				System.out.print("\tuui = " + n.getProperty("uui"));
             			} else if (label.equals("relation")) {
             				System.out.print("\trui = " + n.getProperty("rui"));

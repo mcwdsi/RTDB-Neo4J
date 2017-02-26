@@ -1,6 +1,5 @@
 package edu.ufl.ctsi.rts.persist.neo4j.template;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
@@ -14,9 +13,8 @@ public class ATemplatePersister extends RepresentationalTemplatePersister {
 
 	Iso8601DateTimeFormatter dtf;
 	
-	public ATemplatePersister(GraphDatabaseService db, ExecutionEngine ee)
-			 {
-		super(db, ee);
+	public ATemplatePersister(GraphDatabaseService db) {
+		super(db);
 		dtf = new Iso8601DateTimeFormatter();
 	}
 
@@ -39,7 +37,7 @@ public class ATemplatePersister extends RepresentationalTemplatePersister {
 
 	@Override
 	protected void connectToReferent() {
-		InstanceNodeCreator inc = new InstanceNodeCreator(ee);
+		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
 		Node referentNode = inc.persistEntity(((ATemplate)templateToPersist).getReferent().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);

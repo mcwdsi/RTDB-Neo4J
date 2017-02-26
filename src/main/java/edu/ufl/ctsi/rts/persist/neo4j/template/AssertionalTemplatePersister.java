@@ -1,6 +1,5 @@
 package edu.ufl.ctsi.rts.persist.neo4j.template;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
@@ -25,12 +24,11 @@ public abstract class AssertionalTemplatePersister extends
 	
 	String rui;
 	
-	public AssertionalTemplatePersister(GraphDatabaseService db,
-			ExecutionEngine ee) {
-		super(db, ee);
-		rnc = new RelationNodeCreator(this.ee);
+	public AssertionalTemplatePersister(GraphDatabaseService db) {
+		super(db);
+		rnc = new RelationNodeCreator(this.graphDb);
 		rui = null;
-		trp = new TemporalReferencePersister(this.graphDb, this.ee);
+		trp = new TemporalReferencePersister(this.graphDb);
 	}
 	
 	@Override

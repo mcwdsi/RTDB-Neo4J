@@ -3,19 +3,20 @@ package edu.ufl.ctsi.rts.persist.neo4j.entity;
 import java.util.HashMap;
 import java.util.List;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Result;
 
 public abstract class EntityNodePersister {
 	
 	static HashMap<String, Node> uiNode = new HashMap<String, Node>();
 	
-	ExecutionEngine ee;
+	GraphDatabaseService graphDb;
+
 	
-	public EntityNodePersister(ExecutionEngine engine) {
-		ee = engine;
+	public EntityNodePersister(GraphDatabaseService db) {
+		this.graphDb = db;
 	}
 
 	public Node persistEntity(String ui) {
@@ -36,8 +37,8 @@ public abstract class EntityNodePersister {
 		parameters.put("value", ui);
 		
 		//run the query.
-		ExecutionResult er = ee.execute( query, parameters );
-		System.out.println(er.dumpToString());
+		Result er = graphDb.execute( query, parameters );
+		System.out.println(er.toString());
 		List<String> cs = er.columns();
 		for (String c : cs) {
 			System.out.println(c);

@@ -1,10 +1,8 @@
 package edu.ufl.ctsi.rts.persist.neo4j.template;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.template.PtoLackUTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
@@ -21,10 +19,9 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 	 *   lacks a relationship to some universal?  I doubt it, but you never know...
 	 */
 
-	public PtoLackUTemplatePersister(GraphDatabaseService db,
-			ExecutionEngine ee) {
-		super(db, ee);
-		unc = new UniversalNodeCreator(this.ee);
+	public PtoLackUTemplatePersister(GraphDatabaseService db) {
+		super(db);
+		unc = new UniversalNodeCreator(this.graphDb);
 	}
 
 	@Override
@@ -51,7 +48,7 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 	
 	@Override
 	protected void connectToReferent() {
-		InstanceNodeCreator inc = new InstanceNodeCreator(ee);
+		InstanceNodeCreator inc = new InstanceNodeCreator(graphDb);
 		Node referentNode = inc.persistEntity(((PtoLackUTemplate)templateToPersist).getReferent().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);

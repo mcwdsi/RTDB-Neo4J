@@ -1,6 +1,7 @@
 package edu.ufl.ctsi.rts.neo4j;
 
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,7 +9,6 @@ import java.util.Iterator;
 
 import neo4jtest.test.App;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -39,7 +39,6 @@ import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoPTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.TemporalReferencePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.TenTemplatePersister;
 
 public class RtsTemplatePersistenceManager {
 
@@ -47,7 +46,6 @@ public class RtsTemplatePersistenceManager {
 	static String CTNODE_QUERY = "MERGE (n:change_type { ct: {value} }) return n";
 	
 	public GraphDatabaseService graphDb;
-	ExecutionEngine ee;
 	
 	Label templateLabel;
 	Label aTemplateLabel;
@@ -76,7 +74,7 @@ public class RtsTemplatePersistenceManager {
 	Iso8601DateTimeFormatter dttmFormatter;
 	
 	ATemplatePersister atp;
-	TenTemplatePersister tenp;
+	//TenTemplatePersister tenp;
 	PtoUTemplatePersister pup;
 	PtoPTemplatePersister ppp;
 	PtoLackUTemplatePersister plup;
@@ -96,20 +94,19 @@ public class RtsTemplatePersistenceManager {
 		iuisInPtoPTemplates = new HashSet<String>();
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( App.DB_PATH );
+		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(App.DB_PATH) );
 		setupSchema();
-		setupExecutionEngine();
 		setupMetadata();
 
-		atp = new ATemplatePersister(graphDb, ee);
-		tenp = new TenTemplatePersister(graphDb, ee);
-		pup = new PtoUTemplatePersister(graphDb, ee);
-		ppp = new PtoPTemplatePersister(graphDb, ee);
-		plup = new PtoLackUTemplatePersister(graphDb, ee);
-		pdrp = new PtoDETemplatePersister(graphDb, ee);
-		pcp = new PtoCTemplatePersister(graphDb, ee);
-		mp = new MetadataTemplatePersister(graphDb, ee);
-		trp = new TemporalReferencePersister(graphDb, ee);
+		atp = new ATemplatePersister(graphDb);
+		//tenp = new TenTemplatePersister(graphDb, ee);
+		pup = new PtoUTemplatePersister(graphDb);
+		ppp = new PtoPTemplatePersister(graphDb);
+		plup = new PtoLackUTemplatePersister(graphDb);
+		pdrp = new PtoDETemplatePersister(graphDb);
+		pcp = new PtoCTemplatePersister(graphDb);
+		mp = new MetadataTemplatePersister(graphDb);
+		trp = new TemporalReferencePersister(graphDb);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
@@ -197,7 +194,7 @@ public class RtsTemplatePersistenceManager {
 			if (!iuiToItsAssignmentTemplate.containsKey(iui)) {
 				HashMap<String, Object> params = new HashMap<String, Object>();
 				params.put("value", iui);
-				ResourceIterator<Node> rin = ee.execute(queryInstanceNode, params).columnAs("n");
+				ResourceIterator<Node> rin = graphDb.execute(queryInstanceNode, params).columnAs("n");
 				if (!rin.hasNext()) {
 					System.err.println("Iui " + iui + " is referenced in a PtoP template but has " +
 							"no assignment template in the cache and there is no node for it already "
@@ -331,7 +328,7 @@ public class RtsTemplatePersistenceManager {
 		parameters.put("value", targetNodeUi);
 	    
 		//run the query.
-	    ResourceIterator<Node> resultIterator = ee.execute( query, parameters ).columnAs( "n" );
+	    ResourceIterator<Node> resultIterator = graphDb.execute( query, parameters ).columnAs( "n" );
 	    Node n = resultIterator.next();
 	    
 	    //add node to cache
@@ -355,7 +352,7 @@ public class RtsTemplatePersistenceManager {
 	boolean isTemplateInDb(RtsTemplate t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", t.getTemplateIui().toString());
-		return ee.execute(templateByIuiQuery, parameters).iterator().hasNext();
+		return graphDb.execute(templateByIuiQuery, parameters).hasNext();
 	}
 	
 	/*
@@ -522,10 +519,6 @@ public class RtsTemplatePersistenceManager {
     	}*/
     }
     
-    void setupExecutionEngine() {
-    	ee = new ExecutionEngine(graphDb);
-    }
-
 	public void addTemporalReference(TemporalReference t) {
 		tempReferences.add(t);
 	}

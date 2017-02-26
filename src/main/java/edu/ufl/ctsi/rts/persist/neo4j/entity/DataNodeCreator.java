@@ -1,15 +1,14 @@
 package edu.ufl.ctsi.rts.persist.neo4j.entity;
 
-import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
 public class DataNodeCreator extends EntityNodePersister {
 
-	public DataNodeCreator(ExecutionEngine engine) {
-		super(engine);
+	public DataNodeCreator(GraphDatabaseService db) {
+		super(db);
 	}
 
 	static final String QUERY = "MERGE (n:data { dr: {value} }) return n";
@@ -21,7 +20,7 @@ public class DataNodeCreator extends EntityNodePersister {
 
 	@Override
 	protected Label getLabel() {
-		return DynamicLabel.label(RtsNodeLabel.DATA.getLabelText());
+		return Label.label(RtsNodeLabel.DATA.getLabelText());
 	}
 
 }
