@@ -6,7 +6,8 @@ public enum RtsNodeLabel {
 	RELATION("relation"),
 	DATA("data"),
 	TEMPLATE("template"), 
-	CONCEPT("concept");
+	CONCEPT("concept"),
+	TEMPORAL_REGION("temporal_region");
 	
 	String labelText;
 	

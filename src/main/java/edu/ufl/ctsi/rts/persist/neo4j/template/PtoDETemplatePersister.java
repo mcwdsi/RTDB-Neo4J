@@ -6,10 +6,15 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
+import edu.uams.dbmi.rts.ParticularReference;
+import edu.uams.dbmi.rts.iui.Iui;
+import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.template.PtoDETemplate;
+import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.DataNodeCreator;
+import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class PtoDETemplatePersister extends AssertionalTemplatePersister {
@@ -54,5 +59,20 @@ public class PtoDETemplatePersister extends AssertionalTemplatePersister {
 		String dataAsString = new String(ptodr.getData(), Charset.forName("UTF-8"));
 		Node target = dnc.persistEntity(dataAsString);
 		n.createRelationshipTo(target, RtsRelationshipType.dr);
+	}
+	
+	@Override
+	protected void connectToReferent() {
+		ParticularReference p = ((PtoDETemplate)templateToPersist).getReferent();
+		Node referentNode = null; 
+		if (p instanceof Iui) {
+			InstanceNodeCreator inc = new InstanceNodeCreator(ee);
+			referentNode = inc.persistEntity(((PtoDETemplate)templateToPersist).getReferent().toString());
+		} else if (p instanceof TemporalReference) {
+			TemporalReferencePersister trp = new TemporalReferencePersister(this.graphDb, this.ee);
+			referentNode = trp.persistTemporalReference((TemporalReference)p);
+		}
+		//This directionality is what I did on the Confluence page and it seems to make sense.
+		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}
 }

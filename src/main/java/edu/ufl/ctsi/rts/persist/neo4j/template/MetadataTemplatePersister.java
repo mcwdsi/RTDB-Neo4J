@@ -63,7 +63,7 @@ public class MetadataTemplatePersister extends RtsTemplatePersister {
 		 * The target node is the template node, which for metadata templates
 		 *   is the referent.
 		 */
-		Node target = tnc.persistEntity(d.getReferentIui().toString());
+		Node target = tnc.persistEntity(d.getReferent().toString());
 		
 		/*
 		 * This is the td parameter.  This time either starts or ends 
@@ -151,7 +151,7 @@ public class MetadataTemplatePersister extends RtsTemplatePersister {
 			n.createRelationshipTo(target, RtsRelationshipType.s);
 		}
 	}
-
+	
 	@Override
 	protected void setTemplateTypeProperty() {
 		n.addLabel(RtsTemplateNodeLabel.d);

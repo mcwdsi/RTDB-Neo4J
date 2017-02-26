@@ -5,12 +5,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 
 import neo4jtest.test.App;
 
 import org.neo4j.cypher.javacompat.ExecutionEngine;
-import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -19,9 +17,8 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
+import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
-import edu.uams.dbmi.rts.metadata.RtsChangeReason;
-import edu.uams.dbmi.rts.metadata.RtsChangeType;
 import edu.uams.dbmi.rts.template.MetadataTemplate;
 import edu.uams.dbmi.rts.template.PtoCTemplate;
 import edu.uams.dbmi.rts.template.PtoDETemplate;
@@ -30,8 +27,7 @@ import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.template.RtsTemplate;
 import edu.uams.dbmi.rts.template.ATemplate;
-import edu.uams.dbmi.rts.template.TeTemplate;
-import edu.uams.dbmi.rts.template.TenTemplate;
+import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
@@ -42,7 +38,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDETemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoPTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.TeTemplatePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.TemporalReferencePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.TenTemplatePersister;
 
 public class RtsTemplatePersistenceManager {
@@ -69,6 +65,7 @@ public class RtsTemplatePersistenceManager {
 
 	HashSet<RtsTemplate> templates;
 	HashSet<MetadataTemplate> metadata;
+	HashSet<TemporalReference> tempReferences;
 	
 	HashMap<Iui, Node> iuiNode;
 	HashMap<String, Node> uiNode;
@@ -79,7 +76,6 @@ public class RtsTemplatePersistenceManager {
 	Iso8601DateTimeFormatter dttmFormatter;
 	
 	ATemplatePersister atp;
-	TeTemplatePersister tep;
 	TenTemplatePersister tenp;
 	PtoUTemplatePersister pup;
 	PtoPTemplatePersister ppp;
@@ -88,9 +84,12 @@ public class RtsTemplatePersistenceManager {
 	PtoCTemplatePersister pcp;
 	MetadataTemplatePersister mp;
 	
+	TemporalReferencePersister trp;
+	
 	public RtsTemplatePersistenceManager() {
 		templates = new HashSet<RtsTemplate>();
 		metadata = new HashSet<MetadataTemplate>();
+		tempReferences = new HashSet<TemporalReference>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
 		iuiToItsAssignmentTemplate = new HashMap<String, RtsTemplate>();
@@ -103,8 +102,6 @@ public class RtsTemplatePersistenceManager {
 		setupMetadata();
 
 		atp = new ATemplatePersister(graphDb, ee);
-		tep = new TeTemplatePersister(graphDb, ee);
-		tep = new TeTemplatePersister(graphDb, ee);
 		tenp = new TenTemplatePersister(graphDb, ee);
 		pup = new PtoUTemplatePersister(graphDb, ee);
 		ppp = new PtoPTemplatePersister(graphDb, ee);
@@ -112,18 +109,20 @@ public class RtsTemplatePersistenceManager {
 		pdrp = new PtoDETemplatePersister(graphDb, ee);
 		pcp = new PtoCTemplatePersister(graphDb, ee);
 		mp = new MetadataTemplatePersister(graphDb, ee);
+		trp = new TemporalReferencePersister(graphDb, ee);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
 	
 	public void addTemplate(RtsTemplate t) {
-		if (t instanceof ATemplate || t instanceof TeTemplate) {
-			iuiToItsAssignmentTemplate.put(t.getReferentIui().toString(), t);
+		if (t instanceof ATemplate) {
+			ATemplate at = (ATemplate)t;
+			iuiToItsAssignmentTemplate.put(at.getReferent().toString(), t);
 		} else if ( (t instanceof PtoPTemplate) ) {
 			PtoPTemplate ptop = (PtoPTemplate)t;
-			Iterable<Iui> p = ptop.getParticulars();
-			for (Iui i : p) {
-				iuisInPtoPTemplates.add(i.toString());
+			Iterable<ParticularReference> p = ptop.getAllParticulars();
+			for (ParticularReference i : p) {
+				if (i instanceof Iui) iuisInPtoPTemplates.add(i.toString());
 			}
 		}
 		if (t instanceof MetadataTemplate) {
@@ -158,10 +157,10 @@ public class RtsTemplatePersistenceManager {
 			for (RtsTemplate t : templates) {
 				if (t instanceof ATemplate) {
 					atp.persistTemplate(t);
-				} else if (t instanceof TeTemplate) {
-					tep.persistTemplate(t);
-				} else if (t instanceof TenTemplate) {
-					tenp.persistTemplate(t);
+				//} else if (t instanceof TeTemplate) {
+				//	tep.persistTemplate(t);
+				//} else if (t instanceof TenTemplate) {
+				//	tenp.persistTemplate(t);
 				} else if (t instanceof PtoUTemplate) {
 					pup.persistTemplate(t);
 				} else if (t instanceof PtoLackUTemplate) {
@@ -264,6 +263,7 @@ public class RtsTemplatePersistenceManager {
 		templateNode.createRelationshipTo(authorNode, RtsRelationshipType.iuia);
 	}//*/
 
+	/*
 	private void completeTeTemplate(Node n, TeTemplate t) {
 		// TODO Auto-generated method stub
 		n.setProperty("type", "TE");
@@ -272,6 +272,7 @@ public class RtsTemplatePersistenceManager {
 		Node typeNode = getOrCreateNode(RtsNodeLabel.TYPE, t.getUniversalUui().toString());
 		n.createRelationshipTo(typeNode, RtsRelationshipType.uui);
 	}
+	*/
 	
 	static String TYPE_QUERY = "MERGE (n:universal {ui : {value}})"
 			//+ "ON CREATE "
@@ -461,7 +462,12 @@ public class RtsTemplatePersistenceManager {
     				.constraintFor( metadataLabel )
     				.assertPropertyIsUnique("ct")
     				.create();         
-                      	
+            
+            graphDb.schema()
+    				.constraintFor( temporalRegionLabel )
+    				.assertPropertyIsUnique("tref")
+    				.create();   
+            
             tx2.success();
         }
     }
@@ -519,4 +525,8 @@ public class RtsTemplatePersistenceManager {
     void setupExecutionEngine() {
     	ee = new ExecutionEngine(graphDb);
     }
+
+	public void addTemporalReference(TemporalReference t) {
+		tempReferences.add(t);
+	}
 }

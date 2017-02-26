@@ -4,9 +4,11 @@ import org.neo4j.cypher.javacompat.ExecutionEngine;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
+import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class PtoUTemplatePersister extends AssertionalTemplatePersister {
@@ -39,5 +41,13 @@ public class PtoUTemplatePersister extends AssertionalTemplatePersister {
 		PtoUTemplate ptou = (PtoUTemplate)templateToPersist;
 		Node target = unc.persistEntity(ptou.getUniversalUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
+	}
+	
+	@Override
+	protected void connectToReferent() {
+		InstanceNodeCreator inc = new InstanceNodeCreator(ee);
+		Node referentNode = inc.persistEntity(((PtoUTemplate)templateToPersist).getReferent().toString());
+		//This directionality is what I did on the Confluence page and it seems to make sense.
+		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}
 }

@@ -6,15 +6,20 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
+import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
+import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 
 public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 	
+	TemporalReferencePersister trp;
+	
 	public PtoPTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
 		super(db, ee);
+		trp = new TemporalReferencePersister(this.graphDb, this.ee);
 	}
 
 	@Override
@@ -37,13 +42,24 @@ public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 	private void connectToParticulars() {
 		int order = 1;
 		PtoPTemplate ptop = (PtoPTemplate)templateToPersist;
-		Iterable<Iui> p = ptop.getParticulars();
-		for (Iui i : p) {
-			Node target = inc.persistEntity(i.toString());
+		Iterable<ParticularReference> p = ptop.getAllParticulars();
+		for (ParticularReference i : p) {
+			Node target = null;
+			if (i instanceof Iui) {
+				target = inc.persistEntity(i.toString());
+			} else if (i instanceof TemporalReference) {
+				target = trp.persistTemporalReference((TemporalReference)i);
+			}
 			Relationship r = n.createRelationshipTo(target, RtsRelationshipType.p);
 			r.setProperty("relation order", Integer.toString(order));
 			order++;
 		}
+	}
+
+	@Override
+	protected void connectToReferent() {
+		/* gets connected to referent above in connectToParticulars, so this is a no op */
+		
 	}
 
 }

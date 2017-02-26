@@ -8,12 +8,13 @@ import edu.uams.dbmi.rts.template.TenTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
 
+@Deprecated
 public class TenTemplatePersister extends RepresentationalTemplatePersister {
 	
-	String taIui;
+	String taRef;
 	String nsIui;
 	String name;
-	String teIui;
+	String teRef;
 	
 	public TenTemplatePersister(GraphDatabaseService db, ExecutionEngine ee) {
 		super(db, ee);
@@ -39,19 +40,21 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 
 	private void getParametersFromTemplate() {
 		TenTemplate ten = (TenTemplate)templateToPersist;
-		taIui = ten.getAuthoringTimeIui().toString();
+		//taIui = ten.getAuthoringTimeIui().toString();
+		taRef = ten.getAuthoringTimeReference().toString();
 		nsIui = ten.getNamingSystemIui().toString();
-		teIui = ten.getTemporalEntityIui().toString();
+		//teIui = ten.getTemporalEntityIui().toString();
+		teRef = ten.getTemporalEntityReference().toString();
 		name = ten.getName();
 	}
 
 	private void connectToTimeOfAssertion() {
-		Node target = inc.persistEntity(taIui);
+		Node target = inc.persistEntity(taRef);
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
 	
 	private void connectToTemporalEntity() {
-		Node target = inc.persistEntity(teIui);
+		Node target = inc.persistEntity(teRef);
 		n.createRelationshipTo(target, RtsRelationshipType.iuite);
 	}
 	
@@ -68,6 +71,12 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 	protected void setTemplateTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ten");
 		n.addLabel(RtsTemplateNodeLabel.ten);
+	}
+
+	@Override
+	protected void connectToReferent() {
+		// TODO Auto-generated method stub
+		throw new IllegalStateException("TenTemplatePersister is deprecated.");
 	}
 
 }
