@@ -11,6 +11,7 @@ import org.neo4j.graphdb.Result;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.rts.uui.Uui;
+import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
@@ -18,7 +19,9 @@ import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
 public class TemporalReferencePersister {
 
-	static final String TEMPORAL_NODE_BY_TEMPORAL_REFERENCE_QUERY = "MATCH (n:temporal_region { tref : {value} }) return n";
+	static final String TEMPORAL_NODE_BY_TEMPORAL_REFERENCE_QUERY = 
+			"MATCH (n:" + RtsNodeLabel.TEMPORAL_REGION.getLabelText() + 
+				" { tref : {value} }) return n";
 	
 	GraphDatabaseService graphDb;
 

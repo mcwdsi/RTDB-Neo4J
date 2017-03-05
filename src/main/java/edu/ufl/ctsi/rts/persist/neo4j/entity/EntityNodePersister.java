@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
 
@@ -35,6 +34,8 @@ public abstract class EntityNodePersister {
 		   */
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", ui);
+		//parameters.put("label", getLabel());
+		
 		
 		//run the query.
 		Result er = graphDb.execute( query, parameters );
@@ -63,5 +64,4 @@ public abstract class EntityNodePersister {
 	}
 	
 	protected abstract String setupQuery();
-	protected abstract Label getLabel();
 }

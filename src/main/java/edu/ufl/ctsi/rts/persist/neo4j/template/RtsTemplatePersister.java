@@ -6,11 +6,12 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.template.RtsTemplate;
+import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemplateNodeCreator;
 
 public abstract class RtsTemplatePersister {
 	
-	static final String TEMPLATE_BY_IUI_QUERY = "MATCH (n:template { iui : {value} }) return n";
+	static final String TEMPLATE_BY_IUI_QUERY = "MATCH (n:" + RtsNodeLabel.TEMPLATE.getLabelText() + " { iui : {value} }) return n";
 	
 	static final String TEMPLATE_TYPE_PROPERTY_NAME = "type";
 	

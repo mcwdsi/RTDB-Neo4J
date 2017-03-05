@@ -1,13 +1,12 @@
 package edu.ufl.ctsi.rts.persist.neo4j.entity;
 
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
 
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
 public class TemporalNodeCreator extends EntityNodePersister {
 
-	static final String QUERY = "MERGE (n:temporal_region { tref: {value} }) return n";
+	static final String QUERY = "MERGE (n:" + RtsNodeLabel.TEMPORAL_REGION.getLabelText() + " { tref: $value }) return n";
 	
 	public TemporalNodeCreator(GraphDatabaseService db) {
 		super(db);
@@ -18,10 +17,4 @@ public class TemporalNodeCreator extends EntityNodePersister {
 	protected String setupQuery() {
 		return QUERY;
 	}
-
-	@Override
-	protected Label getLabel() {
-		return Label.label(RtsNodeLabel.TEMPORAL_REGION.getLabelText());
-	}
-
 }
