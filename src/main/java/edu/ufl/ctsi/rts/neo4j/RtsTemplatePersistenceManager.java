@@ -6,10 +6,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 import neo4jtest.test.App;
 
-import org.neo4j.graphdb.DynamicLabel;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -74,7 +74,6 @@ public class RtsTemplatePersistenceManager {
 	Iso8601DateTimeFormatter dttmFormatter;
 	
 	ATemplatePersister atp;
-	//TenTemplatePersister tenp;
 	PtoUTemplatePersister pup;
 	PtoPTemplatePersister ppp;
 	PtoLackUTemplatePersister plup;
@@ -99,7 +98,6 @@ public class RtsTemplatePersistenceManager {
 		setupMetadata();
 
 		atp = new ATemplatePersister(graphDb);
-		//tenp = new TenTemplatePersister(graphDb, ee);
 		pup = new PtoUTemplatePersister(graphDb);
 		ppp = new PtoPTemplatePersister(graphDb);
 		plup = new PtoLackUTemplatePersister(graphDb);
@@ -154,10 +152,6 @@ public class RtsTemplatePersistenceManager {
 			for (RtsTemplate t : templates) {
 				if (t instanceof ATemplate) {
 					atp.persistTemplate(t);
-				//} else if (t instanceof TeTemplate) {
-				//	tep.persistTemplate(t);
-				//} else if (t instanceof TenTemplate) {
-				//	tenp.persistTemplate(t);
 				} else if (t instanceof PtoUTemplate) {
 					pup.persistTemplate(t);
 				} else if (t instanceof PtoLackUTemplate) {
@@ -235,6 +229,21 @@ public class RtsTemplatePersistenceManager {
 		return n;
 	}
 
+	public Iterator<RtsTemplate> getTemplateIterator() {
+		return templates.iterator();
+	}
+	
+	public Iterator<MetadataTemplate> getMetadataTemplateIterator() {
+		return metadata.iterator();
+	}
+	
+	public Stream<RtsTemplate> getTemplateStream() {
+		return templates.stream();
+	}
+	
+	public Stream<MetadataTemplate> getMetadataTemplateStream() {
+		return metadata.stream();
+	}
 	/*
 	private void connectToReferentNode(Node templateNode, RtsTemplate t) {
 		Node referentNode;
@@ -414,6 +423,7 @@ public class RtsTemplatePersistenceManager {
 	
     void setupSchema() {
     	
+    	/*
     	templateLabel = DynamicLabel.label("template");
     	instanceLabel = DynamicLabel.label("instance");
     	typeLabel = DynamicLabel.label("universal");
@@ -421,6 +431,15 @@ public class RtsTemplatePersistenceManager {
     	temporalRegionLabel = DynamicLabel.label("temporal_region");
     	dataLabel = DynamicLabel.label("data");
     	metadataLabel = DynamicLabel.label("metadata");
+    	*/
+    	
+    	templateLabel = Label.label("template");
+    	instanceLabel = Label.label("instance");
+    	typeLabel = Label.label("universal");
+    	relationLabel = Label.label("relation");
+    	temporalRegionLabel = Label.label("temporal_region");
+    	dataLabel = Label.label("data");
+    	metadataLabel = Label.label("metadata");
     	
   	
         try ( Transaction tx2 = graphDb.beginTx() )

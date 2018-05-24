@@ -86,13 +86,15 @@ public class TemporalReferencePersister {
 		Result r = 
 				graphDb.execute(TEMPORAL_NODE_BY_TEMPORAL_REFERENCE_QUERY, parameters);
 		boolean exists = r.hasNext();
+		//System.out.println("TemporalReferencePersister: checking to see if node exists already");
 		if (exists) {
 			Map<String,Object> map = r.next();
 			Collection<Object> c = map.values();
-			if (c.size() > 1) System.err.println("should only have retrieved one temporal reference!");
+			if (c.size() > 1) System.err.println("should have retrieved at most one temporal reference!");
 			n = (Node)c.iterator().next();
-			System.out.println(n);
+			//System.out.println("\t" + n);
 		}
+		//System.out.println(exists);
 		return exists;
 	}
 	

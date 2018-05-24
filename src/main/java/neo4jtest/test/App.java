@@ -1,6 +1,8 @@
 package neo4jtest.test;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -43,6 +45,7 @@ import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601UnitTime;
 import edu.uams.dbmi.util.iso8601.TimeUnit;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplatePersistenceManager;
+import edu.ufl.ctsi.rts.text.TemplateTextWriter;
 
 /**
  * Hello world!
@@ -91,6 +94,10 @@ public class App
 	    
 	    static URI instance_of;
 	    static Iui gregorianIui = Iui.createFromString("D4AF5C9A-47BA-4BF4-9BAE-F13A8ED6455E");
+	    static Iui bfoIui = Iui.createFromString("E7006DDD-3075-46DB-BEC2-FAD5A5F0B513");
+	    static Iui roIui = Iui.createFromString("C8BFD0E2-9CCE-4961-80F4-1290A7767B7C");
+	    static Iui ncbiTaxonIui = Iui.createFromString("D7A93FCB-72CA-4D89-A1AE-328F33138FBF");
+	    static Iui pnoIui = Iui.createFromString("6C151D9A-6694-4EFD-840F-BC7CBE90DB5E");
 
 	    public static void main( final String[] args )
 	    {
@@ -217,11 +224,13 @@ public class App
             ptouBad.setTemplateIui(Iui.createRandomIui());
             ptouBad.setReferent(wh);
             ptouBad.setRelationshipURI(instance_of);
+            ptouBad.setRelationshipOntologyIui(roIui);
             //ptouBad.setAuthoringTimeIui(t.getReferentIui());
             ptouBad.setAuthoringTimeReference(ta);
             ptouBad.setAuthorIui(wh);
             ptouBad.setTemporalReference(t3);
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
+            ptouBad.setUniversalOntologyIui(ncbiTaxonIui);
             rpm.addTemplate(ptouBad);
             
             /*
@@ -246,6 +255,26 @@ public class App
 					tb_name, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name);
 
             System.out.println("temporal reference t5: " + t5.getIdentifier());
+            
+            try {
+				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt");
+				TemplateTextWriter rw = new TemplateTextWriter(fw);
+				
+				try {
+					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				fw.close();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
             /*
              * Save all the templates accumulated thus far to Neo4J
              */
@@ -486,6 +515,7 @@ public class App
                 ptop4.addParticular(t7);
                 try {
                 	ptop4.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
+                	ptop4.setRelationshipOntologyIui(roIui);
     			} catch (URISyntaxException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
@@ -509,6 +539,7 @@ public class App
             ptop.setAuthorIui(authorIui);
             try {
 				ptop.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/OMIABIS_0000048"));
+				ptop.setRelationshipOntologyIui(roIui);  //ok so it's not correct IUIo parameter.  Temporizing.
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -527,12 +558,14 @@ public class App
             ptou.setTemplateIui(Iui.createRandomIui());
             ptou.setReferent(wh);
             ptou.setRelationshipURI(instance_of);
+            ptou.setRelationshipOntologyIui(roIui);
             //ptou.setAuthoringTimeIui(t.getReferentIui());
             ptou.setAuthoringTimeReference(ta);
             ptou.setAuthorIui(authorIui);
             //ptou.setTemporalEntityIui(t3.getReferent());
             ptou.setTemporalReference(t3);
             ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
+            ptou.setUniversalOntologyIui(ncbiTaxonIui);
        
             /*
              * W. Hogan's name instance of personal name
@@ -541,12 +574,14 @@ public class App
             ptou3.setTemplateIui(Iui.createRandomIui());
             ptou3.setReferent(wh_name);
             ptou3.setRelationshipURI(instance_of);
+            ptou3.setRelationshipOntologyIui(roIui);
             //ptou3.setAuthoringTimeIui(t.getReferentIui());
             ptou3.setAuthoringTimeReference(ta);
             ptou3.setAuthorIui(authorIui);
             //ptou3.setTemporalEntityIui(t3.getReferent());
             ptou3.setTemporalReference(t3);
             ptou3.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/IAO_0020015"));
+            ptou3.setUniversalOntologyIui(pnoIui);
             
             /*
              * W. Hogan's name designates W. Hogan
@@ -556,6 +591,7 @@ public class App
             ptop2.setAuthorIui(authorIui);
             try {
 				ptop2.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/IAO_0000219"));
+				ptop2.setRelationshipOntologyIui(roIui); //NEED TO FIX
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -597,6 +633,7 @@ public class App
             ptop3.addParticular(t3);
             try {
 				ptop3.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
+				ptop3.setRelationshipOntologyIui(roIui);  //FIX
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
