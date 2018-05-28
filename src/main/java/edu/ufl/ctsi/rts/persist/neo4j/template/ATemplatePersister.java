@@ -38,7 +38,7 @@ public class ATemplatePersister extends RepresentationalTemplatePersister {
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((ATemplate)templateToPersist).getReferent().toString());
+		Node referentNode = inc.persistEntity(((ATemplate)templateToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

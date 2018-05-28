@@ -112,13 +112,22 @@ public class RtsTemplatePersistenceManager {
 	public void addTemplate(RtsTemplate t) {
 		if (t instanceof ATemplate) {
 			ATemplate at = (ATemplate)t;
-			iuiToItsAssignmentTemplate.put(at.getReferent().toString(), t);
+			iuiToItsAssignmentTemplate.put(at.getReferentIui().toString(), t);
 		} else if ( (t instanceof PtoPTemplate) ) {
 			PtoPTemplate ptop = (PtoPTemplate)t;
 			Iterable<ParticularReference> p = ptop.getAllParticulars();
 			for (ParticularReference i : p) {
 				if (i instanceof Iui) iuisInPtoPTemplates.add(i.toString());
+				else if (i instanceof TemporalReference) {
+					TemporalReference tr = (TemporalReference)i;
+					tempReferences.add(tr);
+				}
 			}
+		} else if ( (t instanceof PtoDETemplate) ) {
+			PtoDETemplate ptode = (PtoDETemplate)t;
+			ParticularReference pr = ptode.getReferent();
+			if (pr instanceof TemporalReference)
+				tempReferences.add((TemporalReference)pr);
 		}
 		if (t instanceof MetadataTemplate) {
 			metadata.add((MetadataTemplate)t);
@@ -179,6 +188,8 @@ public class RtsTemplatePersistenceManager {
 			 *  templates as one transaction.
 			 */
 			templates.clear();
+			metadata.clear();
+			tempReferences.clear();
 			EntityNodePersister.clearCache();
 		}
 	}
@@ -214,8 +225,6 @@ public class RtsTemplatePersistenceManager {
 		
 	}
 
-	
-
 	static String createTemplateQuery = "CREATE (n:template { iui : {value}})";
 	
 	/*
@@ -243,6 +252,10 @@ public class RtsTemplatePersistenceManager {
 	
 	public Stream<MetadataTemplate> getMetadataTemplateStream() {
 		return metadata.stream();
+	}
+	
+	public Stream<TemporalReference> getTemporalReferenceStream() {
+		return tempReferences.stream();
 	}
 	/*
 	private void connectToReferentNode(Node templateNode, RtsTemplate t) {

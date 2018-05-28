@@ -98,6 +98,10 @@ public class App
 	    static Iui roIui = Iui.createFromString("C8BFD0E2-9CCE-4961-80F4-1290A7767B7C");
 	    static Iui ncbiTaxonIui = Iui.createFromString("D7A93FCB-72CA-4D89-A1AE-328F33138FBF");
 	    static Iui pnoIui = Iui.createFromString("6C151D9A-6694-4EFD-840F-BC7CBE90DB5E");
+	    
+	    //This one should refer to https://www.iana.org/assignments/character-sets/character-sets.xhtml
+	    static Iui characterEncodingsIui = Iui.createFromString("85F850AD-C348-4256-81F0-24DC45B63079");
+	    
 
 	    public static void main( final String[] args )
 	    {
@@ -153,11 +157,14 @@ public class App
             ten.setAuthoringTimeReference(ta);  
             try {
 				ten.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
+				ten.setRelationshipOntologyIui(bfoIui);
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            ten.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
+            ten.setDatatypeUui(new Uui("https://www.ietf.org/rfc/rfc3629.txt"));
+            ten.setDatatypeOntologyIui(characterEncodingsIui);
+            //ten.setNamingSystem(gregorianIui);
                         
             rpm.addTemporalReference(ta);
             rpm.addTemplate(ten);
@@ -179,8 +186,9 @@ public class App
              *   assertion (t) and name of date of birth (tb_name), and returns a tetemplate
              *   that references the interval from moment of birth to ~ta
              */
+            TimeZone tzChicago = TimeZone.getTimeZone("America/Chicago");
             TemporalReference t3 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
-					tb_name, wHoganNameTxt,	wh, wh, rpm, ta, ten, null);
+					tb_name, tzChicago, wHoganNameTxt,	wh, wh, rpm, ta, ten, null, null);
             
             /*
              * assign an IUI to the SNOMED-CT terminology
@@ -192,7 +200,7 @@ public class App
              */
             PtoCTemplate ptoc = new PtoCTemplate();
             ptoc.setTemplateIui(Iui.createRandomIui());
-            ptoc.setReferent(wh);
+            ptoc.setReferentIui(wh);
             //ptoc.setAuthoringTimeIui(t.getReferentIui());
             ptoc.setAuthoringTimeReference(ta);
             ptoc.setAuthorIui(wh);
@@ -222,7 +230,7 @@ public class App
              */
             PtoUTemplate ptouBad = new PtoUTemplate();
             ptouBad.setTemplateIui(Iui.createRandomIui());
-            ptouBad.setReferent(wh);
+            ptouBad.setReferentIui(wh);
             ptouBad.setRelationshipURI(instance_of);
             ptouBad.setRelationshipOntologyIui(roIui);
             //ptouBad.setAuthoringTimeIui(t.getReferentIui());
@@ -249,10 +257,11 @@ public class App
             
             //create another William Hogan
             tb_name = "1895-01-01";  //not his real birth date, either
+            TimeZone tzNewYork = TimeZone.getTimeZone("America/New_York");
             String td_name = "1982-02";
             Iui wfh = Iui.createRandomIui();
             TemporalReference t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
-					tb_name, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name);
+					tb_name, tzNewYork, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name, tzNewYork);
 
             System.out.println("temporal reference t5: " + t5.getIdentifier());
             
@@ -263,6 +272,7 @@ public class App
 				try {
 					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
 					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getTemporalReferenceStream().forEach(i -> { try { rw.writeTemporalReference(i); } catch (Exception e) { e.printStackTrace(); } } );
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -367,6 +377,27 @@ public class App
             dCorrection.setChangeType(RtsChangeType.X);
             //we could also point it at ptou if we wanted
             rpm.addTemplate(dCorrection);
+            
+            try {
+  				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt", true);
+  				TemplateTextWriter rw = new TemplateTextWriter(fw);
+  				
+  				try {
+  					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getTemporalReferenceStream().forEach(i -> { try { rw.writeTemporalReference(i); } catch (Exception e) { e.printStackTrace(); } } );
+  				} catch (Exception e) {
+  					// TODO Auto-generated catch block
+  					e.printStackTrace();
+  				}
+  				
+  				fw.close();
+  				
+  			} catch (IOException e) {
+  				// TODO Auto-generated catch block
+  				e.printStackTrace();
+  			}
+            
             rpm.commitTemplates();
             
             //System.out.println(d1.toString());
@@ -382,9 +413,9 @@ public class App
 	    }
 
 		private static TemporalReference createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
-				String tb_name,	String personsName, Iui wh, Iui authorIui, 
+				String tb_name,	TimeZone tzBirth, String personsName, Iui wh, Iui authorIui, 
 				RtsTemplatePersistenceManager rpm, TemporalReference ta, PtoDETemplate ten,
-				String td_name) {
+				String td_name, TimeZone tzDeath) {
 			
 			Iui wh_chair = Iui.createRandomIui();
             Iui wh_name = Iui.createRandomIui();
@@ -396,7 +427,7 @@ public class App
              */
             ATemplate a1 = new ATemplate();
             a1.setAuthorIui(authorIui);
-            a1.setReferent(wh);
+            a1.setReferentIui(wh);
             a1.setAuthoringTimestamp(new Iso8601DateTime());
             a1.setTemplateIui(Iui.createRandomIui());
             
@@ -405,7 +436,7 @@ public class App
              */
             ATemplate a2 = new ATemplate();
             a2.setAuthorIui(authorIui);
-            a2.setReferent(wh_chair);
+            a2.setReferentIui(wh_chair);
             a2.setAuthoringTimestamp(new Iso8601DateTime());
             a2.setTemplateIui(Iui.createRandomIui());
             
@@ -414,7 +445,7 @@ public class App
              */
             ATemplate a3 = new ATemplate();
             a3.setAuthorIui(authorIui);
-            a3.setReferent(wh_name);
+            a3.setReferentIui(wh_name);
             a3.setAuthoringTimestamp(new Iso8601DateTime());
             a3.setTemplateIui(Iui.createRandomIui());
             
@@ -442,7 +473,7 @@ public class App
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
-            TemporalReference t4 = new TemporalReference(db, TimeZone.getTimeZone("America/Chicago"));
+            TemporalReference t4 = new TemporalReference(db, tzBirth);
             
             /*
              * Name of day of W. Hogan's birth
@@ -458,11 +489,14 @@ public class App
             //ten2.setReferent(Iui.createRandomIui());
             try {
 				ten2.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
+				ten2.setRelationshipOntologyIui(bfoIui);
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            ten2.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
+            ten2.setDatatypeUui(new Uui("https://www.ietf.org/rfc/rfc3629.txt"));
+            ten2.setDatatypeOntologyIui(characterEncodingsIui);
+            //ten2.setNamingSystem(gregorianIui);
            
             
             /*
@@ -480,7 +514,7 @@ public class App
                 /*
                  * Day of W. Hogan's death
                  */
-            	t7 = new TemporalReference(deathDate, TimeZone.getDefault());
+            	t7 = new TemporalReference(deathDate, tzDeath);
             	                
                 /*
                  * Name of day of W. Hogan's death
@@ -497,11 +531,14 @@ public class App
                 //ten3.setReferent(Iui.createRandomIui());
                 try {
     				ten3.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
+    				ten3.setRelationshipOntologyIui(bfoIui);
     			} catch (URISyntaxException e) {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-                ten3.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
+                ten3.setDatatypeUui(new Uui("https://www.ietf.org/rfc/rfc3629.txt"));
+                ten3.setDatatypeOntologyIui(characterEncodingsIui);
+                //ten3.setNamingSystem(gregorianIui);
                 
                 /*
                  * PtoP for day of W. Hogan's death to time during which W. Hogan has been a human being
@@ -556,7 +593,7 @@ public class App
              */
             PtoUTemplate ptou = new PtoUTemplate();
             ptou.setTemplateIui(Iui.createRandomIui());
-            ptou.setReferent(wh);
+            ptou.setReferentIui(wh);
             ptou.setRelationshipURI(instance_of);
             ptou.setRelationshipOntologyIui(roIui);
             //ptou.setAuthoringTimeIui(t.getReferentIui());
@@ -572,7 +609,7 @@ public class App
              */
             PtoUTemplate ptou3 = new PtoUTemplate();
             ptou3.setTemplateIui(Iui.createRandomIui());
-            ptou3.setReferent(wh_name);
+            ptou3.setReferentIui(wh_name);
             ptou3.setRelationshipURI(instance_of);
             ptou3.setRelationshipOntologyIui(roIui);
             //ptou3.setAuthoringTimeIui(t.getReferentIui());
@@ -615,11 +652,17 @@ public class App
             ptodr.setData(personsName.getBytes());
             try {
 				ptodr.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
+				ptodr.setRelationshipOntologyIui(bfoIui);
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            ptodr.setDatatypeUui(new Uui("http://ctsi.ufl.edu/rts/UTF-8"));
+            ptodr.setDatatypeUui(new Uui("https://www.ietf.org/rfc/rfc3629.txt"));
+            //need to set datatype ontology IUI
+            ptodr.setDatatypeOntologyIui(characterEncodingsIui);
+            //need to set naming system IUI - not great but a hack for now to set it to
+            // Proper Name Ontology
+            ptodr.setNamingSystem(pnoIui);
             
             /*
              * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
