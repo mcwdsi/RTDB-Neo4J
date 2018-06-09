@@ -1,11 +1,16 @@
 package neo4jtest.test;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,6 +50,7 @@ import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601UnitTime;
 import edu.uams.dbmi.util.iso8601.TimeUnit;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplatePersistenceManager;
+import edu.ufl.ctsi.rts.text.TemplateTextParser;
 import edu.ufl.ctsi.rts.text.TemplateTextWriter;
 
 /**
@@ -391,6 +397,39 @@ public class App
   					e.printStackTrace();
   				}
   				
+  				FileReader fr_test = new FileReader("/Users/hoganwr/rtstemplates_old");
+  				BufferedReader br_test = new BufferedReader(fr_test);
+  				char[] read = new char[64];
+  				
+  				int i = 1;
+  				char prior_read = '\0';
+  				StringBuilder sb = new StringBuilder();
+  				while (i > 0) {
+  					i = br_test.read(read, 0, 64);
+  					//System.out.println(read);
+  					for (int j=0; j<i; j++) {
+  						if (read[j] == '\n' && prior_read != '\\') {
+  							System.out.println("Template = \"" + sb.toString() + "\"");
+  							sb = new StringBuilder();
+  							prior_read = '\0';
+  						} else {
+  							sb.append(read[j]);
+  							prior_read = read[j];
+  						}
+  					}
+  				}
+  				System.out.println(read);
+  				
+  				fr_test.close();
+  				
+  				/*LineNumberReader lnr = new LineNumberReader(fr_test);
+  				String line = null;
+  				while ((line=lnr.readLine())!=null) {
+  					System.out.println("\""+ line + "\"");
+  				}
+  				lnr.close();
+  				*/
+  				
   				fw.close();
   				
   			} catch (IOException e) {
@@ -410,6 +449,20 @@ public class App
             System.out.println("Long.MAX_VALUE=" + Long.MAX_VALUE);
             
             hello.shutDown();
+            
+            try {
+				TemplateTextParser ttr = new TemplateTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstemplates.txt")));
+				ttr.parseTemplates();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 	    }
 
 		private static TemporalReference createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
