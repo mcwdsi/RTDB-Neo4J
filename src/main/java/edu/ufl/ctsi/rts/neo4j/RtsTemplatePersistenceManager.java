@@ -28,6 +28,7 @@ import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.template.RtsTemplate;
 import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.time.TemporalReference;
+import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
@@ -38,7 +39,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDETemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoPTemplatePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.TemporalReferencePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.template.TemporalRegionPersister;
 
 public class RtsTemplatePersistenceManager {
 
@@ -64,6 +65,7 @@ public class RtsTemplatePersistenceManager {
 	HashSet<RtsTemplate> templates;
 	HashSet<MetadataTemplate> metadata;
 	HashSet<TemporalReference> tempReferences;
+	HashSet<TemporalRegion> tempRegions;
 	
 	HashMap<Iui, Node> iuiNode;
 	HashMap<String, Node> uiNode;
@@ -81,12 +83,13 @@ public class RtsTemplatePersistenceManager {
 	PtoCTemplatePersister pcp;
 	MetadataTemplatePersister mp;
 	
-	TemporalReferencePersister trp;
+	TemporalRegionPersister trp;
 	
 	public RtsTemplatePersistenceManager() {
 		templates = new HashSet<RtsTemplate>();
 		metadata = new HashSet<MetadataTemplate>();
 		tempReferences = new HashSet<TemporalReference>();
+		tempRegions = new HashSet<TemporalRegion>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
 		iuiToItsAssignmentTemplate = new HashMap<String, RtsTemplate>();
@@ -104,7 +107,7 @@ public class RtsTemplatePersistenceManager {
 		pdrp = new PtoDETemplatePersister(graphDb);
 		pcp = new PtoCTemplatePersister(graphDb);
 		mp = new MetadataTemplatePersister(graphDb);
-		trp = new TemporalReferencePersister(graphDb);
+		trp = new TemporalRegionPersister(graphDb);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
@@ -190,6 +193,7 @@ public class RtsTemplatePersistenceManager {
 			templates.clear();
 			metadata.clear();
 			tempReferences.clear();
+			tempRegions.clear();
 			EntityNodePersister.clearCache();
 		}
 	}
@@ -256,6 +260,10 @@ public class RtsTemplatePersistenceManager {
 	
 	public Stream<TemporalReference> getTemporalReferenceStream() {
 		return tempReferences.stream();
+	}
+	
+	public Stream<TemporalRegion> getTemporalRegionStream() {
+		return tempRegions.stream();
 	}
 	/*
 	private void connectToReferentNode(Node templateNode, RtsTemplate t) {
@@ -553,5 +561,9 @@ public class RtsTemplatePersistenceManager {
     
 	public void addTemporalReference(TemporalReference t) {
 		tempReferences.add(t);
+	}
+	
+	public void addTemporalRegion(TemporalRegion t) {
+		tempRegions.add(t);
 	}
 }

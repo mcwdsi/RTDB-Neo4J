@@ -11,6 +11,7 @@ import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.RelationNodeCreator;
+import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
 
 public abstract class AssertionalTemplatePersister extends
 		RepresentationalTemplatePersister {
@@ -19,8 +20,8 @@ public abstract class AssertionalTemplatePersister extends
 	
 	TemporalReference taRef;
 	TemporalReference trRef;
-	
-	TemporalReferencePersister trp;
+
+	TemporalNodeCreator tnc;
 	
 	String rui;
 	
@@ -28,7 +29,7 @@ public abstract class AssertionalTemplatePersister extends
 		super(db);
 		rnc = new RelationNodeCreator(this.graphDb);
 		rui = null;
-		trp = new TemporalReferencePersister(this.graphDb);
+		tnc = new TemporalNodeCreator(this.graphDb);
 	}
 	
 	@Override
@@ -80,8 +81,9 @@ public abstract class AssertionalTemplatePersister extends
 		/*
 		 * First, persist (or get already persisted) temporal reference node
 		 */
-		trp.persistTemporalReference(taRef);
-		Node target = trp.getNode();
+		//trp.persistTemporalRegion(taRef);
+		
+		Node target = tnc.persistEntity(taRef.toString());
 		//Then, create relationship from this template to that node
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
@@ -95,8 +97,8 @@ public abstract class AssertionalTemplatePersister extends
 			/*
 			 * First, persist (or get already persisted) temporal reference node
 			 */
-			trp.persistTemporalReference(trRef);
-			Node target = trp.getNode();
+			//trp.persistTemporalRegion(trRef);
+			Node target = tnc.persistEntity(trRef.toString());  // trp.getNode();
 			//Then, create relationship from this template to that node
 			n.createRelationshipTo(target, RtsRelationshipType.tr);
 		}

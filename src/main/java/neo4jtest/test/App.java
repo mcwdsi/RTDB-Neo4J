@@ -40,7 +40,7 @@ import edu.uams.dbmi.rts.template.PtoDETemplate;
 import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.template.RtsTemplate;
-import edu.uams.dbmi.rts.time.TemporalReference;
+import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.uams.dbmi.util.iso8601.Iso8601Date;
 import edu.uams.dbmi.util.iso8601.Iso8601Date.DateConfiguration;
@@ -147,9 +147,9 @@ public class App
             /*
              * Time of assertion of this set of templates
              */
-            TemporalReference ta = new TemporalReference(
+            TemporalRegion ta = new TemporalRegion(
             		new Iso8601DateTime(ta_date, ta_time), TimeZone.getDefault());
-           
+           rpm.addTemporalRegion(ta);
             
             /*
              * Name of time of assertion of this set of templates
@@ -160,7 +160,7 @@ public class App
             ten.setData(ta_name.getBytes());
             ten.setNamingSystem(gregorianIui);
             ten.setReferent(Iui.createRandomIui());
-            ten.setAuthoringTimeReference(ta);  
+            ten.setAuthoringTimeReference(ta.getTemporalRefeence());  
             try {
 				ten.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
 				ten.setRelationshipOntologyIui(bfoIui);
@@ -172,7 +172,7 @@ public class App
             ten.setDatatypeOntologyIui(characterEncodingsIui);
             //ten.setNamingSystem(gregorianIui);
                         
-            rpm.addTemporalReference(ta);
+            rpm.addTemporalReference(ta.getTemporalRefeence());
             rpm.addTemplate(ten);
             
             //Metadata template for ten
@@ -193,8 +193,10 @@ public class App
              *   that references the interval from moment of birth to ~ta
              */
             TimeZone tzChicago = TimeZone.getTimeZone("America/Chicago");
-            TemporalReference t3 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+            TemporalRegion t3 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 					tb_name, tzChicago, wHoganNameTxt,	wh, wh, rpm, ta, ten, null, null);
+            
+            rpm.addTemporalRegion(t3);
             
             /*
              * assign an IUI to the SNOMED-CT terminology
@@ -208,10 +210,10 @@ public class App
             ptoc.setTemplateIui(Iui.createRandomIui());
             ptoc.setReferentIui(wh);
             //ptoc.setAuthoringTimeIui(t.getReferentIui());
-            ptoc.setAuthoringTimeReference(ta);
+            ptoc.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptoc.setAuthorIui(wh);
             ptoc.setConceptCui(new Cui("66839005"));
-            ptoc.setTemporalReference(t3);  //the temporal region when a concept annotation "holds" is fairly meaningless
+            ptoc.setTemporalReference(t3.getTemporalRefeence());  //the temporal region when a concept annotation "holds" is fairly meaningless
             ptoc.setConceptSystemIui(snctCsIui);  
             rpm.addTemplate(ptoc);
             
@@ -240,9 +242,9 @@ public class App
             ptouBad.setRelationshipURI(instance_of);
             ptouBad.setRelationshipOntologyIui(roIui);
             //ptouBad.setAuthoringTimeIui(t.getReferentIui());
-            ptouBad.setAuthoringTimeReference(ta);
+            ptouBad.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptouBad.setAuthorIui(wh);
-            ptouBad.setTemporalReference(t3);
+            ptouBad.setTemporalReference(t3.getTemporalRefeence());
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
             ptouBad.setUniversalOntologyIui(ncbiTaxonIui);
             rpm.addTemplate(ptouBad);
@@ -266,10 +268,10 @@ public class App
             TimeZone tzNewYork = TimeZone.getTimeZone("America/New_York");
             String td_name = "1982-02";
             Iui wfh = Iui.createRandomIui();
-            TemporalReference t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+            TemporalRegion t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 					tb_name, tzNewYork, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name, tzNewYork);
 
-            System.out.println("temporal reference t5: " + t5.getIdentifier());
+            System.out.println("temporal reference t5: " + t5.getTemporalRefeence().toString());
             
             try {
 				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt");
@@ -278,7 +280,7 @@ public class App
 				try {
 					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
 					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
-					rpm.getTemporalReferenceStream().forEach(i -> { try { rw.writeTemporalReference(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getTemporalRegionStream().forEach(i -> { try { rw.writeTemporalRegion(i); } catch (Exception e) { e.printStackTrace(); } } );
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -391,7 +393,7 @@ public class App
   				try {
   					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
   					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
-  					rpm.getTemporalReferenceStream().forEach(i -> { try { rw.writeTemporalReference(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getTemporalRegionStream().forEach(i -> { try { rw.writeTemporalRegion(i); } catch (Exception e) { e.printStackTrace(); } } );
   				} catch (Exception e) {
   					// TODO Auto-generated catch block
   					e.printStackTrace();
@@ -465,9 +467,9 @@ public class App
 			}
 	    }
 
-		private static TemporalReference createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 				String tb_name,	TimeZone tzBirth, String personsName, Iui wh, Iui authorIui, 
-				RtsTemplatePersistenceManager rpm, TemporalReference ta, PtoDETemplate ten,
+				RtsTemplatePersistenceManager rpm, TemporalRegion ta, PtoDETemplate ten,
 				String td_name, TimeZone tzDeath) {
 			
 			Iui wh_chair = Iui.createRandomIui();
@@ -506,14 +508,15 @@ public class App
             /*
              * Time during which W. Hogan has been owner of his chair
              */
-            TemporalReference t2 = new TemporalReference(TemporalReference.ONE_D_REGION_TYPE);
+            TemporalRegion t2 = new TemporalRegion(TemporalRegion.ONE_D_REGION_TYPE);
+            rpm.addTemporalRegion(t2);
             
             
             /*
              * Time during which W. Hogan has been instance of human being
              */
-            TemporalReference t3 = new TemporalReference(TemporalReference.ONE_D_REGION_TYPE);
-            
+            TemporalRegion t3 = new TemporalRegion(TemporalRegion.ONE_D_REGION_TYPE);
+            rpm.addTemporalRegion(t3);
             
             /*
              * Day of W. Hogan's birth
@@ -526,16 +529,17 @@ public class App
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
-            TemporalReference t4 = new TemporalReference(db, tzBirth);
+            TemporalRegion t4 = new TemporalRegion(db, tzBirth);
+            rpm.addTemporalRegion(t4);
             
             /*
              * Name of day of W. Hogan's birth
              */
             PtoDETemplate ten2 = new PtoDETemplate();
             ten2.setTemplateIui(Iui.createRandomIui());
-            ten2.setReferent(t4);
+            ten2.setReferent(t4.getTemporalRefeence());
             //ten2.setAuthoringTimeIui(t.getReferentIui());
-            ten2.setAuthoringTimeReference(ta);
+            ten2.setAuthoringTimeReference(ta.getTemporalRefeence());
             ten2.setAuthorIui(authorIui);
             ten2.setData(tb_name.getBytes());
             ten2.setNamingSystem(gregorianIui);
@@ -555,7 +559,7 @@ public class App
             /*
              * If we have a date of death, then create it and add it
              */
-            TemporalReference t7 = null;
+            TemporalRegion t7 = null;
             PtoDETemplate ten3 = null;
             if (td_name != null) {
             	Iso8601Date deathDate = null;
@@ -567,7 +571,8 @@ public class App
                 /*
                  * Day of W. Hogan's death
                  */
-            	t7 = new TemporalReference(deathDate, tzDeath);
+            	t7 = new TemporalRegion(deathDate, tzDeath);
+            	rpm.addTemporalRegion(t7);
             	                
                 /*
                  * Name of day of W. Hogan's death
@@ -575,9 +580,9 @@ public class App
                 ten3 = new PtoDETemplate();
                 ten3.setTemplateIui(Iui.createRandomIui());
                 //ten3.setTemporalEntityIui(t4.getReferentIui());
-                ten3.setReferent(t7);
+                ten3.setReferent(t7.getTemporalRefeence());
                 //ten3.setAuthoringTimeIui(t.getReferentIui());
-                ten3.setAuthoringTimeReference(ta);
+                ten3.setAuthoringTimeReference(ta.getTemporalRefeence());
                 ten3.setAuthorIui(authorIui);
                 ten3.setData(td_name.getBytes());
                 ten3.setNamingSystem(gregorianIui);
@@ -600,9 +605,9 @@ public class App
                 ptop4.setTemplateIui(Iui.createRandomIui());
                 ptop4.setAuthorIui(authorIui);
                 //ptop4.setAuthoringTimeIui(t.getReferentIui());
-                ptop4.setAuthoringTimeReference(ta);
-                ptop4.setReferent(t3);
-                ptop4.addParticular(t7);
+                ptop4.setAuthoringTimeReference(ta.getTemporalRefeence());
+                ptop4.setReferent(t3.getTemporalRefeence());
+                ptop4.addParticular(t7.getTemporalRefeence());
                 try {
                 	ptop4.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
                 	ptop4.setRelationshipOntologyIui(roIui);
@@ -610,13 +615,14 @@ public class App
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-                ptop4.setTemporalReference(TemporalReference.MAX_TEMPORAL_REGION);
+                ptop4.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION.getTemporalRefeence());
+                rpm.addTemporalRegion(TemporalRegion.MAX_TEMPORAL_REGION);
                 
                 //tset.add(t7);
                 tset.add(ten3);
                 tset.add(ptop4);
                 
-                rpm.addTemporalReference(t7);
+                rpm.addTemporalReference(t7.getTemporalRefeence());
                 rpm.addTemplate(ten3);
                 rpm.addTemplate(ptop4);
             }
@@ -635,10 +641,10 @@ public class App
 				e.printStackTrace();
 			}
             //ptop.setAuthoringTimeIui(t.getReferentIui());
-            ptop.setAuthoringTimeReference(ta);
+            ptop.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptop.addParticular(wh);
             ptop.setTemplateIui(Iui.createRandomIui());
-            ptop.setTemporalReference(t2);
+            ptop.setTemporalReference(t2.getTemporalRefeence());
             //ptop.setTemporalEntityIui(t2.getReferent());
           
             /*
@@ -650,10 +656,10 @@ public class App
             ptou.setRelationshipURI(instance_of);
             ptou.setRelationshipOntologyIui(roIui);
             //ptou.setAuthoringTimeIui(t.getReferentIui());
-            ptou.setAuthoringTimeReference(ta);
+            ptou.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptou.setAuthorIui(authorIui);
             //ptou.setTemporalEntityIui(t3.getReferent());
-            ptou.setTemporalReference(t3);
+            ptou.setTemporalReference(t3.getTemporalRefeence());
             ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
             ptou.setUniversalOntologyIui(ncbiTaxonIui);
        
@@ -666,10 +672,10 @@ public class App
             ptou3.setRelationshipURI(instance_of);
             ptou3.setRelationshipOntologyIui(roIui);
             //ptou3.setAuthoringTimeIui(t.getReferentIui());
-            ptou3.setAuthoringTimeReference(ta);
+            ptou3.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptou3.setAuthorIui(authorIui);
             //ptou3.setTemporalEntityIui(t3.getReferent());
-            ptou3.setTemporalReference(t3);
+            ptou3.setTemporalReference(t3.getTemporalRefeence());
             ptou3.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/IAO_0020015"));
             ptou3.setUniversalOntologyIui(pnoIui);
             
@@ -687,11 +693,11 @@ public class App
 				e.printStackTrace();
 			}
             //ptop2.setAuthoringTimeIui(t.getReferentIui());
-            ptop2.setAuthoringTimeReference(ta);
+            ptop2.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptop2.addParticular(wh);
             ptop2.setTemplateIui(Iui.createRandomIui());
             //ptop2.setTemporalEntityIui(t3.getReferent());  
-            ptop2.setTemporalReference(t3);
+            ptop2.setTemporalReference(t3.getTemporalRefeence());
             
             /*
              * W. Hogan's name's digital representation
@@ -700,7 +706,7 @@ public class App
             ptodr.setTemplateIui(Iui.createRandomIui());
             ptodr.setAuthorIui(authorIui);
             //ptodr.setAuthoringTimeIui(t.getReferentIui());
-            ptodr.setAuthoringTimeReference(ta);
+            ptodr.setAuthoringTimeReference(ta.getTemporalRefeence());
             ptodr.setReferent(wh_name);
             ptodr.setData(personsName.getBytes());
             try {
@@ -724,9 +730,9 @@ public class App
             ptop3.setTemplateIui(Iui.createRandomIui());
             ptop3.setAuthorIui(authorIui);
             //ptop3.setAuthoringTimeIui(t.getReferentIui());
-            ptop3.setAuthoringTimeReference(ta);
-            ptop3.setReferent(t4);
-            ptop3.addParticular(t3);
+            ptop3.setAuthoringTimeReference(ta.getTemporalRefeence());
+            ptop3.setReferent(t4.getTemporalRefeence());
+            ptop3.addParticular(t3.getTemporalRefeence());
             try {
 				ptop3.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
 				ptop3.setRelationshipOntologyIui(roIui);  //FIX
@@ -735,7 +741,7 @@ public class App
 				e.printStackTrace();
 			}
             //ptop3.setTemporalEntityIui(maxTimeIntervalIui);
-            ptop3.setTemporalReference(TemporalReference.MAX_TEMPORAL_REGION);
+            ptop3.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION.getTemporalRefeence());
             
             tset.add(a1);
             tset.add(a2);
@@ -751,9 +757,7 @@ public class App
             rpm.addTemplate(a1);
             rpm.addTemplate(a2);
             rpm.addTemplate(a3);
-            rpm.addTemporalReference(t2);
-            rpm.addTemporalReference(t3);
-            rpm.addTemporalReference(t4);
+            
             rpm.addTemplate(ptop);
             rpm.addTemplate(ptop2);
             rpm.addTemplate(ptop3);

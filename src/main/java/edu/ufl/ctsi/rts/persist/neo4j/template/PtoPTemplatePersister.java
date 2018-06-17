@@ -11,14 +11,17 @@ import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
 
 public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 	
-	TemporalReferencePersister trp;
+	//TemporalRegionPersister trp;
+	TemporalNodeCreator tnc;
 	
 	public PtoPTemplatePersister(GraphDatabaseService db) {
 		super(db);
-		trp = new TemporalReferencePersister(this.graphDb);
+		//trp = new TemporalRegionPersister(this.graphDb);
+		tnc = new TemporalNodeCreator(this.graphDb);
 	}
 
 	@Override
@@ -47,7 +50,8 @@ public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 			if (i instanceof Iui) {
 				target = inc.persistEntity(i.toString());
 			} else if (i instanceof TemporalReference) {
-				target = trp.persistTemporalReference((TemporalReference)i);
+				//target = trp.persistTemporalRegion((TemporalRegion)i);
+				target = tnc.persistEntity(((TemporalReference)i).toString());
 			}
 			Relationship r = n.createRelationshipTo(target, RtsRelationshipType.p);
 			r.setProperty("relation order", Integer.toString(order));

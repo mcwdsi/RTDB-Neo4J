@@ -9,7 +9,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
 
 import edu.uams.dbmi.rts.iui.Iui;
-import edu.uams.dbmi.rts.time.TemporalReference;
+import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
@@ -17,11 +17,16 @@ import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
-public class TemporalReferencePersister {
+public class TemporalRegionPersister {
 
+	static final String TEMPORAL_REGION_BY_TEMPORAL_REFERENCE_QUERY = 
+			"MATCH (n:" + RtsNodeLabel.TEMPORAL_REGION.getLabelText() + 
+				" { tref : {value} })-[:uui]->(n2:universal),"
+				+ "n-[:iuins]->(n3:instance) return n";
+	
 	static final String TEMPORAL_NODE_BY_TEMPORAL_REFERENCE_QUERY = 
 			"MATCH (n:" + RtsNodeLabel.TEMPORAL_REGION.getLabelText() + 
-				" { tref : {value} }) return n";
+			" { tref : {value} }) return n";
 	
 	GraphDatabaseService graphDb;
 
@@ -32,16 +37,16 @@ public class TemporalReferencePersister {
 	
 	Node n;
 
-	protected TemporalReference temporalReferenceToPersist;
+	protected TemporalRegion temporalReferenceToPersist;
 		
-	public TemporalReferencePersister(GraphDatabaseService db) {
+	public TemporalRegionPersister(GraphDatabaseService db) {
 		this.graphDb = db;
 		tnc = new TemporalNodeCreator(this.graphDb);
 		inc = new InstanceNodeCreator(this.graphDb);
 		unc = new UniversalNodeCreator(this.graphDb);
 	}
 	
-	public Node persistTemporalReference(TemporalReference t) {
+	public Node persistTemporalRegion(TemporalRegion t) {
 		//check to see if temporal reference exists already, if so, then grab the node and return
 		if (existsInDb(t)) {
 			return n;
@@ -53,8 +58,8 @@ public class TemporalReferencePersister {
 		 */
 		temporalReferenceToPersist = t;
 		
-		//if not in database already, then create the template node
-		n = tnc.persistEntity(t.getIdentifier());
+		//if not in database already, then create the temporal node
+		n = tnc.persistEntity(t.getTemporalRefeence().toString());
 		
 		//connect temporal entity to its type (0D vs. 1D)
 		connectToType(t.getTemporalType());
@@ -80,11 +85,11 @@ public class TemporalReferencePersister {
 		n.createRelationshipTo(target, RtsRelationshipType.iuins);
 	}
 
-	protected boolean existsInDb(TemporalReference t) {
+	protected boolean existsInDb(TemporalRegion t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("value", t.getIdentifier());
+		parameters.put("value", t.getTemporalRefeence().toString());
 		Result r = 
-				graphDb.execute(TEMPORAL_NODE_BY_TEMPORAL_REFERENCE_QUERY, parameters);
+				graphDb.execute(TEMPORAL_REGION_BY_TEMPORAL_REFERENCE_QUERY, parameters);
 		boolean exists = r.hasNext();
 		//System.out.println("TemporalReferencePersister: checking to see if node exists already");
 		if (exists) {
