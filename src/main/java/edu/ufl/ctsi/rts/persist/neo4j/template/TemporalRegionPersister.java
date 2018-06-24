@@ -59,7 +59,7 @@ public class TemporalRegionPersister {
 		temporalReferenceToPersist = t;
 		
 		//if not in database already, then create the temporal node
-		n = tnc.persistEntity(t.getTemporalRefeence().toString());
+		n = tnc.persistEntity(t.getTemporalReference().toString());
 		
 		//connect temporal entity to its type (0D vs. 1D)
 		connectToType(t.getTemporalType());
@@ -87,7 +87,7 @@ public class TemporalRegionPersister {
 
 	protected boolean existsInDb(TemporalRegion t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("value", t.getTemporalRefeence().toString());
+		parameters.put("value", t.getTemporalReference().toString());
 		Result r = 
 				graphDb.execute(TEMPORAL_REGION_BY_TEMPORAL_REFERENCE_QUERY, parameters);
 		boolean exists = r.hasNext();
