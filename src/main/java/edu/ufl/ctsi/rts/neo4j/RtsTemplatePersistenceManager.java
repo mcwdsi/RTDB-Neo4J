@@ -238,7 +238,7 @@ public class RtsTemplatePersistenceManager {
 	 */
 	private Node createTemplateNode(RtsTuple t) {
 		Node n = graphDb.createNode(templateLabel);
-		n.setProperty("ui", t.getTemplateIui().toString());
+		n.setProperty("ui", t.getTupleIui().toString());
 		return n;
 	}
 
@@ -381,7 +381,7 @@ public class RtsTemplatePersistenceManager {
 	
 	boolean isTemplateInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("value", t.getTemplateIui().toString());
+		parameters.put("value", t.getTupleIui().toString());
 		return graphDb.execute(templateByIuiQuery, parameters).hasNext();
 	}
 	

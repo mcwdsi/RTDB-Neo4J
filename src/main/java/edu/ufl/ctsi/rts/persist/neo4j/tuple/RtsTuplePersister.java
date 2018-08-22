@@ -40,7 +40,7 @@ public abstract class RtsTuplePersister {
 		templateToPersist = t;
 		
 		//if not in database already, then create the template node
-		n = tnc.persistEntity(t.getTemplateIui().toString());
+		n = tnc.persistEntity(t.getTupleIui().toString());
 		
 		//set the type of the template - each non-abstract subclass will know its type
 		setTemplateTypeProperty();
@@ -52,7 +52,7 @@ public abstract class RtsTuplePersister {
 	
 	protected boolean existsInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("value", t.getTemplateIui().toString());
+		parameters.put("value", t.getTupleIui().toString());
 		return graphDb.execute(TEMPLATE_BY_IUI_QUERY, parameters).hasNext();
 	}
 

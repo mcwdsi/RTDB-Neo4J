@@ -155,7 +155,7 @@ public class App
              * Name of time of assertion of this set of templates
              */
             PtoDETuple ten = new PtoDETuple();
-            ten.setTemplateIui(Iui.createRandomIui());
+            ten.setTupleIui(Iui.createRandomIui());
             ten.setAuthorIui(wh);
             ten.setData(ta_name.getBytes());
             ten.setNamingSystem(gregorianIui);
@@ -177,8 +177,8 @@ public class App
             
             //Metadata template for ten
          	MetadataTuple d2 = new MetadataTuple();
-        	d2.setTemplateIui(Iui.createRandomIui());
-        	d2.setReferent(ten.getTemplateIui());
+        	d2.setTupleIui(Iui.createRandomIui());
+        	d2.setReferent(ten.getTupleIui());
         	d2.setAuthorIui(wh);
             //d.setAuthoringTimestamp(new Iso8601DateTime());
         	d2.setChangeReason(RtsChangeReason.CR);
@@ -207,7 +207,7 @@ public class App
              * PtoC that annotates W. Hogan with SNOMED-CT's "Father (person)" concept
              */
             PtoCTuple ptoc = new PtoCTuple();
-            ptoc.setTemplateIui(Iui.createRandomIui());
+            ptoc.setTupleIui(Iui.createRandomIui());
             ptoc.setReferentIui(wh);
             //ptoc.setAuthoringTimeIui(t.getReferentIui());
             ptoc.setAuthoringTimeReference(ta.getTemporalReference());
@@ -221,8 +221,8 @@ public class App
              * Metadata template for PtoC template
              */
         	MetadataTuple d3 = new MetadataTuple();
-        	d3.setTemplateIui(Iui.createRandomIui());
-        	d3.setReferent(ptoc.getTemplateIui());
+        	d3.setTupleIui(Iui.createRandomIui());
+        	d3.setReferent(ptoc.getTupleIui());
         	d3.setAuthorIui(wh);
             //d.setAuthoringTimestamp(new Iso8601DateTime());
         	d3.setChangeReason(RtsChangeReason.CR);
@@ -237,7 +237,7 @@ public class App
              *   this template after the original commit
              */
             PtoUTuple ptouBad = new PtoUTuple();
-            ptouBad.setTemplateIui(Iui.createRandomIui());
+            ptouBad.setTupleIui(Iui.createRandomIui());
             ptouBad.setReferentIui(wh);
             ptouBad.setRelationshipURI(instance_of);
             ptouBad.setRelationshipOntologyIui(roIui);
@@ -253,8 +253,8 @@ public class App
              * The original metadata template for the misinformed PtoU template
              */
         	MetadataTuple d4 = new MetadataTuple();
-        	d4.setTemplateIui(Iui.createRandomIui());
-        	d4.setReferent(ptouBad.getTemplateIui());
+        	d4.setTupleIui(Iui.createRandomIui());
+        	d4.setReferent(ptouBad.getTupleIui());
         	d4.setAuthorIui(wh);
             //d.setAuthoringTimestamp(new Iso8601DateTime());
         	d4.setChangeReason(RtsChangeReason.CR);
@@ -278,8 +278,8 @@ public class App
 				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
 				
 				try {
-					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
-					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getTemplateStream().forEach(i -> { try { rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
 					rpm.getTemporalRegionStream().forEach(i -> { try { rw.writeTemporalRegion(i); } catch (Exception e) { e.printStackTrace(); } } );
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -376,8 +376,8 @@ public class App
              *   which per Ceusters' error coding is an error of type U1
              */
             MetadataTuple dCorrection = new MetadataTuple();
-            dCorrection.setTemplateIui(Iui.createRandomIui());
-            dCorrection.setReferent(ptouBad.getTemplateIui());
+            dCorrection.setTupleIui(Iui.createRandomIui());
+            dCorrection.setReferent(ptouBad.getTupleIui());
             dCorrection.setAuthoringTimestamp(new Iso8601DateTime());
             dCorrection.setAuthorIui(wh);
             dCorrection.setChangeReason(RtsChangeReason.XR);
@@ -391,8 +391,8 @@ public class App
   				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
   				
   				try {
-  					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
-  					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getTemplateStream().forEach(i -> { try { rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
   					rpm.getTemporalRegionStream().forEach(i -> { try { rw.writeTemporalRegion(i); } catch (Exception e) { e.printStackTrace(); } } );
   				} catch (Exception e) {
   					// TODO Auto-generated catch block
@@ -454,7 +454,7 @@ public class App
             
             try {
 				RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstemplates.txt")));
-				ttr.parseTemplates();
+				ttr.parseTuples();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -484,7 +484,7 @@ public class App
             a1.setAuthorIui(authorIui);
             a1.setReferentIui(wh);
             a1.setAuthoringTimestamp(new Iso8601DateTime());
-            a1.setTemplateIui(Iui.createRandomIui());
+            a1.setTupleIui(Iui.createRandomIui());
             
             /*
              * W. Hogan's chair
@@ -493,7 +493,7 @@ public class App
             a2.setAuthorIui(authorIui);
             a2.setReferentIui(wh_chair);
             a2.setAuthoringTimestamp(new Iso8601DateTime());
-            a2.setTemplateIui(Iui.createRandomIui());
+            a2.setTupleIui(Iui.createRandomIui());
             
             /*
              * W. Hogan's full name
@@ -502,7 +502,7 @@ public class App
             a3.setAuthorIui(authorIui);
             a3.setReferentIui(wh_name);
             a3.setAuthoringTimestamp(new Iso8601DateTime());
-            a3.setTemplateIui(Iui.createRandomIui());
+            a3.setTupleIui(Iui.createRandomIui());
             
             
             /*
@@ -536,7 +536,7 @@ public class App
              * Name of day of W. Hogan's birth
              */
             PtoDETuple ten2 = new PtoDETuple();
-            ten2.setTemplateIui(Iui.createRandomIui());
+            ten2.setTupleIui(Iui.createRandomIui());
             ten2.setReferent(t4.getTemporalReference());
             //ten2.setAuthoringTimeIui(t.getReferentIui());
             ten2.setAuthoringTimeReference(ta.getTemporalReference());
@@ -578,7 +578,7 @@ public class App
                  * Name of day of W. Hogan's death
                  */
                 ten3 = new PtoDETuple();
-                ten3.setTemplateIui(Iui.createRandomIui());
+                ten3.setTupleIui(Iui.createRandomIui());
                 //ten3.setTemporalEntityIui(t4.getReferentIui());
                 ten3.setReferent(t7.getTemporalReference());
                 //ten3.setAuthoringTimeIui(t.getReferentIui());
@@ -602,7 +602,7 @@ public class App
                  * PtoP for day of W. Hogan's death to time during which W. Hogan has been a human being
                  */
                 PtoPTuple ptop4 = new PtoPTuple();
-                ptop4.setTemplateIui(Iui.createRandomIui());
+                ptop4.setTupleIui(Iui.createRandomIui());
                 ptop4.setAuthorIui(authorIui);
                 //ptop4.setAuthoringTimeIui(t.getReferentIui());
                 ptop4.setAuthoringTimeReference(ta.getTemporalReference());
@@ -643,7 +643,7 @@ public class App
             //ptop.setAuthoringTimeIui(t.getReferentIui());
             ptop.setAuthoringTimeReference(ta.getTemporalReference());
             ptop.addParticular(wh);
-            ptop.setTemplateIui(Iui.createRandomIui());
+            ptop.setTupleIui(Iui.createRandomIui());
             ptop.setTemporalReference(t2.getTemporalReference());
             //ptop.setTemporalEntityIui(t2.getReferent());
           
@@ -651,7 +651,7 @@ public class App
              * W. Hogan instance of human being
              */
             PtoUTuple ptou = new PtoUTuple();
-            ptou.setTemplateIui(Iui.createRandomIui());
+            ptou.setTupleIui(Iui.createRandomIui());
             ptou.setReferentIui(wh);
             ptou.setRelationshipURI(instance_of);
             ptou.setRelationshipOntologyIui(roIui);
@@ -667,7 +667,7 @@ public class App
              * W. Hogan's name instance of personal name
              */
             PtoUTuple ptou3 = new PtoUTuple();
-            ptou3.setTemplateIui(Iui.createRandomIui());
+            ptou3.setTupleIui(Iui.createRandomIui());
             ptou3.setReferentIui(wh_name);
             ptou3.setRelationshipURI(instance_of);
             ptou3.setRelationshipOntologyIui(roIui);
@@ -695,7 +695,7 @@ public class App
             //ptop2.setAuthoringTimeIui(t.getReferentIui());
             ptop2.setAuthoringTimeReference(ta.getTemporalReference());
             ptop2.addParticular(wh);
-            ptop2.setTemplateIui(Iui.createRandomIui());
+            ptop2.setTupleIui(Iui.createRandomIui());
             //ptop2.setTemporalEntityIui(t3.getReferent());  
             ptop2.setTemporalReference(t3.getTemporalReference());
             
@@ -703,7 +703,7 @@ public class App
              * W. Hogan's name's digital representation
              */
             PtoDETuple ptodr = new PtoDETuple();
-            ptodr.setTemplateIui(Iui.createRandomIui());
+            ptodr.setTupleIui(Iui.createRandomIui());
             ptodr.setAuthorIui(authorIui);
             //ptodr.setAuthoringTimeIui(t.getReferentIui());
             ptodr.setAuthoringTimeReference(ta.getTemporalReference());
@@ -727,7 +727,7 @@ public class App
              * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
              */
             PtoPTuple ptop3 = new PtoPTuple();
-            ptop3.setTemplateIui(Iui.createRandomIui());
+            ptop3.setTupleIui(Iui.createRandomIui());
             ptop3.setAuthorIui(authorIui);
             //ptop3.setAuthoringTimeIui(t.getReferentIui());
             ptop3.setAuthoringTimeReference(ta.getTemporalReference());
@@ -770,8 +770,8 @@ public class App
             while (it.hasNext()) {
             	RtsTuple tnext = it.next();
             	MetadataTuple d = new MetadataTuple();
-                d.setTemplateIui(Iui.createRandomIui());
-                d.setReferent(tnext.getTemplateIui());
+                d.setTupleIui(Iui.createRandomIui());
+                d.setReferent(tnext.getTupleIui());
                 d.setAuthorIui(authorIui);
                 //d.setAuthoringTimestamp(new Iso8601DateTime());
                 d.setChangeReason(RtsChangeReason.CR);

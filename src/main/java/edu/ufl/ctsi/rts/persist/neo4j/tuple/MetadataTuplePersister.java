@@ -50,7 +50,7 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 		n.setProperty("e", d.getErrorCode().toString());
 		
 		//replacements (s parameter)
-		Set<Iui> r = d.getReplacementTemplateIuis();
+		Set<Iui> r = d.getReplacementTupleIuis();
 		if (r.size() > 0) connectToReplacements(r.iterator());
 	}
 
