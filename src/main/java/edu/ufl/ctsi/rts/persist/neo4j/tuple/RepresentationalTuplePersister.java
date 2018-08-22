@@ -18,26 +18,26 @@ public abstract class RepresentationalTuplePersister extends
 	}
 
 	@Override
-	protected void completeTemplate(RtsTuple t) {
+	protected void completeTuple(RtsTuple t) {
 		//connect to referent
 		connectToReferent();
-		//connect template to author
+		//connect tuple to author
 		connectToAuthor();
-		//handle template specific parameters
-		handleTemplateSpecificParameters();
+		//handle tuple specific parameters
+		handleTupleSpecificParameters();
 	}
 	
 	protected abstract void connectToReferent();// {
 		//InstanceNodeCreator inc = new InstanceNodeCreator(ee);
-		//Node referentNode = inc.persistEntity(templateToPersist.getReferent().toString());
+		//Node referentNode = inc.persistEntity(tupleToPersist.getReferent().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		//referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	//}
 	
 	protected void connectToAuthor() {
-		Node authorNode = inc.persistEntity(templateToPersist.getAuthorIui().toString());
+		Node authorNode = inc.persistEntity(tupleToPersist.getAuthorIui().toString());
 		n.createRelationshipTo(authorNode, RtsRelationshipType.iuia);
 	}
 	
-	public abstract void handleTemplateSpecificParameters();
+	public abstract void handleTupleSpecificParameters();
 }

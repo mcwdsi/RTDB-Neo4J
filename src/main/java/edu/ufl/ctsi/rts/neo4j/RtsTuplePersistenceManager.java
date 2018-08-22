@@ -41,7 +41,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoPTuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoUTuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.TemporalRegionPersister;
 
-public class RtsTemplatePersistenceManager {
+public class RtsTuplePersistenceManager {
 
 	static String CNODE_QUERY = "MERGE (n:change_reason { c: {value} }) return n";
 	static String CTNODE_QUERY = "MERGE (n:change_type { ct: {value} }) return n";
@@ -62,15 +62,15 @@ public class RtsTemplatePersistenceManager {
 	
 	Label metadataLabel;
 
-	HashSet<RtsTuple> templates;
+	HashSet<RtsTuple> tuples;
 	HashSet<MetadataTuple> metadata;
 	HashSet<TemporalReference> tempReferences;
 	HashSet<TemporalRegion> tempRegions;
 	
 	HashMap<Iui, Node> iuiNode;
 	HashMap<String, Node> uiNode;
-	HashMap<String, RtsTuple> iuiToItsAssignmentTemplate;
-	HashSet<String> iuisInPtoPTemplates;
+	HashMap<String, RtsTuple> iuiToItsAssignmentTuple;
+	HashSet<String> iuisInPtoPTuples;
 	HashMap<String, String> iuiToNodeLabel;
 	
 	Iso8601DateTimeFormatter dttmFormatter;
@@ -85,15 +85,15 @@ public class RtsTemplatePersistenceManager {
 	
 	TemporalRegionPersister trp;
 	
-	public RtsTemplatePersistenceManager() {
-		templates = new HashSet<RtsTuple>();
+	public RtsTuplePersistenceManager() {
+		tuples = new HashSet<RtsTuple>();
 		metadata = new HashSet<MetadataTuple>();
 		tempReferences = new HashSet<TemporalReference>();
 		tempRegions = new HashSet<TemporalRegion>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
-		iuiToItsAssignmentTemplate = new HashMap<String, RtsTuple>();
-		iuisInPtoPTemplates = new HashSet<String>();
+		iuiToItsAssignmentTuple = new HashMap<String, RtsTuple>();
+		iuisInPtoPTuples = new HashSet<String>();
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(App.DB_PATH) );
@@ -112,15 +112,15 @@ public class RtsTemplatePersistenceManager {
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
 	
-	public void addTemplate(RtsTuple t) {
+	public void addTuple(RtsTuple t) {
 		if (t instanceof ATuple) {
 			ATuple at = (ATuple)t;
-			iuiToItsAssignmentTemplate.put(at.getReferentIui().toString(), t);
+			iuiToItsAssignmentTuple.put(at.getReferentIui().toString(), t);
 		} else if ( (t instanceof PtoPTuple) ) {
 			PtoPTuple ptop = (PtoPTuple)t;
 			Iterable<ParticularReference> p = ptop.getAllParticulars();
 			for (ParticularReference i : p) {
-				if (i instanceof Iui) iuisInPtoPTemplates.add(i.toString());
+				if (i instanceof Iui) iuisInPtoPTuples.add(i.toString());
 				else if (i instanceof TemporalReference) {
 					TemporalReference tr = (TemporalReference)i;
 					tempReferences.add(tr);
@@ -135,19 +135,19 @@ public class RtsTemplatePersistenceManager {
 		if (t instanceof MetadataTuple) {
 			metadata.add((MetadataTuple)t);
 		} else {
-			templates.add(t);
+			tuples.add(t);
 		}
 	} 
 	
-	public void addTemplates(Collection<RtsTuple> t) {
+	public void addTuples(Collection<RtsTuple> t) {
 		Iterator<RtsTuple> i = t.iterator();
 		while (i.hasNext()) {
-			addTemplate(i.next());
+			addTuple(i.next());
 		}
 	}
 	
 	
-	public void commitTemplates() {
+	public void commitTuples() {
 		try (Transaction tx = graphDb.beginTx() ) {
 			
 			/*
@@ -161,25 +161,25 @@ public class RtsTemplatePersistenceManager {
 			//Iso8601DateTimeFormatter dtf = new Iso8601DateTimeFormatter();
 			//String iuid = dtf.format(dt);
 			
-			for (RtsTuple t : templates) {
+			for (RtsTuple t : tuples) {
 				if (t instanceof ATuple) {
-					atp.persistTemplate(t);
+					atp.persistTuple(t);
 				} else if (t instanceof PtoUTuple) {
-					pup.persistTemplate(t);
+					pup.persistTuple(t);
 				} else if (t instanceof PtoLackUTuple) {
-					plup.persistTemplate(t);
+					plup.persistTuple(t);
 				} else if (t instanceof PtoDETuple) {
-					pdrp.persistTemplate(t);
+					pdrp.persistTuple(t);
 				} else if (t instanceof PtoPTuple) {
-					ppp.persistTemplate(t);
+					ppp.persistTuple(t);
 				} else if (t instanceof PtoCTuple) {
-					pcp.persistTemplate(t);
+					pcp.persistTuple(t);
 				} 
 			}
 			
 			for (MetadataTuple d : metadata) {
 				d.setAuthoringTimestamp(dt);
-				mp.persistTemplate(d);
+				mp.persistTuple(d);
 			}
 			
 			tx.success();
@@ -190,7 +190,7 @@ public class RtsTemplatePersistenceManager {
 			 *  cache, it is merely the thing that submits a chunk of related 
 			 *  templates as one transaction.
 			 */
-			templates.clear();
+			tuples.clear();
 			metadata.clear();
 			tempReferences.clear();
 			tempRegions.clear();
@@ -199,8 +199,8 @@ public class RtsTemplatePersistenceManager {
 	}
 	
 	private void checkIuisInPtoP() {
-		for (String iui : iuisInPtoPTemplates) {
-			if (!iuiToItsAssignmentTemplate.containsKey(iui)) {
+		for (String iui : iuisInPtoPTuples) {
+			if (!iuiToItsAssignmentTuple.containsKey(iui)) {
 				HashMap<String, Object> params = new HashMap<String, Object>();
 				params.put("value", iui);
 				ResourceIterator<Node> rin = graphDb.execute(queryInstanceNode, params).columnAs("n");
@@ -243,18 +243,18 @@ public class RtsTemplatePersistenceManager {
 	}
 
 	public Iterator<RtsTuple> getTemplateIterator() {
-		return templates.iterator();
+		return tuples.iterator();
 	}
 	
 	public Iterator<MetadataTuple> getMetadataTemplateIterator() {
 		return metadata.iterator();
 	}
 	
-	public Stream<RtsTuple> getTemplateStream() {
-		return templates.stream();
+	public Stream<RtsTuple> getTupleStream() {
+		return tuples.stream();
 	}
 	
-	public Stream<MetadataTuple> getMetadataTemplateStream() {
+	public Stream<MetadataTuple> getMetadataTupleStream() {
 		return metadata.stream();
 	}
 	
@@ -367,7 +367,7 @@ public class RtsTemplatePersistenceManager {
 	    //TODO change this to also throw a new type of exception, and transaction 
 	    //	should roll back
 	    if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ) {
-	    	if ( !iuiToItsAssignmentTemplate.containsKey(targetNodeUi) ) {
+	    	if ( !iuiToItsAssignmentTuple.containsKey(targetNodeUi) ) {
 		    	System.err.println("ERROR: creating new entity with IUI " + targetNodeUi +
 		    			" but this IUI has no corresponding assignment template!");
 	    	}

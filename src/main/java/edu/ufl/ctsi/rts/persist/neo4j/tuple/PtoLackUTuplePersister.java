@@ -25,14 +25,13 @@ public class PtoLackUTuplePersister extends AssertionalTuplePersister {
 	}
 
 	@Override
-	protected void setTemplateTypeProperty() {
-		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptolacku");
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.ptolacku);
 	}
 	
 	@Override
-	public void handleTemplateSpecificParameters() {
-		super.handleTemplateSpecificParameters();
+	public void handleTupleSpecificParameters() {
+		super.handleTupleSpecificParameters();
 		/* by now, we've already handled iuit, iuia, iuip, ta, tr, and r, which 
 		 *   leaves ptou, and should we choose to do something with it someday,
 		 *   iuio. 
@@ -41,7 +40,7 @@ public class PtoLackUTuplePersister extends AssertionalTuplePersister {
 	}
 
 	private void connectToUniversalNode() {
-		PtoLackUTuple ptolacku = (PtoLackUTuple)templateToPersist;
+		PtoLackUTuple ptolacku = (PtoLackUTuple)tupleToPersist;
 		Node target = unc.persistEntity(ptolacku.getRelationshipURI().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
@@ -49,7 +48,7 @@ public class PtoLackUTuplePersister extends AssertionalTuplePersister {
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(graphDb);
-		Node referentNode = inc.persistEntity(((PtoLackUTuple)templateToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(((PtoLackUTuple)tupleToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

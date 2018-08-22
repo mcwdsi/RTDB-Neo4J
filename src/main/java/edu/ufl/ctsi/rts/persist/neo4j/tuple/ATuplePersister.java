@@ -19,26 +19,25 @@ public class ATuplePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	public void handleTemplateSpecificParameters() {
+	public void handleTupleSpecificParameters() {
 		//superclass handles iuit, iuip, and iuia, so only one left is tap
 		setTapProperty();
 	}
 	
 	protected void setTapProperty() {
-		ATuple a = (ATuple)templateToPersist;
+		ATuple a = (ATuple)tupleToPersist;
 		n.setProperty("tap", dtf.format(a.getAuthoringTimestamp()));
 	}
 
 	@Override
-	protected void setTemplateTypeProperty() {
-		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "a");
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.a);
 	}
 
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((ATuple)templateToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(((ATuple)tupleToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

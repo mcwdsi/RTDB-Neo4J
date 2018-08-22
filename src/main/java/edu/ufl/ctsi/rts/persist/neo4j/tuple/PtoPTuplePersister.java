@@ -25,15 +25,14 @@ public class PtoPTuplePersister extends AssertionalTuplePersister {
 	}
 
 	@Override
-	protected void setTemplateTypeProperty() {
-		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptop");
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.ptop);
 	}
 	
 	@Override
-	public void handleTemplateSpecificParameters() {
+	public void handleTupleSpecificParameters() {
 		// superclass handles iuit, iuip, iuia, ta, tr, and r
-		super.handleTemplateSpecificParameters();
+		super.handleTupleSpecificParameters();
 		
 		/*
 		 * Connect node to each particular node in p parameter
@@ -43,7 +42,7 @@ public class PtoPTuplePersister extends AssertionalTuplePersister {
 
 	private void connectToParticulars() {
 		int order = 1;
-		PtoPTuple ptop = (PtoPTuple)templateToPersist;
+		PtoPTuple ptop = (PtoPTuple)tupleToPersist;
 		Iterable<ParticularReference> p = ptop.getAllParticulars();
 		for (ParticularReference i : p) {
 			Node target = null;

@@ -20,14 +20,13 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 
 
 	@Override
-	protected void setTemplateTypeProperty() {
-		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptou");
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.ptou);
 	}
 	
 	@Override
-	public void handleTemplateSpecificParameters() {
-		super.handleTemplateSpecificParameters();
+	public void handleTupleSpecificParameters() {
+		super.handleTupleSpecificParameters();
 		/* by now, we've already handled iuit, iuia, iuip, ta, tr, and r, which 
 		 *   leaves ptou, and should we choose to do something with it someday,
 		 *   iuio. 
@@ -36,7 +35,7 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 	}
 
 	private void connectToUniversalNode() {
-		PtoUTuple ptou = (PtoUTuple)templateToPersist;
+		PtoUTuple ptou = (PtoUTuple)tupleToPersist;
 		Node target = unc.persistEntity(ptou.getUniversalUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
@@ -44,7 +43,7 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((PtoUTuple)templateToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(((PtoUTuple)tupleToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

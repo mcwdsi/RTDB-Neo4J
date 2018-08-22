@@ -48,7 +48,7 @@ import edu.uams.dbmi.util.iso8601.Iso8601DateParser;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601UnitTime;
 import edu.uams.dbmi.util.iso8601.TimeUnit;
-import edu.ufl.ctsi.rts.neo4j.RtsTemplatePersistenceManager;
+import edu.ufl.ctsi.rts.neo4j.RtsTuplePersistenceManager;
 import edu.ufl.ctsi.rts.text.RtsTupleTextParser;
 import edu.ufl.ctsi.rts.text.RtsTupleTextWriter;
 
@@ -126,7 +126,7 @@ public class App
 			}
 			/*
 			 * This is the name of the time of assignment and assertion we will use for all non-metadata
-			 *   templates
+			 *   tuples
 			 */
             String ta_name = "2014-07-03T15:49:37.543";
             Iso8601Date ta_date = new Iso8601Date(DateConfiguration.YEAR_MONTH_DAY, 2014, 7, 3);
@@ -142,17 +142,17 @@ public class App
             String wHoganNameTxt = "William Hogan";
             Iui wh = Iui.createRandomIui();
 	       
-            RtsTemplatePersistenceManager rpm = new RtsTemplatePersistenceManager();
+            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager();
             
             /*
-             * Time of assertion of this set of templates
+             * Time of assertion of this set of tuples
              */
             TemporalRegion ta = new TemporalRegion(
             		new Iso8601DateTime(ta_date, ta_time), TimeZone.getDefault());
            rpm.addTemporalRegion(ta);
             
             /*
-             * Name of time of assertion of this set of templates
+             * Name of time of assertion of this set of tuples
              */
             PtoDETuple ten = new PtoDETuple();
             ten.setTupleIui(Iui.createRandomIui());
@@ -173,9 +173,9 @@ public class App
             //ten.setNamingSystem(gregorianIui);
                         
             rpm.addTemporalReference(ta.getTemporalReference());
-            rpm.addTemplate(ten);
+            rpm.addTuple(ten);
             
-            //Metadata template for ten
+            //Metadata tuple for ten
          	MetadataTuple d2 = new MetadataTuple();
         	d2.setTupleIui(Iui.createRandomIui());
         	d2.setReferent(ten.getTupleIui());
@@ -184,16 +184,16 @@ public class App
         	d2.setChangeReason(RtsChangeReason.CR);
         	d2.setChangeType(RtsChangeType.I);
         	d2.setErrorCode(RtsErrorCode.Null);
-            rpm.addTemplate(d2);
+            rpm.addTuple(d2);
             
             
             /*
              * This function creates the person with his/her name and the time of assignment/
-             *   assertion (t) and name of date of birth (tb_name), and returns a tetemplate
+             *   assertion (t) and name of date of birth (tb_name), and returns a tetuple
              *   that references the interval from moment of birth to ~ta
              */
             TimeZone tzChicago = TimeZone.getTimeZone("America/Chicago");
-            TemporalRegion t3 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+            TemporalRegion t3 = createIndividualWithBirthdateAndReturnLifeIntervalTuple(
 					tb_name, tzChicago, wHoganNameTxt,	wh, wh, rpm, ta, ten, null, null);
             
             rpm.addTemporalRegion(t3);
@@ -215,10 +215,10 @@ public class App
             ptoc.setConceptCui(new Cui("66839005"));
             ptoc.setTemporalReference(t3.getTemporalReference());  //the temporal region when a concept annotation "holds" is fairly meaningless
             ptoc.setConceptSystemIui(snctCsIui);  
-            rpm.addTemplate(ptoc);
+            rpm.addTuple(ptoc);
             
             /*
-             * Metadata template for PtoC template
+             * Metadata tuple for PtoC tuple
              */
         	MetadataTuple d3 = new MetadataTuple();
         	d3.setTupleIui(Iui.createRandomIui());
@@ -228,13 +228,13 @@ public class App
         	d3.setChangeReason(RtsChangeReason.CR);
         	d3.setChangeType(RtsChangeType.I);
         	d3.setErrorCode(RtsErrorCode.Null);
-            rpm.addTemplate(d3);
+            rpm.addTuple(d3);
             
             /*
              * W. Hogan instance of canis lupis familiaris (and hopefully a lucky one :-)
              * 
              * seriously, though, this is for testing purposes, I'm going to invalidate
-             *   this template after the original commit
+             *   this tuple after the original commit
              */
             PtoUTuple ptouBad = new PtoUTuple();
             ptouBad.setTupleIui(Iui.createRandomIui());
@@ -247,10 +247,10 @@ public class App
             ptouBad.setTemporalReference(t3.getTemporalReference());
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
             ptouBad.setUniversalOntologyIui(ncbiTaxonIui);
-            rpm.addTemplate(ptouBad);
+            rpm.addTuple(ptouBad);
             
             /*
-             * The original metadata template for the misinformed PtoU template
+             * The original metadata tuple for the misinformed PtoU tuple
              */
         	MetadataTuple d4 = new MetadataTuple();
         	d4.setTupleIui(Iui.createRandomIui());
@@ -260,7 +260,7 @@ public class App
         	d4.setChangeReason(RtsChangeReason.CR);
         	d4.setChangeType(RtsChangeType.I);
         	d4.setErrorCode(RtsErrorCode.Null);
-            rpm.addTemplate(d4);
+            rpm.addTuple(d4);
              
             
             //create another William Hogan
@@ -268,18 +268,18 @@ public class App
             TimeZone tzNewYork = TimeZone.getTimeZone("America/New_York");
             String td_name = "1982-02";
             Iui wfh = Iui.createRandomIui();
-            TemporalRegion t5 = createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+            TemporalRegion t5 = createIndividualWithBirthdateAndReturnLifeIntervalTuple(
 					tb_name, tzNewYork, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name, tzNewYork);
 
             System.out.println("temporal reference t5: " + t5.getTemporalReference().toString());
             
             try {
-				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt");
+				FileWriter fw = new FileWriter("/Users/hoganwr/rtstuples.txt");
 				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
 				
 				try {
-					rpm.getTemplateStream().forEach(i -> { try { rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
-					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getTupleStream().forEach(i -> { try { rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
+					rpm.getMetadataTupleStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
 					rpm.getTemporalRegionStream().forEach(i -> { try { rw.writeTemporalRegion(i); } catch (Exception e) { e.printStackTrace(); } } );
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -294,9 +294,9 @@ public class App
 			}
             
             /*
-             * Save all the templates accumulated thus far to Neo4J
+             * Save all the tuples accumulated thus far to Neo4J
              */
-            rpm.commitTemplates();
+            rpm.commitTuples();
             
             hello.graphDb = rpm.graphDb;
             
@@ -307,17 +307,17 @@ public class App
             
             /*
              * Here's an interesting query:
-             * match (n:data)-[:dr]-(n2:template)-[:iuip]-(n3:instance)-[:p]-(n4:template)-[:p]-(n5:instance)-[:iuip]-(n6:template)-[:uui]-(n7:universal) where n2.type = 'ptodr' and n.dr = 'William Hogan' and n4.type = 'ptop' and n6.type = 'ptou' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' return n, n2, n3, n4,n5,n6,n7;
+             * match (n:data)-[:dr]-(n2:tuple)-[:iuip]-(n3:instance)-[:p]-(n4:tuple)-[:p]-(n5:instance)-[:iuip]-(n6:tuple)-[:uui]-(n7:universal) where n2.type = 'ptodr' and n.dr = 'William Hogan' and n4.type = 'ptop' and n6.type = 'ptou' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' return n, n2, n3, n4,n5,n6,n7;
              * 
-             * Need to check that name is instance of personal name (n3 is iuip to ptou template with uui of URI for personal name from PNO)
+             * Need to check that name is instance of personal name (n3 is iuip to ptou tuple with uui of URI for personal name from PNO)
              *   plus need to check that relation of n2 is "is concretized by"
              *   plus relation of n4 is URI for 'denotes'
              *   
-             *   match (n:data)-[:dr]-(n2:template)-[:iuip]-(n3:instance)-[:p]-(n4:template)-[:p]-(n5:instance)-[:iuip]-(n6:template)-[:uui]-(n7:universal), n3-[:iuip]->(n8:template)-[:uui]->(n9:universal), n4-[:r]->(n10:relation) where n2.type = 'ptodr' and n.dr = 'William Hogan' and n4.type = 'ptop' and n6.type = 'ptou' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n8.type = 'ptou' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n,n2,n3,n4,n5,n6,n7,n8,n9,n10;
+             *   match (n:data)-[:dr]-(n2:tuple)-[:iuip]-(n3:instance)-[:p]-(n4:tuple)-[:p]-(n5:instance)-[:iuip]-(n6:tuple)-[:uui]-(n7:universal), n3-[:iuip]->(n8:tuple)-[:uui]->(n9:universal), n4-[:r]->(n10:relation) where n2.type = 'ptodr' and n.dr = 'William Hogan' and n4.type = 'ptop' and n6.type = 'ptou' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n8.type = 'ptou' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n,n2,n3,n4,n5,n6,n7,n8,n9,n10;
              */
             
             /*
-             * after changing template types to labels, the query simplifies to:
+             * after changing tuple types to labels, the query simplifies to:
              * 
              * match (n1:data)-[:dr]-(n2:ptode)-[:iuip]-(n3:instance)-[:p]-(n4:ptop)-[:p]-(n5:instance)-[:iuip]-(n6:ptou)-[:uui]-(n7:universal), n3-[:iuip]->(n8:ptou)-[:uui]->(n9:universal), n4-[:r]->(n10:relation) where n1.dr = 'William Hogan' and n7.uui = 'http://purl.obolibrary.org/obo/NCBITaxon_9606' and n9.uui = 'http://purl.obolibrary.org/obo/IAO_0020015' and n10.rui = 'http://purl.obolibrary.org/obo/IAO_0000219' return n1,n2,n3,n4,n5,n6,n7,n8,n9,n10;
              * 
@@ -353,26 +353,26 @@ public class App
             System.out.println(c + "\t" + c.displayName() + "\t" + c.name() + "\tis registered: " + c.isRegistered() + "\tcan encode: " + c.canEncode());
             
             /*
-             * For all the templates we are inserting, we know all the parameters
+             * For all the tuples we are inserting, we know all the parameters
              *   except possibly iuid and change reason (C)
              *   
-             *   iui of metadata template: assign a new one
-             *   iuit: iui of template this metadata template references
+             *   iui of metadata tuple: assign a new one
+             *   iuit: iui of tuple this metadata tuple references
              *   td: generate timestamp right before end of transaction
              *   CT: I (inserting)
              *   C: could be any value (change in relevance or reality or belief, or
-             *   		we recognized an error in an existing template and are
+             *   		we recognized an error in an existing tuple and are
              *   		inserting this one with the correct information.)
              *   E: Null
-             *   S: empty (if the inserted template is replacing an existing template,
-             *      then the metadata template that invalidates the existing template
-             *      must have an S parameter that points to the template we're inserting
+             *   S: empty (if the inserted tuple is replacing an existing tuple,
+             *      then the metadata tuple that invalidates the existing tuple
+             *      must have an S parameter that points to the tuple we're inserting
              *      here). 
              */
            
             
             /*
-             * Now invalidate the template that says W. Hogan is instance of dog,
+             * Now invalidate the tuple that says W. Hogan is instance of dog,
              *   which per Ceusters' error coding is an error of type U1
              */
             MetadataTuple dCorrection = new MetadataTuple();
@@ -384,22 +384,22 @@ public class App
             dCorrection.setErrorCode(RtsErrorCode.U1);
             dCorrection.setChangeType(RtsChangeType.X);
             //we could also point it at ptou if we wanted
-            rpm.addTemplate(dCorrection);
+            rpm.addTuple(dCorrection);
             
             try {
   				FileWriter fw = new FileWriter("/Users/hoganwr/rtstuples.txt", true);
   				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
   				
   				try {
-  					rpm.getTemplateStream().forEach(i -> { try { rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
-  					rpm.getMetadataTemplateStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getTupleStream().forEach(i -> { try { rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
+  					rpm.getMetadataTupleStream().forEach(i -> { try { i.setAuthoringTimestamp(new Iso8601DateTime()); rw.writeTuple(i); } catch (Exception e) { e.printStackTrace(); } } );
   					rpm.getTemporalRegionStream().forEach(i -> { try { rw.writeTemporalRegion(i); } catch (Exception e) { e.printStackTrace(); } } );
   				} catch (Exception e) {
   					// TODO Auto-generated catch block
   					e.printStackTrace();
   				}
   				
-  				FileReader fr_test = new FileReader("/Users/hoganwr/rtstemplates_old");
+  				FileReader fr_test = new FileReader("/Users/hoganwr/rtstuples_old");
   				BufferedReader br_test = new BufferedReader(fr_test);
   				char[] read = new char[64];
   				
@@ -411,7 +411,7 @@ public class App
   					//System.out.println(read);
   					for (int j=0; j<i; j++) {
   						if (read[j] == '\n' && prior_read != '\\') {
-  							System.out.println("Template = \"" + sb.toString() + "\"");
+  							System.out.println("tuple = \"" + sb.toString() + "\"");
   							sb = new StringBuilder();
   							prior_read = '\0';
   						} else {
@@ -439,7 +439,7 @@ public class App
   				e.printStackTrace();
   			}
             
-            rpm.commitTemplates();
+            rpm.commitTuples();
             
             //System.out.println(d1.toString());
             System.out.println(ptouBad.toString());
@@ -453,7 +453,7 @@ public class App
             hello.shutDown();
             
             try {
-				RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstemplates.txt")));
+				RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstuples.txt")));
 				ttr.parseTuples();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -467,9 +467,9 @@ public class App
 			}
 	    }
 
-		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
+		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTuple(
 				String tb_name,	TimeZone tzBirth, String personsName, Iui wh, Iui authorIui, 
-				RtsTemplatePersistenceManager rpm, TemporalRegion ta, PtoDETuple ten,
+				RtsTuplePersistenceManager rpm, TemporalRegion ta, PtoDETuple ten,
 				String td_name, TimeZone tzDeath) {
 			
 			Iui wh_chair = Iui.createRandomIui();
@@ -623,8 +623,8 @@ public class App
                 tset.add(ptop4);
                 
                 rpm.addTemporalReference(t7.getTemporalReference());
-                rpm.addTemplate(ten3);
-                rpm.addTemplate(ptop4);
+                rpm.addTuple(ten3);
+                rpm.addTuple(ptop4);
             }
             
             /*
@@ -754,17 +754,17 @@ public class App
             tset.add(ten2);
             tset.add(ptodr);
                      
-            rpm.addTemplate(a1);
-            rpm.addTemplate(a2);
-            rpm.addTemplate(a3);
+            rpm.addTuple(a1);
+            rpm.addTuple(a2);
+            rpm.addTuple(a3);
             
-            rpm.addTemplate(ptop);
-            rpm.addTemplate(ptop2);
-            rpm.addTemplate(ptop3);
-            rpm.addTemplate(ptou);
-            rpm.addTemplate(ptou3);
-            rpm.addTemplate(ten2);
-            rpm.addTemplate(ptodr);
+            rpm.addTuple(ptop);
+            rpm.addTuple(ptop2);
+            rpm.addTuple(ptop3);
+            rpm.addTuple(ptou);
+            rpm.addTuple(ptou3);
+            rpm.addTuple(ten2);
+            rpm.addTuple(ptodr);
                         
             Iterator<RtsTuple> it = tset.iterator();
             while (it.hasNext()) {
@@ -777,7 +777,7 @@ public class App
                 d.setChangeReason(RtsChangeReason.CR);
                 d.setChangeType(RtsChangeType.I);
                 d.setErrorCode(RtsErrorCode.Null);
-                rpm.addTemplate(d);
+                rpm.addTuple(d);
             }
 			return t3;
 		}
@@ -915,7 +915,7 @@ public class App
             				System.out.print("\tuui = " + n.getProperty("uui"));
             			} else if (label.equals("relation")) {
             				System.out.print("\trui = " + n.getProperty("rui"));
-            			} else if (label.equals("template")) {
+            			} else if (label.equals("tuple")) {
             				System.out.print("\tiui = "+ n.getProperty("iui"));
             				String type = labels.next().toString();
             				System.out.print("\t" + type);

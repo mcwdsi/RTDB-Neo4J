@@ -29,14 +29,13 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 	}
 
 	@Override
-	protected void setTemplateTypeProperty() {
-		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptodr");
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.ptode);
 	}
 	
 	@Override
-	public void handleTemplateSpecificParameters() {
-		super.handleTemplateSpecificParameters();
+	public void handleTupleSpecificParameters() {
+		super.handleTupleSpecificParameters();
 		/*
 		 * At this point, we've already handled iuit, iuip, iuia, ta, tr, and r.
 		 */
@@ -49,13 +48,13 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 	}
 
 	private void connectToUniversalNode() {
-		PtoDETuple ptodr = (PtoDETuple)templateToPersist;
+		PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
 		Node target = unc.persistEntity(ptodr.getDatatypeUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
 
 	private void connectToDataNode() {
-		PtoDETuple ptodr = (PtoDETuple)templateToPersist;
+		PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
 		String dataAsString = new String(ptodr.getData(), Charset.forName("UTF-8"));
 		Node target = dnc.persistEntity(dataAsString);
 		n.createRelationshipTo(target, RtsRelationshipType.dr);
@@ -63,11 +62,11 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 	
 	@Override
 	protected void connectToReferent() {
-		ParticularReference p = ((PtoDETuple)templateToPersist).getReferent();
+		ParticularReference p = ((PtoDETuple)tupleToPersist).getReferent();
 		Node referentNode = null; 
 		if (p instanceof Iui) {
 			InstanceNodeCreator inc = new InstanceNodeCreator(graphDb);
-			referentNode = inc.persistEntity(((PtoDETuple)templateToPersist).getReferent().toString());
+			referentNode = inc.persistEntity(((PtoDETuple)tupleToPersist).getReferent().toString());
 		} else if (p instanceof TemporalReference) {
 			//TemporalRegionPersister trp = new TemporalRegionPersister(this.graphDb);
 			//referentNode = trp.persistTemporalRegion((TemporalRegion)p);

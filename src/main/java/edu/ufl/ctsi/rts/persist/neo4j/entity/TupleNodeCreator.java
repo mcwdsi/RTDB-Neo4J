@@ -11,7 +11,7 @@ public class TupleNodeCreator extends EntityNodePersister {
 		// TODO Auto-generated constructor stub
 	}
 	
-	static final String QUERY = "MERGE (n:" + RtsNodeLabel.TEMPLATE.getLabelText() + " { iui: $value }) return n";
+	static final String QUERY = "MERGE (n:" + RtsNodeLabel.TUPLE.getLabelText() + " { iui: $value }) return n";
 
 	@Override
 	protected String setupQuery() {

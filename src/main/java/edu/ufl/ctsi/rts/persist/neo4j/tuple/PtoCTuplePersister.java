@@ -24,27 +24,26 @@ public class PtoCTuplePersister extends AssertionalTuplePersister {
 	}
 	
 	@Override
-	protected void setTemplateTypeProperty() {
-		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptoc");
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.ptoc);
 	}
 	
 	@Override
-	public void handleTemplateSpecificParameters() {
+	public void handleTupleSpecificParameters() {
 		/* 
 		 * superclass handles iuit, iuip, iuia, ta, tr
 		 */
-		super.handleTemplateSpecificParameters();
+		super.handleTupleSpecificParameters();
 		
-		getParametersFromTemplate();
+		getParametersFromTuple();
 		
 		connectToConceptNode();
 		
 		connectToConceptSystemNode();
 	}
 
-	private void getParametersFromTemplate() {
-		PtoCTuple ptoc = (PtoCTuple)templateToPersist;
+	private void getParametersFromTuple() {
+		PtoCTuple ptoc = (PtoCTuple)tupleToPersist;
 		cui = ptoc.getConceptCui();
 		conceptSystemIui = ptoc.getConceptSystemIui();
 	}
@@ -62,7 +61,7 @@ public class PtoCTuplePersister extends AssertionalTuplePersister {
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((PtoCTuple)templateToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(((PtoCTuple)tupleToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

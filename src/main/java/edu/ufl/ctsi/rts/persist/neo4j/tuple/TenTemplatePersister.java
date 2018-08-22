@@ -20,7 +20,7 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	public void handleTemplateSpecificParameters() {
+	public void handleTupleSpecificParameters() {
 		// TODO Auto-generated method stub
 		/*
 		 * iuit, iuip, iuia already handled, which leaves iuite, iuins, name,
@@ -38,7 +38,7 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 	}
 
 	private void getParametersFromTemplate() {
-		TenTemplate ten = (TenTemplate)templateToPersist;
+		TenTemplate ten = (TenTemplate)tupleToPersist;
 		//taIui = ten.getAuthoringTimeIui().toString();
 		taRef = ten.getAuthoringTimeReference().toString();
 		nsIui = ten.getNamingSystemIui().toString();
@@ -67,7 +67,7 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	protected void setTemplateTypeProperty() {
+	protected void setTupleTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ten");
 		n.addLabel(RtsTupleNodeLabel.ten);
 	}

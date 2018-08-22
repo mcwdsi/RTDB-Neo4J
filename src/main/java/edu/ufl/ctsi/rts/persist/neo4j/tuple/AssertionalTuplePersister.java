@@ -33,42 +33,42 @@ public abstract class AssertionalTuplePersister extends
 	}
 	
 	@Override
-	public void handleTemplateSpecificParameters() {
-		getAssertionalParametersFromTemplate();
+	public void handleTupleSpecificParameters() {
+		getAssertionalParametersFromTuple();
 		connectToTimeOfAssertion();
 		connectToTimeInReality();
 		connectToRelation();
 	}
 
-	private void getAssertionalParametersFromTemplate() {
-		if (templateToPersist instanceof PtoUTuple) {
-			PtoUTuple ptou = (PtoUTuple)templateToPersist;
+	private void getAssertionalParametersFromTuple() {
+		if (tupleToPersist instanceof PtoUTuple) {
+			PtoUTuple ptou = (PtoUTuple)tupleToPersist;
 			taRef = ptou.getAuthoringTimeReference();
 			trRef = ptou.getTemporalReference();
 			//taIui = ptou.getAuthoringTimeIui().toString();
 			//trIui = ptou.getTemporalEntityIui().toString();
 			rui = ptou.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoPTuple) {
-			PtoPTuple ptop = (PtoPTuple)templateToPersist;
+		} else if (tupleToPersist instanceof PtoPTuple) {
+			PtoPTuple ptop = (PtoPTuple)tupleToPersist;
 			taRef = ptop.getAuthoringTimeReference();
 			trRef = ptop.getTemporalReference();
 			//taIui = ptop.getAuthoringTimeIui().toString();
 			//trIui = ptop.getTemporalEntityIui().toString();
 			rui = ptop.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoLackUTuple) {
-			PtoLackUTuple ptolacku = (PtoLackUTuple)templateToPersist;
+		} else if (tupleToPersist instanceof PtoLackUTuple) {
+			PtoLackUTuple ptolacku = (PtoLackUTuple)tupleToPersist;
 			taRef = ptolacku.getAuthoringTimeReference();
 			trRef = ptolacku.getTemporalReference();
 			//taIui = ptolacku.getAuthoringTimeIui().toString();
 			//trIui = ptolacku.getTemporalEntityIui().toString();
 			rui = ptolacku.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoDETuple) {
-			PtoDETuple ptodr = (PtoDETuple)templateToPersist;
+		} else if (tupleToPersist instanceof PtoDETuple) {
+			PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
 			//taIui = ptodr.getAuthoringTimeIui().toString();
 			taRef = ptodr.getAuthoringTimeReference();
 			rui = ptodr.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoCTuple) {
-			PtoCTuple ptoc = (PtoCTuple)templateToPersist;
+		} else if (tupleToPersist instanceof PtoCTuple) {
+			PtoCTuple ptoc = (PtoCTuple)tupleToPersist;
 			taRef = ptoc.getAuthoringTimeReference();
 			trRef = ptoc.getTemporalReference();
 			//taIui = ptoc.getAuthoringTimeIui().toString();
@@ -90,7 +90,7 @@ public abstract class AssertionalTuplePersister extends
 
 	private void connectToTimeInReality() {
 		/* 
-		 * If it is null, it is because we are persisting a PtoDETemplate, which
+		 * If it is null, it is because we are persisting a PtoDETuple, which
 		 *   doesn't have a tr parameter.		
 		 */
 		if (trRef != null) {
@@ -99,7 +99,7 @@ public abstract class AssertionalTuplePersister extends
 			 */
 			//trp.persistTemporalRegion(trRef);
 			Node target = tnc.persistEntity(trRef.toString());  // trp.getNode();
-			//Then, create relationship from this template to that node
+			//Then, create relationship from this tuple to that node
 			n.createRelationshipTo(target, RtsRelationshipType.tr);
 		}
 	}

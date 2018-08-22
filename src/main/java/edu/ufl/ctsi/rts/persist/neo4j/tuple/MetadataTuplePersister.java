@@ -28,10 +28,10 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 	}
 
 	@Override
-	protected void completeTemplate(RtsTuple t) {
+	protected void completeTuple(RtsTuple t) {
 		d = (MetadataTuple)t;
 
-		connectToTemplate();
+		connectToTuple();
 		
 		connectToActor();
 
@@ -54,19 +54,19 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 		if (r.size() > 0) connectToReplacements(r.iterator());
 	}
 
-	/* connect the metadata template to the template it is about
+	/* connect the metadata tuple to the tuple it is about
 	 * 
 	 */
-	private void connectToTemplate() {
+	private void connectToTuple() {
 		/*
-		 * The target node is the template node, which for metadata templates
+		 * The target node is the tuple node, which for metadata tuples
 		 *   is the referent.
 		 */
 		Node target = tnc.persistEntity(d.getReferent().toString());
 		
 		/*
 		 * This is the td parameter.  This time either starts or ends 
-		 *   an interval during which the referent template is valid.
+		 *   an interval during which the referent tuple is valid.
 		 */
 		long validMillis = d.getAuthoringTimestamp().getCalendar().getTimeInMillis();
 		
@@ -92,7 +92,7 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 				r.setProperty("valid_from", validMillis);
 				r.setProperty("seq", 1);
 			} else {
-				throw new IllegalArgumentException("bad metadata template! no previous metadata, so change type should be insert but instead is " + change.toString());
+				throw new IllegalArgumentException("bad metadata tuple! no previous metadata, so change type should be insert but instead is " + change.toString());
 			}
 		} else {
 			/*
@@ -128,14 +128,14 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 				r.setProperty("valid_from", validMillis);
 				r.setProperty("seq", ++seqMax);
 			} else {
-				throw new IllegalArgumentException("bad metadata template!  last change was " + lastChange + " and current change is " + change.toString());
+				throw new IllegalArgumentException("bad metadata tuple!  last change was " + lastChange + " and current change is " + change.toString());
 			}
 			
 		}
 	}
 
 	/*
-	 * Could use a better name, but basically connect metadata template to the
+	 * Could use a better name, but basically connect metadata tuple to the
 	 * 	entity that acted on it.  Actions = insert, invalidate, revalidate.
 	 */
 	private void connectToActor() {
@@ -152,7 +152,7 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 	}
 	
 	@Override
-	protected void setTemplateTypeProperty() {
+	protected void setTupleTypeProperty() {
 		n.addLabel(RtsTupleNodeLabel.d);
 	}
 
