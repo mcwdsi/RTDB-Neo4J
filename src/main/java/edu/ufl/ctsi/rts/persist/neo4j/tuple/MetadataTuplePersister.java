@@ -1,4 +1,4 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -9,27 +9,27 @@ import org.neo4j.graphdb.Relationship;
 
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeType;
-import edu.uams.dbmi.rts.template.MetadataTemplate;
-import edu.uams.dbmi.rts.template.RtsTemplate;
+import edu.uams.dbmi.rts.tuple.MetadataTuple;
+import edu.uams.dbmi.rts.tuple.RtsTuple;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 
-public class MetadataTemplatePersister extends RtsTemplatePersister {
+public class MetadataTuplePersister extends RtsTuplePersister {
 
-	MetadataTemplate d;
+	MetadataTuple d;
 	
 	InstanceNodeCreator inc;
 	
-	public MetadataTemplatePersister(GraphDatabaseService db) {
+	public MetadataTuplePersister(GraphDatabaseService db) {
 		super(db);
 		inc = new InstanceNodeCreator(graphDb);
 	}
 
 	@Override
-	protected void completeTemplate(RtsTemplate t) {
-		d = (MetadataTemplate)t;
+	protected void completeTemplate(RtsTuple t) {
+		d = (MetadataTuple)t;
 
 		connectToTemplate();
 		
@@ -153,7 +153,7 @@ public class MetadataTemplatePersister extends RtsTemplatePersister {
 	
 	@Override
 	protected void setTemplateTypeProperty() {
-		n.addLabel(RtsTemplateNodeLabel.d);
+		n.addLabel(RtsTupleNodeLabel.d);
 	}
 
 }

@@ -1,15 +1,15 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.PtoLackUTemplate;
+import edu.uams.dbmi.rts.tuple.PtoLackUTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
-public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
+public class PtoLackUTuplePersister extends AssertionalTuplePersister {
 
 	UniversalNodeCreator unc;
 	/*
@@ -19,7 +19,7 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 	 *   lacks a relationship to some universal?  I doubt it, but you never know...
 	 */
 
-	public PtoLackUTemplatePersister(GraphDatabaseService db) {
+	public PtoLackUTuplePersister(GraphDatabaseService db) {
 		super(db);
 		unc = new UniversalNodeCreator(this.graphDb);
 	}
@@ -27,7 +27,7 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 	@Override
 	protected void setTemplateTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptolacku");
-		n.addLabel(RtsTemplateNodeLabel.ptolacku);
+		n.addLabel(RtsTupleNodeLabel.ptolacku);
 	}
 	
 	@Override
@@ -41,7 +41,7 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 	}
 
 	private void connectToUniversalNode() {
-		PtoLackUTemplate ptolacku = (PtoLackUTemplate)templateToPersist;
+		PtoLackUTuple ptolacku = (PtoLackUTuple)templateToPersist;
 		Node target = unc.persistEntity(ptolacku.getRelationshipURI().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 	}
@@ -49,7 +49,7 @@ public class PtoLackUTemplatePersister extends AssertionalTemplatePersister {
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(graphDb);
-		Node referentNode = inc.persistEntity(((PtoLackUTemplate)templateToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(((PtoLackUTuple)templateToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

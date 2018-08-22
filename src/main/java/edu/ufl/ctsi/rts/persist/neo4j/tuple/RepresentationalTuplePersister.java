@@ -1,24 +1,24 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.RtsTemplate;
+import edu.uams.dbmi.rts.tuple.RtsTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 
-public abstract class RepresentationalTemplatePersister extends
-		RtsTemplatePersister {
+public abstract class RepresentationalTuplePersister extends
+		RtsTuplePersister {
 	
 	InstanceNodeCreator inc;
 
-	public RepresentationalTemplatePersister(GraphDatabaseService db) {
+	public RepresentationalTuplePersister(GraphDatabaseService db) {
 		super(db);
 		inc = new InstanceNodeCreator(this.graphDb);
 	}
 
 	@Override
-	protected void completeTemplate(RtsTemplate t) {
+	protected void completeTemplate(RtsTuple t) {
 		//connect to referent
 		connectToReferent();
 		//connect template to author

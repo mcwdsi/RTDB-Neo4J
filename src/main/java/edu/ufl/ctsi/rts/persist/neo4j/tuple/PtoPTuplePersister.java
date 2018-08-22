@@ -1,4 +1,4 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -7,18 +7,18 @@ import org.neo4j.graphdb.Relationship;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
-import edu.uams.dbmi.rts.template.PtoPTemplate;
 import edu.uams.dbmi.rts.time.TemporalReference;
+import edu.uams.dbmi.rts.tuple.PtoPTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
 
-public class PtoPTemplatePersister extends AssertionalTemplatePersister {
+public class PtoPTuplePersister extends AssertionalTuplePersister {
 	
 	//TemporalRegionPersister trp;
 	TemporalNodeCreator tnc;
 	
-	public PtoPTemplatePersister(GraphDatabaseService db) {
+	public PtoPTuplePersister(GraphDatabaseService db) {
 		super(db);
 		//trp = new TemporalRegionPersister(this.graphDb);
 		tnc = new TemporalNodeCreator(this.graphDb);
@@ -27,7 +27,7 @@ public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 	@Override
 	protected void setTemplateTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptop");
-		n.addLabel(RtsTemplateNodeLabel.ptop);
+		n.addLabel(RtsTupleNodeLabel.ptop);
 	}
 	
 	@Override
@@ -43,7 +43,7 @@ public class PtoPTemplatePersister extends AssertionalTemplatePersister {
 
 	private void connectToParticulars() {
 		int order = 1;
-		PtoPTemplate ptop = (PtoPTemplate)templateToPersist;
+		PtoPTuple ptop = (PtoPTuple)templateToPersist;
 		Iterable<ParticularReference> p = ptop.getAllParticulars();
 		for (ParticularReference i : p) {
 			Node target = null;

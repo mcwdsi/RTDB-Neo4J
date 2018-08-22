@@ -19,27 +19,27 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
-import edu.uams.dbmi.rts.template.MetadataTemplate;
-import edu.uams.dbmi.rts.template.PtoCTemplate;
-import edu.uams.dbmi.rts.template.PtoDETemplate;
-import edu.uams.dbmi.rts.template.PtoLackUTemplate;
-import edu.uams.dbmi.rts.template.PtoPTemplate;
-import edu.uams.dbmi.rts.template.PtoUTemplate;
-import edu.uams.dbmi.rts.template.RtsTemplate;
-import edu.uams.dbmi.rts.template.ATemplate;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.rts.time.TemporalRegion;
+import edu.uams.dbmi.rts.tuple.ATuple;
+import edu.uams.dbmi.rts.tuple.MetadataTuple;
+import edu.uams.dbmi.rts.tuple.PtoCTuple;
+import edu.uams.dbmi.rts.tuple.PtoDETuple;
+import edu.uams.dbmi.rts.tuple.PtoLackUTuple;
+import edu.uams.dbmi.rts.tuple.PtoPTuple;
+import edu.uams.dbmi.rts.tuple.PtoUTuple;
+import edu.uams.dbmi.rts.tuple.RtsTuple;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.ATemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.MetadataTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.PtoCTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.PtoDETemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.PtoLackUTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.PtoPTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.PtoUTemplatePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.template.TemporalRegionPersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.ATuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.MetadataTuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoCTuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoDETuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoLackUTuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoPTuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoUTuplePersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.TemporalRegionPersister;
 
 public class RtsTemplatePersistenceManager {
 
@@ -62,37 +62,37 @@ public class RtsTemplatePersistenceManager {
 	
 	Label metadataLabel;
 
-	HashSet<RtsTemplate> templates;
-	HashSet<MetadataTemplate> metadata;
+	HashSet<RtsTuple> templates;
+	HashSet<MetadataTuple> metadata;
 	HashSet<TemporalReference> tempReferences;
 	HashSet<TemporalRegion> tempRegions;
 	
 	HashMap<Iui, Node> iuiNode;
 	HashMap<String, Node> uiNode;
-	HashMap<String, RtsTemplate> iuiToItsAssignmentTemplate;
+	HashMap<String, RtsTuple> iuiToItsAssignmentTemplate;
 	HashSet<String> iuisInPtoPTemplates;
 	HashMap<String, String> iuiToNodeLabel;
 	
 	Iso8601DateTimeFormatter dttmFormatter;
 	
-	ATemplatePersister atp;
-	PtoUTemplatePersister pup;
-	PtoPTemplatePersister ppp;
-	PtoLackUTemplatePersister plup;
-	PtoDETemplatePersister pdrp;
-	PtoCTemplatePersister pcp;
-	MetadataTemplatePersister mp;
+	ATuplePersister atp;
+	PtoUTuplePersister pup;
+	PtoPTuplePersister ppp;
+	PtoLackUTuplePersister plup;
+	PtoDETuplePersister pdrp;
+	PtoCTuplePersister pcp;
+	MetadataTuplePersister mp;
 	
 	TemporalRegionPersister trp;
 	
 	public RtsTemplatePersistenceManager() {
-		templates = new HashSet<RtsTemplate>();
-		metadata = new HashSet<MetadataTemplate>();
+		templates = new HashSet<RtsTuple>();
+		metadata = new HashSet<MetadataTuple>();
 		tempReferences = new HashSet<TemporalReference>();
 		tempRegions = new HashSet<TemporalRegion>();
 		iuiNode = new HashMap<Iui, Node>();
 		uiNode = new HashMap<String, Node>();
-		iuiToItsAssignmentTemplate = new HashMap<String, RtsTemplate>();
+		iuiToItsAssignmentTemplate = new HashMap<String, RtsTuple>();
 		iuisInPtoPTemplates = new HashSet<String>();
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
@@ -100,24 +100,24 @@ public class RtsTemplatePersistenceManager {
 		setupSchema();
 		setupMetadata();
 
-		atp = new ATemplatePersister(graphDb);
-		pup = new PtoUTemplatePersister(graphDb);
-		ppp = new PtoPTemplatePersister(graphDb);
-		plup = new PtoLackUTemplatePersister(graphDb);
-		pdrp = new PtoDETemplatePersister(graphDb);
-		pcp = new PtoCTemplatePersister(graphDb);
-		mp = new MetadataTemplatePersister(graphDb);
+		atp = new ATuplePersister(graphDb);
+		pup = new PtoUTuplePersister(graphDb);
+		ppp = new PtoPTuplePersister(graphDb);
+		plup = new PtoLackUTuplePersister(graphDb);
+		pdrp = new PtoDETuplePersister(graphDb);
+		pcp = new PtoCTuplePersister(graphDb);
+		mp = new MetadataTuplePersister(graphDb);
 		trp = new TemporalRegionPersister(graphDb);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
 	
-	public void addTemplate(RtsTemplate t) {
-		if (t instanceof ATemplate) {
-			ATemplate at = (ATemplate)t;
+	public void addTemplate(RtsTuple t) {
+		if (t instanceof ATuple) {
+			ATuple at = (ATuple)t;
 			iuiToItsAssignmentTemplate.put(at.getReferentIui().toString(), t);
-		} else if ( (t instanceof PtoPTemplate) ) {
-			PtoPTemplate ptop = (PtoPTemplate)t;
+		} else if ( (t instanceof PtoPTuple) ) {
+			PtoPTuple ptop = (PtoPTuple)t;
 			Iterable<ParticularReference> p = ptop.getAllParticulars();
 			for (ParticularReference i : p) {
 				if (i instanceof Iui) iuisInPtoPTemplates.add(i.toString());
@@ -126,21 +126,21 @@ public class RtsTemplatePersistenceManager {
 					tempReferences.add(tr);
 				}
 			}
-		} else if ( (t instanceof PtoDETemplate) ) {
-			PtoDETemplate ptode = (PtoDETemplate)t;
+		} else if ( (t instanceof PtoDETuple) ) {
+			PtoDETuple ptode = (PtoDETuple)t;
 			ParticularReference pr = ptode.getReferent();
 			if (pr instanceof TemporalReference)
 				tempReferences.add((TemporalReference)pr);
 		}
-		if (t instanceof MetadataTemplate) {
-			metadata.add((MetadataTemplate)t);
+		if (t instanceof MetadataTuple) {
+			metadata.add((MetadataTuple)t);
 		} else {
 			templates.add(t);
 		}
 	} 
 	
-	public void addTemplates(Collection<RtsTemplate> t) {
-		Iterator<RtsTemplate> i = t.iterator();
+	public void addTemplates(Collection<RtsTuple> t) {
+		Iterator<RtsTuple> i = t.iterator();
 		while (i.hasNext()) {
 			addTemplate(i.next());
 		}
@@ -161,23 +161,23 @@ public class RtsTemplatePersistenceManager {
 			//Iso8601DateTimeFormatter dtf = new Iso8601DateTimeFormatter();
 			//String iuid = dtf.format(dt);
 			
-			for (RtsTemplate t : templates) {
-				if (t instanceof ATemplate) {
+			for (RtsTuple t : templates) {
+				if (t instanceof ATuple) {
 					atp.persistTemplate(t);
-				} else if (t instanceof PtoUTemplate) {
+				} else if (t instanceof PtoUTuple) {
 					pup.persistTemplate(t);
-				} else if (t instanceof PtoLackUTemplate) {
+				} else if (t instanceof PtoLackUTuple) {
 					plup.persistTemplate(t);
-				} else if (t instanceof PtoDETemplate) {
+				} else if (t instanceof PtoDETuple) {
 					pdrp.persistTemplate(t);
-				} else if (t instanceof PtoPTemplate) {
+				} else if (t instanceof PtoPTuple) {
 					ppp.persistTemplate(t);
-				} else if (t instanceof PtoCTemplate) {
+				} else if (t instanceof PtoCTuple) {
 					pcp.persistTemplate(t);
 				} 
 			}
 			
-			for (MetadataTemplate d : metadata) {
+			for (MetadataTuple d : metadata) {
 				d.setAuthoringTimestamp(dt);
 				mp.persistTemplate(d);
 			}
@@ -236,25 +236,25 @@ public class RtsTemplatePersistenceManager {
 	 *  So we're clear to add it de novo without worrying about violating a unique
 	 *  constraint on template IUIs.
 	 */
-	private Node createTemplateNode(RtsTemplate t) {
+	private Node createTemplateNode(RtsTuple t) {
 		Node n = graphDb.createNode(templateLabel);
 		n.setProperty("ui", t.getTemplateIui().toString());
 		return n;
 	}
 
-	public Iterator<RtsTemplate> getTemplateIterator() {
+	public Iterator<RtsTuple> getTemplateIterator() {
 		return templates.iterator();
 	}
 	
-	public Iterator<MetadataTemplate> getMetadataTemplateIterator() {
+	public Iterator<MetadataTuple> getMetadataTemplateIterator() {
 		return metadata.iterator();
 	}
 	
-	public Stream<RtsTemplate> getTemplateStream() {
+	public Stream<RtsTuple> getTemplateStream() {
 		return templates.stream();
 	}
 	
-	public Stream<MetadataTemplate> getMetadataTemplateStream() {
+	public Stream<MetadataTuple> getMetadataTemplateStream() {
 		return metadata.stream();
 	}
 	
@@ -305,7 +305,7 @@ public class RtsTemplatePersistenceManager {
 			//+ "ON CREATE "
 			+ "RETURN n";
 
-	private void completeATemplate(Node n, ATemplate t) {
+	private void completeATemplate(Node n, ATuple t) {
 		n.setProperty("type", "A");
 		n.setProperty("tap", dttmFormatter.format(t.getAuthoringTimestamp()));
 	}
@@ -379,7 +379,7 @@ public class RtsTemplatePersistenceManager {
 	//static String templateByIuiQuery = "START n=node:nodes(iui = {value}) RETURN n";
 	static String templateByIuiQuery = "MATCH (n:template { ui : {value} }) return n";
 	
-	boolean isTemplateInDb(RtsTemplate t) {
+	boolean isTemplateInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", t.getTemplateIui().toString());
 		return graphDb.execute(templateByIuiQuery, parameters).hasNext();

@@ -1,4 +1,4 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import java.util.Collection;
 import java.util.HashMap;

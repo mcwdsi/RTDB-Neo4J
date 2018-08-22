@@ -1,14 +1,14 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.TenTemplate;
+import edu.uams.dbmi.rts.tuple.TenTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 
 @Deprecated
-public class TenTemplatePersister extends RepresentationalTemplatePersister {
+public class TenTemplatePersister extends RepresentationalTuplePersister {
 	
 	String taRef;
 	String nsIui;
@@ -69,7 +69,7 @@ public class TenTemplatePersister extends RepresentationalTemplatePersister {
 	@Override
 	protected void setTemplateTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ten");
-		n.addLabel(RtsTemplateNodeLabel.ten);
+		n.addLabel(RtsTupleNodeLabel.ten);
 	}
 
 	@Override

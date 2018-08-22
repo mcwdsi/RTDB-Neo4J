@@ -1,20 +1,20 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.PtoCTemplate;
-import edu.uams.dbmi.rts.template.PtoDETemplate;
-import edu.uams.dbmi.rts.template.PtoLackUTemplate;
-import edu.uams.dbmi.rts.template.PtoPTemplate;
-import edu.uams.dbmi.rts.template.PtoUTemplate;
 import edu.uams.dbmi.rts.time.TemporalReference;
+import edu.uams.dbmi.rts.tuple.PtoCTuple;
+import edu.uams.dbmi.rts.tuple.PtoDETuple;
+import edu.uams.dbmi.rts.tuple.PtoLackUTuple;
+import edu.uams.dbmi.rts.tuple.PtoPTuple;
+import edu.uams.dbmi.rts.tuple.PtoUTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.RelationNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
 
-public abstract class AssertionalTemplatePersister extends
-		RepresentationalTemplatePersister {
+public abstract class AssertionalTuplePersister extends
+		RepresentationalTuplePersister {
 
 	RelationNodeCreator rnc;
 	
@@ -25,7 +25,7 @@ public abstract class AssertionalTemplatePersister extends
 	
 	String rui;
 	
-	public AssertionalTemplatePersister(GraphDatabaseService db) {
+	public AssertionalTuplePersister(GraphDatabaseService db) {
 		super(db);
 		rnc = new RelationNodeCreator(this.graphDb);
 		rui = null;
@@ -41,34 +41,34 @@ public abstract class AssertionalTemplatePersister extends
 	}
 
 	private void getAssertionalParametersFromTemplate() {
-		if (templateToPersist instanceof PtoUTemplate) {
-			PtoUTemplate ptou = (PtoUTemplate)templateToPersist;
+		if (templateToPersist instanceof PtoUTuple) {
+			PtoUTuple ptou = (PtoUTuple)templateToPersist;
 			taRef = ptou.getAuthoringTimeReference();
 			trRef = ptou.getTemporalReference();
 			//taIui = ptou.getAuthoringTimeIui().toString();
 			//trIui = ptou.getTemporalEntityIui().toString();
 			rui = ptou.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoPTemplate) {
-			PtoPTemplate ptop = (PtoPTemplate)templateToPersist;
+		} else if (templateToPersist instanceof PtoPTuple) {
+			PtoPTuple ptop = (PtoPTuple)templateToPersist;
 			taRef = ptop.getAuthoringTimeReference();
 			trRef = ptop.getTemporalReference();
 			//taIui = ptop.getAuthoringTimeIui().toString();
 			//trIui = ptop.getTemporalEntityIui().toString();
 			rui = ptop.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoLackUTemplate) {
-			PtoLackUTemplate ptolacku = (PtoLackUTemplate)templateToPersist;
+		} else if (templateToPersist instanceof PtoLackUTuple) {
+			PtoLackUTuple ptolacku = (PtoLackUTuple)templateToPersist;
 			taRef = ptolacku.getAuthoringTimeReference();
 			trRef = ptolacku.getTemporalReference();
 			//taIui = ptolacku.getAuthoringTimeIui().toString();
 			//trIui = ptolacku.getTemporalEntityIui().toString();
 			rui = ptolacku.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoDETemplate) {
-			PtoDETemplate ptodr = (PtoDETemplate)templateToPersist;
+		} else if (templateToPersist instanceof PtoDETuple) {
+			PtoDETuple ptodr = (PtoDETuple)templateToPersist;
 			//taIui = ptodr.getAuthoringTimeIui().toString();
 			taRef = ptodr.getAuthoringTimeReference();
 			rui = ptodr.getRelationshipURI().toString();
-		} else if (templateToPersist instanceof PtoCTemplate) {
-			PtoCTemplate ptoc = (PtoCTemplate)templateToPersist;
+		} else if (templateToPersist instanceof PtoCTuple) {
+			PtoCTuple ptoc = (PtoCTuple)templateToPersist;
 			taRef = ptoc.getAuthoringTimeReference();
 			trRef = ptoc.getTemporalReference();
 			//taIui = ptoc.getAuthoringTimeIui().toString();

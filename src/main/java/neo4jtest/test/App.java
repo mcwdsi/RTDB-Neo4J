@@ -32,14 +32,14 @@ import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeReason;
 import edu.uams.dbmi.rts.metadata.RtsChangeType;
 import edu.uams.dbmi.rts.metadata.RtsErrorCode;
-import edu.uams.dbmi.rts.template.ATemplate;
-import edu.uams.dbmi.rts.template.MetadataTemplate;
-import edu.uams.dbmi.rts.template.PtoCTemplate;
-import edu.uams.dbmi.rts.template.PtoDETemplate;
-import edu.uams.dbmi.rts.template.PtoPTemplate;
-import edu.uams.dbmi.rts.template.PtoUTemplate;
-import edu.uams.dbmi.rts.template.RtsTemplate;
 import edu.uams.dbmi.rts.time.TemporalRegion;
+import edu.uams.dbmi.rts.tuple.ATuple;
+import edu.uams.dbmi.rts.tuple.MetadataTuple;
+import edu.uams.dbmi.rts.tuple.PtoCTuple;
+import edu.uams.dbmi.rts.tuple.PtoDETuple;
+import edu.uams.dbmi.rts.tuple.PtoPTuple;
+import edu.uams.dbmi.rts.tuple.PtoUTuple;
+import edu.uams.dbmi.rts.tuple.RtsTuple;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.uams.dbmi.util.iso8601.Iso8601Date;
 import edu.uams.dbmi.util.iso8601.Iso8601Date.DateConfiguration;
@@ -49,8 +49,8 @@ import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601UnitTime;
 import edu.uams.dbmi.util.iso8601.TimeUnit;
 import edu.ufl.ctsi.rts.neo4j.RtsTemplatePersistenceManager;
-import edu.ufl.ctsi.rts.text.TemplateTextParser;
-import edu.ufl.ctsi.rts.text.TemplateTextWriter;
+import edu.ufl.ctsi.rts.text.RtsTupleTextParser;
+import edu.ufl.ctsi.rts.text.RtsTupleTextWriter;
 
 /**
  * Hello world!
@@ -103,6 +103,7 @@ public class App
 	    static Iui roIui = Iui.createFromString("C8BFD0E2-9CCE-4961-80F4-1290A7767B7C");
 	    static Iui ncbiTaxonIui = Iui.createFromString("D7A93FCB-72CA-4D89-A1AE-328F33138FBF");
 	    static Iui pnoIui = Iui.createFromString("6C151D9A-6694-4EFD-840F-BC7CBE90DB5E");
+	    static Iui uberonIui = Iui.createFromString("F312650F-F05E-4EA7-B04C-AF050409A232");
 	    
 	    //This one should refer to https://www.iana.org/assignments/character-sets/character-sets.xhtml
 	    static Iui characterEncodingsIui = Iui.createFromString("85F850AD-C348-4256-81F0-24DC45B63079");
@@ -153,7 +154,7 @@ public class App
             /*
              * Name of time of assertion of this set of templates
              */
-            PtoDETemplate ten = new PtoDETemplate();
+            PtoDETuple ten = new PtoDETuple();
             ten.setTemplateIui(Iui.createRandomIui());
             ten.setAuthorIui(wh);
             ten.setData(ta_name.getBytes());
@@ -175,7 +176,7 @@ public class App
             rpm.addTemplate(ten);
             
             //Metadata template for ten
-         	MetadataTemplate d2 = new MetadataTemplate();
+         	MetadataTuple d2 = new MetadataTuple();
         	d2.setTemplateIui(Iui.createRandomIui());
         	d2.setReferent(ten.getTemplateIui());
         	d2.setAuthorIui(wh);
@@ -205,7 +206,7 @@ public class App
             /*
              * PtoC that annotates W. Hogan with SNOMED-CT's "Father (person)" concept
              */
-            PtoCTemplate ptoc = new PtoCTemplate();
+            PtoCTuple ptoc = new PtoCTuple();
             ptoc.setTemplateIui(Iui.createRandomIui());
             ptoc.setReferentIui(wh);
             //ptoc.setAuthoringTimeIui(t.getReferentIui());
@@ -219,7 +220,7 @@ public class App
             /*
              * Metadata template for PtoC template
              */
-        	MetadataTemplate d3 = new MetadataTemplate();
+        	MetadataTuple d3 = new MetadataTuple();
         	d3.setTemplateIui(Iui.createRandomIui());
         	d3.setReferent(ptoc.getTemplateIui());
         	d3.setAuthorIui(wh);
@@ -235,7 +236,7 @@ public class App
              * seriously, though, this is for testing purposes, I'm going to invalidate
              *   this template after the original commit
              */
-            PtoUTemplate ptouBad = new PtoUTemplate();
+            PtoUTuple ptouBad = new PtoUTuple();
             ptouBad.setTemplateIui(Iui.createRandomIui());
             ptouBad.setReferentIui(wh);
             ptouBad.setRelationshipURI(instance_of);
@@ -251,7 +252,7 @@ public class App
             /*
              * The original metadata template for the misinformed PtoU template
              */
-        	MetadataTemplate d4 = new MetadataTemplate();
+        	MetadataTuple d4 = new MetadataTuple();
         	d4.setTemplateIui(Iui.createRandomIui());
         	d4.setReferent(ptouBad.getTemplateIui());
         	d4.setAuthorIui(wh);
@@ -274,7 +275,7 @@ public class App
             
             try {
 				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt");
-				TemplateTextWriter rw = new TemplateTextWriter(fw);
+				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
 				
 				try {
 					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
@@ -374,7 +375,7 @@ public class App
              * Now invalidate the template that says W. Hogan is instance of dog,
              *   which per Ceusters' error coding is an error of type U1
              */
-            MetadataTemplate dCorrection = new MetadataTemplate();
+            MetadataTuple dCorrection = new MetadataTuple();
             dCorrection.setTemplateIui(Iui.createRandomIui());
             dCorrection.setReferent(ptouBad.getTemplateIui());
             dCorrection.setAuthoringTimestamp(new Iso8601DateTime());
@@ -387,7 +388,7 @@ public class App
             
             try {
   				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt", true);
-  				TemplateTextWriter rw = new TemplateTextWriter(fw);
+  				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
   				
   				try {
   					rpm.getTemplateStream().forEach(i -> { try { rw.writeTemplate(i); } catch (Exception e) { e.printStackTrace(); } } );
@@ -452,7 +453,7 @@ public class App
             hello.shutDown();
             
             try {
-				TemplateTextParser ttr = new TemplateTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstemplates.txt")));
+				RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstemplates.txt")));
 				ttr.parseTemplates();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
@@ -468,18 +469,18 @@ public class App
 
 		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTemplate(
 				String tb_name,	TimeZone tzBirth, String personsName, Iui wh, Iui authorIui, 
-				RtsTemplatePersistenceManager rpm, TemporalRegion ta, PtoDETemplate ten,
+				RtsTemplatePersistenceManager rpm, TemporalRegion ta, PtoDETuple ten,
 				String td_name, TimeZone tzDeath) {
 			
 			Iui wh_chair = Iui.createRandomIui();
             Iui wh_name = Iui.createRandomIui();
             
-            Set<RtsTemplate> tset = new HashSet<RtsTemplate>();
+            Set<RtsTuple> tset = new HashSet<RtsTuple>();
             
             /*
              * W. Hogan
              */
-            ATemplate a1 = new ATemplate();
+            ATuple a1 = new ATuple();
             a1.setAuthorIui(authorIui);
             a1.setReferentIui(wh);
             a1.setAuthoringTimestamp(new Iso8601DateTime());
@@ -488,7 +489,7 @@ public class App
             /*
              * W. Hogan's chair
              */
-            ATemplate a2 = new ATemplate();
+            ATuple a2 = new ATuple();
             a2.setAuthorIui(authorIui);
             a2.setReferentIui(wh_chair);
             a2.setAuthoringTimestamp(new Iso8601DateTime());
@@ -497,7 +498,7 @@ public class App
             /*
              * W. Hogan's full name
              */
-            ATemplate a3 = new ATemplate();
+            ATuple a3 = new ATuple();
             a3.setAuthorIui(authorIui);
             a3.setReferentIui(wh_name);
             a3.setAuthoringTimestamp(new Iso8601DateTime());
@@ -534,7 +535,7 @@ public class App
             /*
              * Name of day of W. Hogan's birth
              */
-            PtoDETemplate ten2 = new PtoDETemplate();
+            PtoDETuple ten2 = new PtoDETuple();
             ten2.setTemplateIui(Iui.createRandomIui());
             ten2.setReferent(t4.getTemporalReference());
             //ten2.setAuthoringTimeIui(t.getReferentIui());
@@ -559,7 +560,7 @@ public class App
              * If we have a date of death, then create it and add it
              */
             TemporalRegion t7 = null;
-            PtoDETemplate ten3 = null;
+            PtoDETuple ten3 = null;
             if (td_name != null) {
             	Iso8601Date deathDate = null;
 				try {
@@ -576,7 +577,7 @@ public class App
                 /*
                  * Name of day of W. Hogan's death
                  */
-                ten3 = new PtoDETemplate();
+                ten3 = new PtoDETuple();
                 ten3.setTemplateIui(Iui.createRandomIui());
                 //ten3.setTemporalEntityIui(t4.getReferentIui());
                 ten3.setReferent(t7.getTemporalReference());
@@ -600,7 +601,7 @@ public class App
                 /*
                  * PtoP for day of W. Hogan's death to time during which W. Hogan has been a human being
                  */
-                PtoPTemplate ptop4 = new PtoPTemplate();
+                PtoPTuple ptop4 = new PtoPTuple();
                 ptop4.setTemplateIui(Iui.createRandomIui());
                 ptop4.setAuthorIui(authorIui);
                 //ptop4.setAuthoringTimeIui(t.getReferentIui());
@@ -629,7 +630,7 @@ public class App
             /*
              * W. Hogan's chair owned by W. Hogan
              */
-            PtoPTemplate ptop = new PtoPTemplate();
+            PtoPTuple ptop = new PtoPTuple();
             ptop.setReferent(wh_chair);
             ptop.setAuthorIui(authorIui);
             try {
@@ -649,7 +650,7 @@ public class App
             /*
              * W. Hogan instance of human being
              */
-            PtoUTemplate ptou = new PtoUTemplate();
+            PtoUTuple ptou = new PtoUTuple();
             ptou.setTemplateIui(Iui.createRandomIui());
             ptou.setReferentIui(wh);
             ptou.setRelationshipURI(instance_of);
@@ -665,7 +666,7 @@ public class App
             /*
              * W. Hogan's name instance of personal name
              */
-            PtoUTemplate ptou3 = new PtoUTemplate();
+            PtoUTuple ptou3 = new PtoUTuple();
             ptou3.setTemplateIui(Iui.createRandomIui());
             ptou3.setReferentIui(wh_name);
             ptou3.setRelationshipURI(instance_of);
@@ -681,7 +682,7 @@ public class App
             /*
              * W. Hogan's name designates W. Hogan
              */
-            PtoPTemplate ptop2 = new PtoPTemplate();
+            PtoPTuple ptop2 = new PtoPTuple();
             ptop2.setReferent(wh_name);
             ptop2.setAuthorIui(authorIui);
             try {
@@ -701,7 +702,7 @@ public class App
             /*
              * W. Hogan's name's digital representation
              */
-            PtoDETemplate ptodr = new PtoDETemplate();
+            PtoDETuple ptodr = new PtoDETuple();
             ptodr.setTemplateIui(Iui.createRandomIui());
             ptodr.setAuthorIui(authorIui);
             //ptodr.setAuthoringTimeIui(t.getReferentIui());
@@ -725,7 +726,7 @@ public class App
             /*
              * PtoP for day of W. Hogan's birth to time during which W. Hogan has been a human being
              */
-            PtoPTemplate ptop3 = new PtoPTemplate();
+            PtoPTuple ptop3 = new PtoPTuple();
             ptop3.setTemplateIui(Iui.createRandomIui());
             ptop3.setAuthorIui(authorIui);
             //ptop3.setAuthoringTimeIui(t.getReferentIui());
@@ -765,10 +766,10 @@ public class App
             rpm.addTemplate(ten2);
             rpm.addTemplate(ptodr);
                         
-            Iterator<RtsTemplate> it = tset.iterator();
+            Iterator<RtsTuple> it = tset.iterator();
             while (it.hasNext()) {
-            	RtsTemplate tnext = it.next();
-            	MetadataTemplate d = new MetadataTemplate();
+            	RtsTuple tnext = it.next();
+            	MetadataTuple d = new MetadataTuple();
                 d.setTemplateIui(Iui.createRandomIui());
                 d.setReferent(tnext.getTemplateIui());
                 d.setAuthorIui(authorIui);

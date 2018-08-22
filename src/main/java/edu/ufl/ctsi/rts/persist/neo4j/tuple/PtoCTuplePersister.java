@@ -1,24 +1,24 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
-import edu.uams.dbmi.rts.template.PtoCTemplate;
+import edu.uams.dbmi.rts.tuple.PtoCTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
-import edu.ufl.ctsi.rts.neo4j.RtsTemplateNodeLabel;
+import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.ConceptNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 
-public class PtoCTemplatePersister extends AssertionalTemplatePersister {
+public class PtoCTuplePersister extends AssertionalTuplePersister {
 	
 	ConceptNodeCreator cnc;
 	
 	Cui cui;
 	Iui conceptSystemIui;
 	
-	public PtoCTemplatePersister(GraphDatabaseService db) {
+	public PtoCTuplePersister(GraphDatabaseService db) {
 		super(db);
 		cnc = new ConceptNodeCreator(this.graphDb);
 	}
@@ -26,7 +26,7 @@ public class PtoCTemplatePersister extends AssertionalTemplatePersister {
 	@Override
 	protected void setTemplateTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ptoc");
-		n.addLabel(RtsTemplateNodeLabel.ptoc);
+		n.addLabel(RtsTupleNodeLabel.ptoc);
 	}
 	
 	@Override
@@ -44,7 +44,7 @@ public class PtoCTemplatePersister extends AssertionalTemplatePersister {
 	}
 
 	private void getParametersFromTemplate() {
-		PtoCTemplate ptoc = (PtoCTemplate)templateToPersist;
+		PtoCTuple ptoc = (PtoCTuple)templateToPersist;
 		cui = ptoc.getConceptCui();
 		conceptSystemIui = ptoc.getConceptSystemIui();
 	}
@@ -62,7 +62,7 @@ public class PtoCTemplatePersister extends AssertionalTemplatePersister {
 	@Override
 	protected void connectToReferent() {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((PtoCTemplate)templateToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(((PtoCTuple)templateToPersist).getReferentIui().toString());
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

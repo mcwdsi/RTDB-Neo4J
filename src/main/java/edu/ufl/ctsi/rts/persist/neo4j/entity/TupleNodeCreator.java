@@ -4,9 +4,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
-public class TemplateNodeCreator extends EntityNodePersister {
+public class TupleNodeCreator extends EntityNodePersister {
 
-	public TemplateNodeCreator(GraphDatabaseService db) {
+	public TupleNodeCreator(GraphDatabaseService db) {
 		super(db);
 		// TODO Auto-generated constructor stub
 	}

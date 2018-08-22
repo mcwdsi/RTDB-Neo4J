@@ -1,15 +1,15 @@
-package edu.ufl.ctsi.rts.persist.neo4j.template;
+package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import java.util.HashMap;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-import edu.uams.dbmi.rts.template.RtsTemplate;
+import edu.uams.dbmi.rts.tuple.RtsTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
-import edu.ufl.ctsi.rts.persist.neo4j.entity.TemplateNodeCreator;
+import edu.ufl.ctsi.rts.persist.neo4j.entity.TupleNodeCreator;
 
-public abstract class RtsTemplatePersister {
+public abstract class RtsTuplePersister {
 	
 	static final String TEMPLATE_BY_IUI_QUERY = "MATCH (n:" + RtsNodeLabel.TEMPLATE.getLabelText() + " { iui : {value} }) return n";
 	
@@ -17,19 +17,19 @@ public abstract class RtsTemplatePersister {
 	
 	GraphDatabaseService graphDb;
 	
-	RtsTemplate templateToPersist;
+	RtsTuple templateToPersist;
 	
-	TemplateNodeCreator tnc;
+	TupleNodeCreator tnc;
 	
 	Node n;
 	
-	public RtsTemplatePersister(GraphDatabaseService db) {
+	public RtsTuplePersister(GraphDatabaseService db) {
 		graphDb = db;
 
-		tnc = new TemplateNodeCreator(db);
+		tnc = new TupleNodeCreator(db);
 	}
 	
-	public void persistTemplate(RtsTemplate t) {
+	public void persistTemplate(RtsTuple t) {
 		//check to see if template exists already, if so, then done
 		if (existsInDb(t)) return;
 		
@@ -50,13 +50,13 @@ public abstract class RtsTemplatePersister {
 		completeTemplate(t);
 	}
 	
-	protected boolean existsInDb(RtsTemplate t) {
+	protected boolean existsInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", t.getTemplateIui().toString());
 		return graphDb.execute(TEMPLATE_BY_IUI_QUERY, parameters).hasNext();
 	}
 
-	protected abstract void completeTemplate(RtsTemplate t);
+	protected abstract void completeTemplate(RtsTuple t);
 	protected abstract void setTemplateTypeProperty(); 
 	
 }
