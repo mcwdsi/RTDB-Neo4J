@@ -387,7 +387,7 @@ public class App
             rpm.addTemplate(dCorrection);
             
             try {
-  				FileWriter fw = new FileWriter("/Users/hoganwr/rtstemplates.txt", true);
+  				FileWriter fw = new FileWriter("/Users/hoganwr/rtstuples.txt", true);
   				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
   				
   				try {
