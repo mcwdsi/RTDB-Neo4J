@@ -236,6 +236,7 @@ public class RtsTuplePersistenceManager {
 	 *  So we're clear to add it de novo without worrying about violating a unique
 	 *  constraint on template IUIs.
 	 */
+	@SuppressWarnings("unused")
 	private Node createTemplateNode(RtsTuple t) {
 		Node n = graphDb.createNode(templateLabel);
 		n.setProperty("ui", t.getTupleIui().toString());
@@ -305,6 +306,7 @@ public class RtsTuplePersistenceManager {
 			//+ "ON CREATE "
 			+ "RETURN n";
 
+	@SuppressWarnings("unused")
 	private void completeATemplate(Node n, ATuple t) {
 		n.setProperty("type", "A");
 		n.setProperty("tap", dttmFormatter.format(t.getAuthoringTimestamp()));
@@ -336,6 +338,7 @@ public class RtsTuplePersistenceManager {
 		templateNode.createRelationshipTo(teNode, RtsRelationshipType.ns);
 	}//*/
 	
+	@SuppressWarnings("unused")
 	private void connectNodeToNode(Node sourceNode, RtsRelationshipType relType, 
 			RtsNodeLabel targetNodeLabel, String targetNodeUi) {
 		Node target;

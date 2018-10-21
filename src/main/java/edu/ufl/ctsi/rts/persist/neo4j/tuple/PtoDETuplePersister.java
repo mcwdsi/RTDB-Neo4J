@@ -8,7 +8,6 @@ import org.neo4j.graphdb.Node;
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.time.TemporalReference;
-import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.rts.tuple.PtoDETuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
