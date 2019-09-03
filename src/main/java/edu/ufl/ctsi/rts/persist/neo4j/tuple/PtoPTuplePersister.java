@@ -9,6 +9,8 @@ import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.rts.tuple.PtoPTuple;
+import edu.uams.dbmi.rts.tuple.PtoUTuple;
+import edu.uams.dbmi.rts.tuple.component.RelationshipPolarity;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
@@ -26,7 +28,11 @@ public class PtoPTuplePersister extends AssertionalTuplePersister {
 
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.ptop);
+		PtoPTuple ptop = (PtoPTuple)tupleToPersist;
+		if (ptop.getRelationshipPolarity().equals(RelationshipPolarity.AFFIRMATIVE))
+			n.addLabel(RtsTupleNodeLabel.ptop);
+		else 
+			n.addLabel(RtsTupleNodeLabel.ptop_negated);
 	}
 	
 	@Override

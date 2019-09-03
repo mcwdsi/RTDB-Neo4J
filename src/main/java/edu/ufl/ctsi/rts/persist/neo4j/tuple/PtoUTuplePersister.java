@@ -4,6 +4,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import edu.uams.dbmi.rts.tuple.PtoUTuple;
+import edu.uams.dbmi.rts.tuple.component.RelationshipPolarity;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
 import edu.ufl.ctsi.rts.neo4j.RtsTupleNodeLabel;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
@@ -21,7 +22,11 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.ptou);
+		PtoUTuple ptou = (PtoUTuple)tupleToPersist;
+		if (ptou.getRelationshipPolarity().equals(RelationshipPolarity.AFFIRMATIVE))
+			n.addLabel(RtsTupleNodeLabel.ptou);
+		else 
+			n.addLabel(RtsTupleNodeLabel.ptou_negated);
 	}
 	
 	@Override
