@@ -69,7 +69,7 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 	@Override
 	protected void setTupleTypeProperty() {
 		//n.setProperty(TEMPLATE_TYPE_PROPERTY_NAME, "ten");
-		n.addLabel(RtsTupleNodeLabel.ten);
+		n.addLabel(RtsTupleNodeLabel.TEN);
 	}
 
 	@Override

@@ -31,7 +31,7 @@ public class ATuplePersister extends RepresentationalTuplePersister {
 
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.a);
+		n.addLabel(RtsTupleNodeLabel.A);
 	}
 
 	@Override

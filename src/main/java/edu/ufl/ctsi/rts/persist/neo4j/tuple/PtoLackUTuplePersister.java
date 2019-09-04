@@ -26,7 +26,7 @@ public class PtoLackUTuplePersister extends AssertionalTuplePersister {
 
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.ptolacku);
+		n.addLabel(RtsTupleNodeLabel.L);
 	}
 	
 	@Override

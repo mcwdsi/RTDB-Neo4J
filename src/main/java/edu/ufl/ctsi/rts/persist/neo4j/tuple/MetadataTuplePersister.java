@@ -153,7 +153,7 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 	
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.d);
+		n.addLabel(RtsTupleNodeLabel.D);
 	}
 
 }

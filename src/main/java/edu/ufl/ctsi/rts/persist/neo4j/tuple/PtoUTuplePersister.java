@@ -24,9 +24,9 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 	protected void setTupleTypeProperty() {
 		PtoUTuple ptou = (PtoUTuple)tupleToPersist;
 		if (ptou.getRelationshipPolarity().equals(RelationshipPolarity.AFFIRMATIVE))
-			n.addLabel(RtsTupleNodeLabel.ptou);
+			n.addLabel(RtsTupleNodeLabel.U);
 		else 
-			n.addLabel(RtsTupleNodeLabel.ptou_negated);
+			n.addLabel(RtsTupleNodeLabel.U_);
 	}
 	
 	@Override

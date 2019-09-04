@@ -25,7 +25,7 @@ public class PtoCTuplePersister extends AssertionalTuplePersister {
 	
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.ptoc);
+		n.addLabel(RtsTupleNodeLabel.C);
 	}
 	
 	@Override

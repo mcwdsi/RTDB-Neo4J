@@ -29,7 +29,7 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 
 	@Override
 	protected void setTupleTypeProperty() {
-		n.addLabel(RtsTupleNodeLabel.ptode);
+		n.addLabel(RtsTupleNodeLabel.E);
 	}
 	
 	@Override
