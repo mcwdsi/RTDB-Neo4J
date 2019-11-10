@@ -68,7 +68,10 @@ public class TemporalRegionPersister {
 		connectToCalendaringSystem(t.getCalendarSystemIui());
 		
 		//add isIso flag
+		System.out.println("Adding ISO flag");
 		n.setProperty("isIso", t.isISO());
+		
+		//n.setProperty("system iui", t.getCalendarSystemIui());
 		
 		return n;
 				

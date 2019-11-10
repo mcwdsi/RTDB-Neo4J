@@ -41,7 +41,7 @@ public abstract class RtsTuplePersister {
 		
 		//if not in database already, then create the tuple node
 		n = tnc.persistEntity(t.getTupleIui().toString());
-		
+				
 		//set the type of the tuple - each non-abstract subclass will know its type
 		setTupleTypeProperty();
 		

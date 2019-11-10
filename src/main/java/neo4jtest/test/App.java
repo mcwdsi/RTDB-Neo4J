@@ -79,7 +79,7 @@ public class App
 
 
 	    //public static final String DB_PATH = "target/neo4j-hello-db";
-		public static final String DB_PATH = "/Users/hoganwr/Documents/Neo4j/default.graphdb";
+		public static final String DB_PATH = "/Users/hoganwr/Documents/Neo4j/databases/rtdb";
 
 	    public String greeting;
 
@@ -450,11 +450,24 @@ public class App
             System.out.println(cal);
             System.out.println("Long.MAX_VALUE=" + Long.MAX_VALUE);
             
-            hello.shutDown();
+            
             
             try {
-				RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstuples.txt")));
+				//RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstuples.txt")));
+            	RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/devel/repos/software/rts_core/src/test/resources/test-tuple-generation.out")));
 				ttr.parseTuples();
+				
+				Set<TemporalRegion> time = ttr.getTemporalRegions();
+				Iterator<TemporalRegion> t = time.iterator();
+				while (t.hasNext()) {
+					rpm.addTemporalRegion(t.next());
+				}
+				Iterator<RtsTuple> i = ttr.iterator();
+				while (i.hasNext()) {
+					rpm.addTuple(i.next());
+				}
+				rpm.commitTuples();
+				System.out.println(rpm.graphDb.toString());
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -465,6 +478,9 @@ public class App
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+           
+            hello.queryRts();
+            hello.shutDown();
 	    }
 
 		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTuple(
@@ -784,7 +800,7 @@ public class App
 
 	    void createDb()
 	    {
-	        deleteFileOrDirectory( new File( DB_PATH ) );
+	    	deleteFileOrDirectory( new File( DB_PATH ) );
 	        // START SNIPPET: startDb
 	        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(DB_PATH) );
 	        registerShutdownHook( graphDb );
@@ -845,6 +861,7 @@ public class App
 
 	    void shutDown()
 	    {
+	    	//graphDb.
 	        System.out.println();
 	        System.out.println( "Shutting down database ..." );
 	        // START SNIPPET: shutdownServer
@@ -915,19 +932,25 @@ public class App
             				System.out.print("\tuui = " + n.getProperty("uui"));
             			} else if (label.equals("relation")) {
             				System.out.print("\trui = " + n.getProperty("rui"));
-            			} else if (label.equals("tuple")) {
+            			} else if (label.equals("tuple") || label.equals("D") || label.equals("P") 
+            					|| label.equals("P_") || label.equals("U") || label.equals("U_") 
+            					|| label.equals("A")) {        				
             				System.out.print("\tiui = "+ n.getProperty("iui"));
-            				String type = labels.next().toString();
-            				System.out.print("\t" + type);
+            				if (labels.hasNext()) {
+            					String type = labels.next().toString();
+            					System.out.print("\t" + type);
+            				} else {
+            					System.out.print("\tno other type!!");
+            				}
             				
-            				if (type.equals("a") || type.equals("te")) {
+            				if (label.equals("a") || label.equals("te")) {
             					String tap = (String) n.getProperty("tap");
             					System.out.print("\ttap =" + tap);
-            				} else if (type.equals("ten")) {
+            				} else if (label.equals("ten")) {
             					String name = (String)n.getProperty("name");
             					System.out.print("\tname = " + name);
-            				} else if (type.equals("ptodr")) {
-            				
+            				} else if (label.equals("ptode")) {
+            					
             				}
             			} else if (label.equals("data")) {
         					String data = (String)n.getProperty("dr");

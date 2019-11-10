@@ -48,11 +48,11 @@ public class RtsTuplePersistenceManager {
 	
 	public GraphDatabaseService graphDb;
 	
-	Label templateLabel;
-	Label aTemplateLabel;
-	Label ptouTemplateLabel;
-	Label ptopTemplateLabel;
-	Label ptolackuTemplateLabel;
+	Label tupleLabel;
+	Label aTupleLabel;
+	Label ptouTupleLabel;
+	Label ptopTupleLabel;
+	Label ptolackuTupleLabel;
 	
 	Label instanceLabel;
 	Label temporalRegionLabel;
@@ -151,8 +151,8 @@ public class RtsTuplePersistenceManager {
 		try (Transaction tx = graphDb.beginTx() ) {
 			
 			/*
-			 * Before we begin, let's be sure that we either have assignment templates
-			 *  for each IUI that a PtoP template references or that the IUI node 
+			 * Before we begin, let's be sure that we either have assignment tuples
+			 *  for each IUI that a PtoP tuple references or that the IUI node 
 			 *  exists in the database already.  
 			 */
 			checkIuisInPtoP();
@@ -183,12 +183,13 @@ public class RtsTuplePersistenceManager {
 			}
 			
 			tx.success();
+			tx.close();
 			
 			/*
 			 * We've sent them all to db, so we can clear.  In the future, we will
 			 *  likely want to send them to some cache first.  But this class isn't the 
 			 *  cache, it is merely the thing that submits a chunk of related 
-			 *  templates as one transaction.
+			 *  tuples as one transaction.
 			 */
 			tuples.clear();
 			metadata.clear();
@@ -205,8 +206,8 @@ public class RtsTuplePersistenceManager {
 				params.put("value", iui);
 				ResourceIterator<Node> rin = graphDb.execute(queryInstanceNode, params).columnAs("n");
 				if (!rin.hasNext()) {
-					System.err.println("Iui " + iui + " is referenced in a PtoP template but has " +
-							"no assignment template in the cache and there is no node for it already "
+					System.err.println("Iui " + iui + " is referenced in a PtoP tuple but has " +
+							"no assignment tuple in the cache and there is no node for it already "
 							+ "in the database.");
 				}
 				/*else {
@@ -229,25 +230,25 @@ public class RtsTuplePersistenceManager {
 		
 	}
 
-	static String createTemplateQuery = "CREATE (n:template { iui : {value}})";
+	static String createTupleQuery = "CREATE (n:tuple { iui : {value}})";
 	
 	/*
-	 * Above, we made sure that a template with this template IUI didn't exist already.
+	 * Above, we made sure that a tuple with this tuple IUI didn't exist already.
 	 *  So we're clear to add it de novo without worrying about violating a unique
-	 *  constraint on template IUIs.
+	 *  constraint on tuple IUIs.
 	 */
 	@SuppressWarnings("unused")
-	private Node createTemplateNode(RtsTuple t) {
-		Node n = graphDb.createNode(templateLabel);
+	private Node createTupleNode(RtsTuple t) {
+		Node n = graphDb.createNode(tupleLabel);
 		n.setProperty("ui", t.getTupleIui().toString());
 		return n;
 	}
 
-	public Iterator<RtsTuple> getTemplateIterator() {
+	public Iterator<RtsTuple> getTupleIterator() {
 		return tuples.iterator();
 	}
 	
-	public Iterator<MetadataTuple> getMetadataTemplateIterator() {
+	public Iterator<MetadataTuple> getMetadataTupleIterator() {
 		return metadata.iterator();
 	}
 	
@@ -267,7 +268,7 @@ public class RtsTuplePersistenceManager {
 		return tempRegions.stream();
 	}
 	/*
-	private void connectToReferentNode(Node templateNode, RtsTemplate t) {
+	private void connectToReferentNode(Node tupleNode, RtsTuple t) {
 		Node referentNode;
 		Iui referentIui = t.getReferentIui();
 		if (iuiNode.containsKey(referentIui)) {
@@ -276,10 +277,10 @@ public class RtsTuplePersistenceManager {
 			referentNode = getOrCreateEntityNode(referentIui, RtsNodeLabel.INSTANCE);
 		}
 		
-		templateNode.createRelationshipTo(referentNode, RtsRelationshipType.iuip);
+		tupleNode.createRelationshipTo(referentNode, RtsRelationshipType.iuip);
 	}
 
-	private void connectToAuthorNode(Node templateNode, RtsTemplate t) {
+	private void connectToAuthorNode(Node tupleNode, RtsTuple t) {
 		Node authorNode;
 		Iui authorIui = t.getAuthorIui();
 		if (iuiNode.containsKey(authorIui)) {
@@ -288,11 +289,11 @@ public class RtsTuplePersistenceManager {
 			authorNode = getOrCreateEntityNode(authorIui, RtsNodeLabel.INSTANCE);
 		}
 		
-		templateNode.createRelationshipTo(authorNode, RtsRelationshipType.iuia);
+		tupleNode.createRelationshipTo(authorNode, RtsRelationshipType.iuia);
 	}//*/
 
 	/*
-	private void completeTeTemplate(Node n, TeTemplate t) {
+	private void completeTeTuple(Node n, TeTuple t) {
 		// TODO Auto-generated method stub
 		n.setProperty("type", "TE");
 		n.setProperty("tap", dttmFormatter.format(t.getAuthoringTimestamp()));
@@ -307,7 +308,7 @@ public class RtsTuplePersistenceManager {
 			+ "RETURN n";
 
 	@SuppressWarnings("unused")
-	private void completeATemplate(Node n, ATuple t) {
+	private void completeATuple(Node n, ATuple t) {
 		n.setProperty("type", "A");
 		n.setProperty("tap", dttmFormatter.format(t.getAuthoringTimestamp()));
 	}
@@ -315,7 +316,7 @@ public class RtsTuplePersistenceManager {
 
 	
 	/*
-	private void connectToTemporalEntityNode(Node templateNode, Iui teIui) {
+	private void connectToTemporalEntityNode(Node tupleNode, Iui teIui) {
 		Node teNode;
 		if (iuiNode.containsKey(teIui)) {
 			teNode = iuiNode.get(teIui);
@@ -324,10 +325,10 @@ public class RtsTuplePersistenceManager {
 					//getOrCreateEntityNode(teIui, RtsNodeLabel.TEMPORAL_REGION);
 		}
 		
-		templateNode.createRelationshipTo(teNode, RtsRelationshipType.iuite);
+		tupleNode.createRelationshipTo(teNode, RtsRelationshipType.iuite);
 	}
 
-	private void connectToNamingSystemNode(Node templateNode, Iui nsIui) {
+	private void connectToNamingSystemNode(Node tupleNode, Iui nsIui) {
 		Node teNode;
 		if (iuiNode.containsKey(nsIui)) {
 			teNode = iuiNode.get(nsIui);
@@ -335,7 +336,7 @@ public class RtsTuplePersistenceManager {
 			teNode = getOrCreateEntityNode(nsIui, RtsNodeLabel.INSTANCE);
 		}
 		
-		templateNode.createRelationshipTo(teNode, RtsRelationshipType.ns);
+		tupleNode.createRelationshipTo(teNode, RtsRelationshipType.ns);
 	}//*/
 	
 	@SuppressWarnings("unused")
@@ -372,20 +373,20 @@ public class RtsTuplePersistenceManager {
 	    if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ) {
 	    	if ( !iuiToItsAssignmentTuple.containsKey(targetNodeUi) ) {
 		    	System.err.println("ERROR: creating new entity with IUI " + targetNodeUi +
-		    			" but this IUI has no corresponding assignment template!");
+		    			" but this IUI has no corresponding assignment tuple!");
 	    	}
 	    }
 		
 		return n;
 	}
 
-	//static String templateByIuiQuery = "START n=node:nodes(iui = {value}) RETURN n";
-	static String templateByIuiQuery = "MATCH (n:template { ui : {value} }) return n";
+	//static String tupleByIuiQuery = "START n=node:nodes(iui = {value}) RETURN n";
+	static String tupleByIuiQuery = "MATCH (n:tuple { ui : {value} }) return n";
 	
-	boolean isTemplateInDb(RtsTuple t) {
+	boolean isTupleInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", t.getTupleIui().toString());
-		return graphDb.execute(templateByIuiQuery, parameters).hasNext();
+		return graphDb.execute(tupleByIuiQuery, parameters).hasNext();
 	}
 	
 	/*
@@ -417,7 +418,7 @@ public class RtsTuplePersistenceManager {
 	    iuiNode.put(iui, result);
 	    
 
-	    if (!iuiToAssignmentTemplate.containsKey(iui)) {
+	    if (!iuiToAssignmentTuple.containsKey(iui)) {
 
 	    }
 	    return result;
@@ -448,7 +449,7 @@ public class RtsTuplePersistenceManager {
     void setupSchema() {
     	
     	/*
-    	templateLabel = DynamicLabel.label("template");
+    	tupleLabel = DynamicLabel.label("tuple");
     	instanceLabel = DynamicLabel.label("instance");
     	typeLabel = DynamicLabel.label("universal");
     	relationLabel = DynamicLabel.label("relation");
@@ -457,7 +458,7 @@ public class RtsTuplePersistenceManager {
     	metadataLabel = DynamicLabel.label("metadata");
     	*/
     	
-    	templateLabel = Label.label("template");
+    	tupleLabel = Label.label("tuple");
     	instanceLabel = Label.label("instance");
     	typeLabel = Label.label("universal");
     	relationLabel = Label.label("relation");
@@ -469,7 +470,7 @@ public class RtsTuplePersistenceManager {
         try ( Transaction tx2 = graphDb.beginTx() )
         {
             graphDb.schema()
-                    .constraintFor( templateLabel )
+                    .constraintFor( tupleLabel )
                     .assertPropertyIsUnique( "iui" )
                     .create();
             

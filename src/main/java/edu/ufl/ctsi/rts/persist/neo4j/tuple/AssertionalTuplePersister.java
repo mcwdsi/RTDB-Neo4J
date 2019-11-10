@@ -84,7 +84,7 @@ public abstract class AssertionalTuplePersister extends
 		//trp.persistTemporalRegion(taRef);
 		
 		Node target = tnc.persistEntity(taRef.toString());
-		//Then, create relationship from this template to that node
+		//Then, create relationship from this tuple to that node
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
 
@@ -106,7 +106,7 @@ public abstract class AssertionalTuplePersister extends
 
 	private void connectToRelation() {
 		/*
-		 * If it is null, it is because we are persisting a PtoCoTemplate, which
+		 * If it is null, it is because we are persisting a PtoCoTuple, which
 		 *   doesn't have an r parameter.
 		 */
 		if (rui != null) {
