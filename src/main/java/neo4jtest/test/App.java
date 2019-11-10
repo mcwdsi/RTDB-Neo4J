@@ -459,6 +459,7 @@ public class App
 				
 				Set<TemporalRegion> time = ttr.getTemporalRegions();
 				Iterator<TemporalRegion> t = time.iterator();
+				System.out.println(time.size() + " temporal regions.");
 				while (t.hasNext()) {
 					rpm.addTemporalRegion(t.next());
 				}
@@ -466,6 +467,7 @@ public class App
 				while (i.hasNext()) {
 					rpm.addTuple(i.next());
 				}
+				
 				rpm.commitTuples();
 				System.out.println(rpm.graphDb.toString());
 			} catch (FileNotFoundException e) {

@@ -161,6 +161,10 @@ public class RtsTuplePersistenceManager {
 			//Iso8601DateTimeFormatter dtf = new Iso8601DateTimeFormatter();
 			//String iuid = dtf.format(dt);
 			
+			for (TemporalRegion r : tempRegions) {
+				trp.persistTemporalRegion(r);
+			}
+			
 			for (RtsTuple t : tuples) {
 				if (t instanceof ATuple) {
 					atp.persistTuple(t);
@@ -183,7 +187,7 @@ public class RtsTuplePersistenceManager {
 			}
 			
 			tx.success();
-			tx.close();
+			//tx.close();
 			
 			/*
 			 * We've sent them all to db, so we can clear.  In the future, we will
