@@ -18,9 +18,9 @@ public enum RtsRelationshipType implements RelationshipType {
 	tr,			//HOLDS_TRUE_AT
 	
 	/** 
-	 * This relationship type is for PtoP, PtoU, PtoLackU, and PtoDE tuples
+	 * These relationship types are for PtoP, PtoU, PtoLackU, and PtoDE tuples
 	 */
-	r,			//
+	r, iuio,			//
 	
 	/**
 	 * This relationship type is for PtoU, PtoLackU, and Te tuples

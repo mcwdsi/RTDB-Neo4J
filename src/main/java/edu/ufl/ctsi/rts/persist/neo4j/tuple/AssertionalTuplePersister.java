@@ -1,8 +1,11 @@
 package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
+import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.rts.tuple.PtoCTuple;
 import edu.uams.dbmi.rts.tuple.PtoDETuple;
@@ -24,6 +27,7 @@ public abstract class AssertionalTuplePersister extends
 	TemporalNodeCreator tnc;
 	
 	String rui;
+	Iui ontologyForRui;
 	
 	public AssertionalTuplePersister(GraphDatabaseService db) {
 		super(db);
@@ -48,6 +52,7 @@ public abstract class AssertionalTuplePersister extends
 			//taIui = ptou.getAuthoringTimeIui().toString();
 			//trIui = ptou.getTemporalEntityIui().toString();
 			rui = ptou.getRelationshipURI().toString();
+			ontologyForRui = ptou.getRelationshipOntologyIui();
 		} else if (tupleToPersist instanceof PtoPTuple) {
 			PtoPTuple ptop = (PtoPTuple)tupleToPersist;
 			taRef = ptop.getAuthoringTimeReference();
@@ -55,6 +60,7 @@ public abstract class AssertionalTuplePersister extends
 			//taIui = ptop.getAuthoringTimeIui().toString();
 			//trIui = ptop.getTemporalEntityIui().toString();
 			rui = ptop.getRelationshipURI().toString();
+			ontologyForRui = ptop.getRelationshipOntologyIui();
 		} else if (tupleToPersist instanceof PtoLackUTuple) {
 			PtoLackUTuple ptolacku = (PtoLackUTuple)tupleToPersist;
 			taRef = ptolacku.getAuthoringTimeReference();
@@ -62,11 +68,13 @@ public abstract class AssertionalTuplePersister extends
 			//taIui = ptolacku.getAuthoringTimeIui().toString();
 			//trIui = ptolacku.getTemporalEntityIui().toString();
 			rui = ptolacku.getRelationshipURI().toString();
+			ontologyForRui = ptolacku.getRelationshipOntologyIui();
 		} else if (tupleToPersist instanceof PtoDETuple) {
 			PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
 			//taIui = ptodr.getAuthoringTimeIui().toString();
 			taRef = ptodr.getAuthoringTimeReference();
 			rui = ptodr.getRelationshipURI().toString();
+			ontologyForRui = ptodr.getRelationshipOntologyIui();
 		} else if (tupleToPersist instanceof PtoCTuple) {
 			PtoCTuple ptoc = (PtoCTuple)tupleToPersist;
 			taRef = ptoc.getAuthoringTimeReference();
@@ -112,6 +120,15 @@ public abstract class AssertionalTuplePersister extends
 		if (rui != null) {
 			Node target = rnc.persistEntity(rui);
 			n.createRelationshipTo(target, RtsRelationshipType.r);
+			Node ontology = inc.persistEntity(ontologyForRui.toString());
+			Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
+			boolean hasOntologyTarget = false;
+			for (Relationship rel : ontologyRels) {
+				Node relTarget = rel.getEndNode();
+				hasOntologyTarget = relTarget.equals(ontology);
+			}
+			if (!hasOntologyTarget)
+				target.createRelationshipTo(ontology, RtsRelationshipType.iuio);			
 		}
 	}
 
