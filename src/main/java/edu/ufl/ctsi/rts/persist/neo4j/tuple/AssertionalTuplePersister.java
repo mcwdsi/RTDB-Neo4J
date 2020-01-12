@@ -1,6 +1,5 @@
 package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -29,10 +28,14 @@ public abstract class AssertionalTuplePersister extends
 	String rui;
 	Iui ontologyForRui;
 	
+	String uui;
+	Iui ontologyForUui;
+	
 	public AssertionalTuplePersister(GraphDatabaseService db) {
 		super(db);
 		rnc = new RelationNodeCreator(this.graphDb);
 		rui = null;
+		uui = null;
 		tnc = new TemporalNodeCreator(this.graphDb);
 	}
 	
@@ -53,6 +56,8 @@ public abstract class AssertionalTuplePersister extends
 			//trIui = ptou.getTemporalEntityIui().toString();
 			rui = ptou.getRelationshipURI().toString();
 			ontologyForRui = ptou.getRelationshipOntologyIui();
+			uui = ptou.getUniversalUui().toString();
+			ontologyForUui = ptou.getUniversalOntologyIui();
 		} else if (tupleToPersist instanceof PtoPTuple) {
 			PtoPTuple ptop = (PtoPTuple)tupleToPersist;
 			taRef = ptop.getAuthoringTimeReference();

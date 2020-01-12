@@ -2,6 +2,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 import edu.uams.dbmi.rts.tuple.PtoUTuple;
 import edu.uams.dbmi.rts.tuple.component.RelationshipPolarity;
@@ -43,6 +44,15 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 		PtoUTuple ptou = (PtoUTuple)tupleToPersist;
 		Node target = unc.persistEntity(ptou.getUniversalUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
+		Node ontology = inc.persistEntity(ontologyForUui.toString());
+		Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
+		boolean hasOntologyTarget = false;
+		for (Relationship rel : ontologyRels) {
+			Node relTarget = rel.getEndNode();
+			hasOntologyTarget = relTarget.equals(ontology);
+		}
+		if (!hasOntologyTarget)
+			target.createRelationshipTo(ontology, RtsRelationshipType.iuio);		
 	}
 	
 	@Override

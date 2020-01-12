@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -303,7 +304,7 @@ public class App
             //hello.shutDown();
             
             //hello.createDb();
-            hello.queryRts();
+            hello.queryRtsForEverythingAndDisplay();
             
             /*
              * Here's an interesting query:
@@ -481,7 +482,20 @@ public class App
 				e.printStackTrace();
 			}
            
-            hello.queryRts();
+            hello.queryRtsForEverythingAndDisplay();
+            
+            System.out.println("*******************************************************************");
+            System.out.println("*  Query IUI of entity denoted by PCORnet PATID ='321454' ");
+            System.out.println("*******************************************************************");
+            hello.runQueryAndDisplayResult("match (n:instance)-[r1:iuip]-(o:U)-[uui]->(q:universal), (n)-[p1:p]-(n2:P)-[r]->(n3:relation), (n2)-[p2:p]->(n4:instance), (n)-[r2:iuip]-(n5:E)-[r3:dr]->(n6:data) where q.uui = \"http://purl.obolibrary.org/obo/PCORnet/PCORnet_00000019\" and n3.rui=\"http://purl.obolibrary.org/obo/IAO_0000219\" and n6.dr = '321454'  return n4.iui;");
+            
+            String patidIriTxt = "http://purl.obolibrary.org/obo/PCORnet/PCORnet_00000019";
+            String queryTemplateTxt = "match (n:instance)-[r1:iuip]-(o:U)-[uui]->(q:universal), (n)-[p1:p]-(n2:P)-[r]->(n3:relation), (n2)-[p2:p]->(n4:instance), (n)-[r2:iuip]-(n5:E)-[r3:dr]->(n6:data) where q.uui = $idTypeIri and n3.rui=\"http://purl.obolibrary.org/obo/IAO_0000219\" and n6.dr = $idValue  return n4.iui;";
+    		HashMap<String, Object> parameters = new HashMap<String, Object>();
+    		parameters.put("idTypeIri", patidIriTxt);
+    		parameters.put("idValue", "321454");
+    		hello.runQueryWithParametersAndDisplayResults(queryTemplateTxt, parameters);
+            
             hello.shutDown();
 	    }
 
@@ -903,7 +917,7 @@ public class App
 	        }
 	    }
 	    
-	    void queryRts() {
+	    void queryRtsForEverythingAndDisplay() {
    
             String query = "MATCH (n) return n"; //"START n=node(*) RETURN n";
             
@@ -982,5 +996,173 @@ public class App
             
             }
 	    }
-	
+	    
+	    void runQueryAndDisplayResult(String query) {
+	    	
+	    	   try ( Transaction tx = graphDb.beginTx() ) {
+	            	
+	            	Result result = graphDb.execute(query);
+	            	//ResourceIterator<Map<String, Object>> i = result.iterator();
+	            	while (result.hasNext()) {
+	            		Map<String, Object> entry = result.next();
+	            		System.out.println(entry.size());
+	            		Set<String> keys = entry.keySet();
+	            		for (String key : keys) {
+	            			System.out.print("\t" + key);
+	            			Object o = entry.get(key);
+	            			if (o instanceof Node) {
+	            				Node n = (Node)o;
+	            			
+	            				System.out.print("\t" + n.getId());
+	            			
+	            				Iterator<Label> labels = n.getLabels().iterator();
+	            				String label =labels.next().toString();
+	            				System.out.print("\t" + label);
+	            				if (label.equals("instance")) {
+	            					System.out.print("\tiui = "+ n.getProperty("iui"));
+	            				} else if (label.equals("temporal_region")) { 
+	            					System.out.print("\ttref = " + n.getProperty("tref"));
+	            				} else if (label.equals("universal")) {
+	            					n.addLabel(Label.label("universal"));  //what happens if we try to add a label that is already there?
+	            					System.out.print("\tuui = " + n.getProperty("uui"));
+	            				} else if (label.equals("relation")) {
+	            					System.out.print("\trui = " + n.getProperty("rui"));
+	            				} else if (label.equals("tuple") || label.equals("D") || label.equals("P") 
+	            						|| label.equals("P_") || label.equals("U") || label.equals("U_") 
+	            						|| label.equals("A")) {        				
+	            					System.out.print("\tiui = "+ n.getProperty("iui"));
+	            					if (labels.hasNext()) {
+	            						String type = labels.next().toString();
+	            						System.out.print("\t" + type);
+	            					} else {
+	            						System.out.print("\tno other type!!");
+	            					}
+	            				
+	            					if (label.equals("a") || label.equals("te")) {
+	            						String tap = (String) n.getProperty("tap");
+	            						System.out.print("\ttap =" + tap);
+	            					} else if (label.equals("ten")) {
+	            						String name = (String)n.getProperty("name");
+	            						System.out.print("\tname = " + name);
+	            					} else if (label.equals("ptode")) {
+	            					
+	            					}
+	            				} else if (label.equals("data")) {
+	            					String data = (String)n.getProperty("dr");
+	            					System.out.print("\tdr = " + data);
+	            				} else if (label.equals("concept")) {
+	            						String code = (String)n.getProperty("cui");
+	            						System.out.print("\tcui = " + code);
+	            				}
+	            			
+	            				System.out.println();
+	            			
+	            			
+	            				Iterator<Relationship> iRel = n.getRelationships().iterator();
+	            				while (iRel.hasNext()) {
+	            					Relationship r = iRel.next();
+	            					String direction = (n.getId() == r.getStartNode().getId()) ? "outgoing" : "incoming";
+	            					Node en = r.getEndNode();
+	            					Node sn = r.getStartNode();
+	            					RelationshipType rt = r.getType();
+	            					System.out.println("\t\tr" + r.getId() + "\t" + sn.getId() + "\t" + rt.name() + "\t" + en.getId() + "\t" + direction);// + "\t" + en.getProperty("type"));
+	            				}//*/
+	            			
+	            			} else if (o instanceof String) {
+	            				String resultTxt =(String)o;
+	            				System.out.println("\tString result is: " + resultTxt);
+	            			
+	            			}
+	            		}
+	            	}
+	    	
+	            	
+	            	tx.success();
+	            }
+	    }
+	    
+	    void runQueryWithParametersAndDisplayResults(String queryTemplateTxt, HashMap<String, Object> parameters) {
+  	
+	    	   try ( Transaction tx = graphDb.beginTx() ) {
+	            	
+	            	Result result = graphDb.execute(queryTemplateTxt, parameters);
+	            	//ResourceIterator<Map<String, Object>> i = result.iterator();
+	            	while (result.hasNext()) {
+	            		Map<String, Object> entry = result.next();
+	            		System.out.println(entry.size());
+	            		Set<String> keys = entry.keySet();
+	            		for (String key : keys) {
+	            			System.out.print("\t" + key);
+	            			Object o = entry.get(key);
+	            			if (o instanceof Node) {
+	            				Node n = (Node)o;
+	            			
+	            				System.out.print("\t" + n.getId());
+	            			
+	            				Iterator<Label> labels = n.getLabels().iterator();
+	            				String label =labels.next().toString();
+	            				System.out.print("\t" + label);
+	            				if (label.equals("instance")) {
+	            					System.out.print("\tiui = "+ n.getProperty("iui"));
+	            				} else if (label.equals("temporal_region")) { 
+	            					System.out.print("\ttref = " + n.getProperty("tref"));
+	            				} else if (label.equals("universal")) {
+	            					n.addLabel(Label.label("universal"));  //what happens if we try to add a label that is already there?
+	            					System.out.print("\tuui = " + n.getProperty("uui"));
+	            				} else if (label.equals("relation")) {
+	            					System.out.print("\trui = " + n.getProperty("rui"));
+	            				} else if (label.equals("tuple") || label.equals("D") || label.equals("P") 
+	            						|| label.equals("P_") || label.equals("U") || label.equals("U_") 
+	            						|| label.equals("A")) {        				
+	            					System.out.print("\tiui = "+ n.getProperty("iui"));
+	            					if (labels.hasNext()) {
+	            						String type = labels.next().toString();
+	            						System.out.print("\t" + type);
+	            					} else {
+	            						System.out.print("\tno other type!!");
+	            					}
+	            				
+	            					if (label.equals("a") || label.equals("te")) {
+	            						String tap = (String) n.getProperty("tap");
+	            						System.out.print("\ttap =" + tap);
+	            					} else if (label.equals("ten")) {
+	            						String name = (String)n.getProperty("name");
+	            						System.out.print("\tname = " + name);
+	            					} else if (label.equals("ptode")) {
+	            					
+	            					}
+	            				} else if (label.equals("data")) {
+	            					String data = (String)n.getProperty("dr");
+	            					System.out.print("\tdr = " + data);
+	            				} else if (label.equals("concept")) {
+	            						String code = (String)n.getProperty("cui");
+	            						System.out.print("\tcui = " + code);
+	            				}
+	            			
+	            				System.out.println();
+	            			
+	            			
+	            				Iterator<Relationship> iRel = n.getRelationships().iterator();
+	            				while (iRel.hasNext()) {
+	            					Relationship r = iRel.next();
+	            					String direction = (n.getId() == r.getStartNode().getId()) ? "outgoing" : "incoming";
+	            					Node en = r.getEndNode();
+	            					Node sn = r.getStartNode();
+	            					RelationshipType rt = r.getType();
+	            					System.out.println("\t\tr" + r.getId() + "\t" + sn.getId() + "\t" + rt.name() + "\t" + en.getId() + "\t" + direction);// + "\t" + en.getProperty("type"));
+	            				}//*/
+	            			
+	            			} else if (o instanceof String) {
+	            				String resultTxt =(String)o;
+	            				System.out.println("\tString result is: " + resultTxt);
+	            			
+	            			}
+	            		}
+	            	}
+	    	
+	            	
+	            	tx.success();
+	            }
+	    }
 }
+ 

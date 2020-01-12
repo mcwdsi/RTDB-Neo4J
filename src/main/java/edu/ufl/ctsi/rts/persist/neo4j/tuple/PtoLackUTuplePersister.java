@@ -2,6 +2,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 import edu.uams.dbmi.rts.tuple.PtoLackUTuple;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
@@ -43,6 +44,16 @@ public class PtoLackUTuplePersister extends AssertionalTuplePersister {
 		PtoLackUTuple ptolacku = (PtoLackUTuple)tupleToPersist;
 		Node target = unc.persistEntity(ptolacku.getRelationshipURI().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
+		
+		Node ontology = inc.persistEntity(ontologyForUui.toString());
+		Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
+		boolean hasOntologyTarget = false;
+		for (Relationship rel : ontologyRels) {
+			Node relTarget = rel.getEndNode();
+			hasOntologyTarget = relTarget.equals(ontology);
+		}
+		if (!hasOntologyTarget)
+			target.createRelationshipTo(ontology, RtsRelationshipType.iuio);	
 	}
 	
 	@Override
