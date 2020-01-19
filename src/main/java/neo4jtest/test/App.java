@@ -112,6 +112,7 @@ public class App
 	    static PtoPTuple designatesPtoP;
 	    static PtoPTuple ownsPtoP;
 	    static PtoPTuple trefPtop;
+	    static PtoDETuple namePtoDE;
 	    
 
 	    public static void main( final String[] args )
@@ -133,7 +134,7 @@ public class App
 			 * This is the name of the time of assignment and assertion we will use for all non-metadata
 			 *   tuples
 			 */
-            String ta_name = "2014-07-03T15:49:37.543";
+            String ta_name = "2014-07-03T15:49:37.543-0400";
             Iso8601Date ta_date = new Iso8601Date(DateConfiguration.YEAR_MONTH_DAY, 2014, 7, 3);
             Iso8601UnitTime ta_time = new Iso8601UnitTime(15, 49, 37, TimeUnit.MILLISECOND, 543); 
             
@@ -323,7 +324,22 @@ public class App
             System.out.println("\t" + tuple4.toString());
             System.out.println("End Getting Tuple by Iui per RtsStore Interface");
             
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple5 = rpm.getTuple(ten.getTupleIui());
+            System.out.println("\t" + tuple5.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
             
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple6 = rpm.getTuple(ptoc.getTupleIui());
+            System.out.println("\t" + tuple6.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple7 = rpm.getTuple(d4.getTupleIui());
+            System.out.println("\t" + tuple7.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
+           
             hello.graphDb = rpm.graphDb;
             
             //hello.shutDown();
@@ -466,6 +482,16 @@ public class App
   			}
             
             rpm.commitTuples();
+            
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple8 = rpm.getTuple(dCorrection.getTupleIui());
+            System.out.println("\t" + tuple8.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple9 = rpm.getTuple(d4.getTupleIui());
+            System.out.println("\t" + tuple9.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
             
             //System.out.println(d1.toString());
             System.out.println(ptouBad.toString());

@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
@@ -50,6 +51,17 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 		PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
 		Node target = unc.persistEntity(ptodr.getDatatypeUui().toString());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
+		
+		if (ontologyForUui == null) System.out.println(new String(ptodr.getData()));
+		Node ontology = inc.persistEntity(ontologyForUui.toString());
+		Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
+		boolean hasOntologyTarget = false;
+		for (Relationship rel : ontologyRels) {
+			Node relTarget = rel.getEndNode();
+			hasOntologyTarget = relTarget.equals(ontology);
+		}
+		if (!hasOntologyTarget)
+			target.createRelationshipTo(ontology, RtsRelationshipType.iuio);	
 	}
 
 	private void connectToDataNode() {

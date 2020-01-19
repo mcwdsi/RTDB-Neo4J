@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import neo4jtest.test.App;
 
 import org.bouncycastle.jcajce.provider.asymmetric.RSA;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -26,7 +27,11 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.ParticularReference;
+import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
+import edu.uams.dbmi.rts.metadata.RtsChangeReason;
+import edu.uams.dbmi.rts.metadata.RtsChangeType;
+import edu.uams.dbmi.rts.metadata.RtsErrorCode;
 import edu.uams.dbmi.rts.persist.RtsStore;
 import edu.uams.dbmi.rts.query.TupleQuery;
 import edu.uams.dbmi.rts.time.TemporalReference;
@@ -628,14 +633,14 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	private RtsTuple reconstituteTuple(Node n, String label, Iui iuit) {
 		RtsTuple tuple = null;
 		Iui iuip, iuia, iuid, iuics, iuins, iuioU, iuioR, about;
-		List<Iui> s;
+		Set<Iui> s;
 		List<ParticularReference> p;
 		Uui uui;
 		URI r; 
 		TemporalRegion ta, tr;
-		Iso8601DateTime tap;
-		String co;
-		String dr;
+		Iso8601DateTime tap, td;
+		Cui co;
+		ParticularReference prForDE;
 		switch (label) {
 			case "A":
 				ATuple a = new ATuple();
@@ -673,7 +678,6 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				break;
 			case "P":
 			case "P_":
-				//TODO
 				PtoPTuple ptop = new PtoPTuple();
 				ptop.setTupleIui(iuit);
 				iuia = getIuiaFromDb(n);
@@ -692,17 +696,93 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				tuple = ptop;
 				break;
 			case "L":
-				//TODO
+				PtoLackUTuple ptolacku = new PtoLackUTuple();
+				ptolacku.setTupleIui(iuit);
+				iuip = getIuipFromDb(n);
+				ptolacku.setReferentIui(iuip);
+				iuia = getIuiaFromDb(n);
+				ptolacku.setAuthorIui(iuia);
+				uui = getUuiFromDb(n);
+				ptolacku.setUniversalUui(uui);
+				iuioU = getIuioForUuiFromDb(n);
+				ptolacku.setUniversalOntologyIui(iuioU);
+				ta = getTaFromDb(n);
+				tr = getTrFromDb(n);
+				ptolacku.setAuthoringTimeReference(ta.getTemporalReference());
+				ptolacku.setTemporalReference(tr.getTemporalReference());
+				r = getRFromDb(n);
+				ptolacku.setRelationshipURI(r);
+				iuioR = getIuioForRFromDb(n);
+				ptolacku.setRelationshipOntologyIui(iuioR);
+				tuple = ptolacku;
 				break;
 			case "E":
-				//TODO
+				PtoDETuple ptode = new PtoDETuple();
+				ptode.setTupleIui(iuit);
+				iuia = getIuiaFromDb(n);
+				ptode.setAuthorIui(iuia);
+				//no tr, just ta
+				ta = getTaFromDb(n);
+				ptode.setAuthoringTimeReference(ta.getTemporalReference());
+				r = getRFromDb(n);
+				ptode.setRelationshipURI(r);
+				iuioR = getIuioForRFromDb(n);
+				ptode.setRelationshipOntologyIui(iuioR);
+				uui = getUuiFromDb(n);
+				ptode.setDatatypeUui(uui);
+				iuioU = getIuioForUuiFromDb(n);
+				ptode.setDatatypeOntologyIui(iuioU);
+				prForDE = getPrForDeFromDb(n);
+				ptode.setReferent(prForDE);
+				byte[] data = getDeDataFromDb(n);
+				ptode.setData(data);
+				tuple = ptode;
 				break;
 			case "D":
-				//TODO
+				MetadataTuple d = new MetadataTuple();
+				d.setTupleIui(iuit);
+				//iuid
+				iuid = getIuidFromDb(n);
+				d.setAuthorIui(iuid);
+				//td
+				td = getTdFromDb(n);
+				d.setAuthoringTimestamp(td);
+				//about (iuit)
+				about = getAboutFromDb(n);
+				d.setReferent(about);
+				//change reason
+				RtsChangeReason cr = getCrFromDb(n);
+				d.setChangeReason(cr);
+				//change type
+				RtsChangeType ct = getCtFromDb(n);
+				d.setChangeType(ct);
+				//error code
+				RtsErrorCode e = getEFromDb(n);
+				d.setErrorCode(e);
+				//replacement tuple IUI list (if any)
+				s = getSFromDb(n);
+				if (s!= null) d.setReplacementTupleIuis(s);
+				tuple = d;
 				break;
 			case "C":
-				//TODO
+				PtoCTuple ptoc = new PtoCTuple();
+				ptoc.setTupleIui(iuit);
+				iuip = getIuipFromDb(n);
+				ptoc.setReferentIui(iuip);
+				iuia = getIuiaFromDb(n);
+				ptoc.setAuthorIui(iuia);
+				co = getCuiFromDb(n);
+				ptoc.setConceptCui(co);
+				ta = getTaFromDb(n);
+				tr = getTrFromDb(n);
+				ptoc.setAuthoringTimeReference(ta.getTemporalReference());
+				ptoc.setTemporalReference(tr.getTemporalReference());
+				iuics = getIuiCsFromDb(n);
+				ptoc.setConceptSystemIui(iuics);
+				tuple = ptoc;
 				break;
+			default:
+				System.err.println("Unknown tuple type: " + label);
 		}
 		
 		return tuple;
@@ -815,6 +895,108 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			pList.add(pRefs[i]);
 		
 		return pList;
+	}
+	
+	private ParticularReference getPrForDeFromDb(Node n) {
+		// We built the iuip relationship as incoming, because the PtoDE tuple says how the 
+		//  particular is concretized
+		Iterable<Relationship> rs = n.getRelationships(RtsRelationshipType.iuip, Direction.INCOMING);
+		int cR = 0;
+		Node instNode = null;
+		for (Relationship r : rs) {
+			cR++;
+			instNode = r.getStartNode();  //again, because tuple is EndNode
+		}
+		if (cR > 1 || cR == 0) {
+			System.err.println("PtoDE tuple should have exactly one iuip relationship but instead has " + cR);
+		}
+		ParticularReference pr = null;
+		if (instNode.hasProperty("iui")) {
+			Iui iui = Iui.createFromString((String)instNode.getProperty("iui"));
+			pr = iui;
+		} else if (instNode.hasProperty("tref")) {
+			String trefTxt = (String)instNode.getProperty("tref");
+			boolean isIso = (boolean)instNode.getProperty("isIso");
+			TemporalReference tref = new TemporalReference(trefTxt, isIso);
+			pr = tref;
+		} else {
+			System.err.println("Incompatible node for reference of PtoDE tuple.");
+		}
+		return pr;
+	}
+	
+	private Cui getCuiFromDb(Node n) {
+		String cuiTxt = (String)n.getRelationships(RtsRelationshipType.co).iterator().next().getEndNode().getProperty("cui");
+		return new Cui(cuiTxt);
+	}
+	
+	private byte[] getDeDataFromDb(Node n) {
+		String dataAsTxt = (String)n.getRelationships(RtsRelationshipType.dr).iterator().next().getEndNode().getProperty("dr");
+		return dataAsTxt.getBytes();
+	}
+	
+	private Iui getIuiCsFromDb(Node n) {
+		String iuiTxt = (String)n.getRelationships(RtsRelationshipType.cs).iterator().next().getEndNode().getProperty("iui");
+		return Iui.createFromString(iuiTxt);
+	}
+	
+	private Iso8601DateTime getTdFromDb(Node n) {
+		String tapTxt = (String)n.getProperty("td");
+		Iso8601DateTimeParser p = new Iso8601DateTimeParser();
+		Iso8601DateTime t = null;
+		try {
+			t = p.parse(tapTxt);
+		} catch (Iso8601DateParseException | Iso8601TimeParseException e) {
+			e.printStackTrace();
+		}
+		return t;
+	}
+	
+	private Iui getIuidFromDb(Node n) {
+		String iuipTxt = (String)n.getRelationships(RtsRelationshipType.iuid).iterator().next().getEndNode().getProperty("iui");
+		Iui iuip = Iui.createFromString(iuipTxt);
+		return iuip;
+	}
+	
+	private Iui getAboutFromDb(Node n) {
+		String iuitTxt = (String)n.getRelationships(RtsRelationshipType.about).iterator().next().getEndNode().getProperty("iui");
+		Iui iuit = Iui.createFromString(iuitTxt);
+		return iuit;
+	}
+	
+	private RtsChangeReason getCrFromDb(Node n) {
+		String crTxt = (String)n.getProperty("c");
+		RtsChangeReason cr = RtsChangeReason.valueOf(crTxt);
+		System.out.println("CHANGE REASON = " + cr);
+		return cr;
+	}
+	
+	private RtsChangeType getCtFromDb(Node n) {
+		String ctTxt = (String)n.getProperty("ct");
+		RtsChangeType ct = RtsChangeType.valueOf(ctTxt);
+		System.out.println("CHANGE TYPE = " + ct);
+		return ct;
+	}
+	
+	private RtsErrorCode getEFromDb(Node n) {
+		String eTxt = (String)n.getProperty("e");
+		RtsErrorCode e = RtsErrorCode.valueOf(eTxt);
+		System.out.println("ERROR CODE = " + e);
+		return e;
+	}
+	
+	private Set<Iui> getSFromDb(Node n) {
+		HashSet<Iui> s = null;
+		
+		Iterable<Relationship> rs = n.getRelationships(RtsRelationshipType.s);
+		if (rs.iterator().hasNext()) s = new HashSet<Iui>();
+		
+		for (Relationship r : rs) {
+			String iuiTxt = (String)r.getEndNode().getProperty("iui");
+			s.add(Iui.createFromString(iuiTxt));
+		}
+		
+		return s;
 	}
 	
 	@Override

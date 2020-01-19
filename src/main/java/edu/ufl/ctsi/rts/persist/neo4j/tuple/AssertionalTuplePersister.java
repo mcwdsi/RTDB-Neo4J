@@ -80,6 +80,7 @@ public abstract class AssertionalTuplePersister extends
 			taRef = ptodr.getAuthoringTimeReference();
 			rui = ptodr.getRelationshipURI().toString();
 			ontologyForRui = ptodr.getRelationshipOntologyIui();
+			ontologyForUui = ptodr.getDatatypeOntologyIui();
 		} else if (tupleToPersist instanceof PtoCTuple) {
 			PtoCTuple ptoc = (PtoCTuple)tupleToPersist;
 			taRef = ptoc.getAuthoringTimeReference();
