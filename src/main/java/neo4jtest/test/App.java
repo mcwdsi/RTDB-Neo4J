@@ -109,6 +109,10 @@ public class App
 	    //This one should refer to https://www.iana.org/assignments/character-sets/character-sets.xhtml
 	    static Iui characterEncodingsIui = Iui.createFromString("85F850AD-C348-4256-81F0-24DC45B63079");
 	    
+	    static PtoPTuple designatesPtoP;
+	    static PtoPTuple ownsPtoP;
+	    static PtoPTuple trefPtop;
+	    
 
 	    public static void main( final String[] args )
 	    {
@@ -174,7 +178,7 @@ public class App
             //ten.setNamingSystem(gregorianIui);
                         
             rpm.addTemporalReference(ta.getTemporalReference());
-            rpm.addTuple(ten);
+            rpm.saveTuple(ten);
             
             //Metadata tuple for ten
          	MetadataTuple d2 = new MetadataTuple();
@@ -185,7 +189,7 @@ public class App
         	d2.setChangeReason(RtsChangeReason.CR);
         	d2.setChangeType(RtsChangeType.I);
         	d2.setErrorCode(RtsErrorCode.Null);
-            rpm.addTuple(d2);
+            rpm.saveTuple(d2);
             
             
             /*
@@ -216,7 +220,7 @@ public class App
             ptoc.setConceptCui(new Cui("66839005"));
             ptoc.setTemporalReference(t3.getTemporalReference());  //the temporal region when a concept annotation "holds" is fairly meaningless
             ptoc.setConceptSystemIui(snctCsIui);  
-            rpm.addTuple(ptoc);
+            rpm.saveTuple(ptoc);
             
             /*
              * Metadata tuple for PtoC tuple
@@ -229,7 +233,7 @@ public class App
         	d3.setChangeReason(RtsChangeReason.CR);
         	d3.setChangeType(RtsChangeType.I);
         	d3.setErrorCode(RtsErrorCode.Null);
-            rpm.addTuple(d3);
+            rpm.saveTuple(d3);
             
             /*
              * W. Hogan instance of canis lupis familiaris (and hopefully a lucky one :-)
@@ -248,7 +252,7 @@ public class App
             ptouBad.setTemporalReference(t3.getTemporalReference());
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
             ptouBad.setUniversalOntologyIui(ncbiTaxonIui);
-            rpm.addTuple(ptouBad);
+            rpm.saveTuple(ptouBad);
             
             /*
              * The original metadata tuple for the misinformed PtoU tuple
@@ -261,7 +265,7 @@ public class App
         	d4.setChangeReason(RtsChangeReason.CR);
         	d4.setChangeType(RtsChangeType.I);
         	d4.setErrorCode(RtsErrorCode.Null);
-            rpm.addTuple(d4);
+            rpm.saveTuple(d4);
              
             
             //create another William Hogan
@@ -298,6 +302,27 @@ public class App
              * Save all the tuples accumulated thus far to Neo4J
              */
             rpm.commitTuples();
+            
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple1 = rpm.getTuple(ptouBad.getTupleIui());
+            System.out.println("\t" + tuple1.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple2 = rpm.getTuple(ownsPtoP.getTupleIui());
+            System.out.println("\t" + tuple2.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple3 = rpm.getTuple(designatesPtoP.getTupleIui());
+            System.out.println("\t" + tuple3.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
+            System.out.println("Getting Tuple by Iui per RtsStore Interface:");
+            RtsTuple tuple4 = rpm.getTuple(trefPtop.getTupleIui());
+            System.out.println("\t" + tuple4.toString());
+            System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
             
             hello.graphDb = rpm.graphDb;
             
@@ -385,7 +410,7 @@ public class App
             dCorrection.setErrorCode(RtsErrorCode.U1);
             dCorrection.setChangeType(RtsChangeType.X);
             //we could also point it at ptou if we wanted
-            rpm.addTuple(dCorrection);
+            rpm.saveTuple(dCorrection);
             
             try {
   				FileWriter fw = new FileWriter("/Users/hoganwr/rtstuples.txt", true);
@@ -466,7 +491,7 @@ public class App
 				}
 				Iterator<RtsTuple> i = ttr.iterator();
 				while (i.hasNext()) {
-					rpm.addTuple(i.next());
+					rpm.saveTuple(i.next());
 				}
 				
 				rpm.commitTuples();
@@ -649,14 +674,15 @@ public class App
     			}
                 ptop4.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION.getTemporalReference());
                 rpm.addTemporalRegion(TemporalRegion.MAX_TEMPORAL_REGION);
+                trefPtop = ptop4;
                 
                 //tset.add(t7);
                 tset.add(ten3);
                 tset.add(ptop4);
                 
                 rpm.addTemporalReference(t7.getTemporalReference());
-                rpm.addTuple(ten3);
-                rpm.addTuple(ptop4);
+                rpm.saveTuple(ten3);
+                rpm.saveTuple(ptop4);
             }
             
             /*
@@ -677,6 +703,7 @@ public class App
             ptop.addParticular(wh);
             ptop.setTupleIui(Iui.createRandomIui());
             ptop.setTemporalReference(t2.getTemporalReference());
+            ownsPtoP = ptop;
             //ptop.setTemporalEntityIui(t2.getReferent());
           
             /*
@@ -730,6 +757,7 @@ public class App
             ptop2.setTupleIui(Iui.createRandomIui());
             //ptop2.setTemporalEntityIui(t3.getReferent());  
             ptop2.setTemporalReference(t3.getTemporalReference());
+            designatesPtoP = ptop2;
             
             /*
              * W. Hogan's name's digital representation
@@ -786,17 +814,17 @@ public class App
             tset.add(ten2);
             tset.add(ptodr);
                      
-            rpm.addTuple(a1);
-            rpm.addTuple(a2);
-            rpm.addTuple(a3);
+            rpm.saveTuple(a1);
+            rpm.saveTuple(a2);
+            rpm.saveTuple(a3);
             
-            rpm.addTuple(ptop);
-            rpm.addTuple(ptop2);
-            rpm.addTuple(ptop3);
-            rpm.addTuple(ptou);
-            rpm.addTuple(ptou3);
-            rpm.addTuple(ten2);
-            rpm.addTuple(ptodr);
+            rpm.saveTuple(ptop);
+            rpm.saveTuple(ptop2);
+            rpm.saveTuple(ptop3);
+            rpm.saveTuple(ptou);
+            rpm.saveTuple(ptou3);
+            rpm.saveTuple(ten2);
+            rpm.saveTuple(ptodr);
                         
             Iterator<RtsTuple> it = tset.iterator();
             while (it.hasNext()) {
@@ -809,7 +837,7 @@ public class App
                 d.setChangeReason(RtsChangeReason.CR);
                 d.setChangeType(RtsChangeType.I);
                 d.setErrorCode(RtsErrorCode.Null);
-                rpm.addTuple(d);
+                rpm.saveTuple(d);
             }
 			return t3;
 		}

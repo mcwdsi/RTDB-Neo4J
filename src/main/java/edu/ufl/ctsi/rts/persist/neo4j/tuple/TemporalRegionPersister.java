@@ -62,15 +62,15 @@ public class TemporalRegionPersister {
 		n = tnc.persistEntity(t.getTemporalReference().toString());
 		
 		//connect temporal entity to its type (0D vs. 1D)
-		System.out.println("Connecting temporal region to its type:");
+		//System.out.println("Connecting temporal region to its type:");
 		connectToType(t.getTemporalType());
 		
 		//connect temporal entity to calendaring system
-		System.out.println("Connecting temporal region to its calendaring system:");
+		//System.out.println("Connecting temporal region to its calendaring system:");
 		connectToCalendaringSystem(t.getCalendarSystemIui());
 		
 		//add isIso flag
-		System.out.println("Adding ISO flag");
+		//System.out.println("Adding ISO flag");
 		n.setProperty("isIso", t.isISO());
 		
 		//n.setProperty("system iui", t.getCalendarSystemIui());
@@ -81,7 +81,7 @@ public class TemporalRegionPersister {
 	
 	private void connectToType(Uui temporalType) {
 		Node target = unc.persistEntity(temporalType.toString());
-		System.out.println("Universal node for " + temporalType + " has ID: " + target.getId());
+		//System.out.println("Universal node for " + temporalType + " has ID: " + target.getId());
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 		
 	}

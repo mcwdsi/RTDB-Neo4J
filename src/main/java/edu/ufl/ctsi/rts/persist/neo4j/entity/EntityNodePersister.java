@@ -25,8 +25,8 @@ public abstract class EntityNodePersister {
 		
 		//Each subclass will have slightly different query to run
 		String query = setupQuery();
-		System.out.println("entity node persister: query = " + query);
-		System.out.println("ui = " + ui);
+		//System.out.println("entity node persister: query = " + query);
+		//System.out.println("ui = " + ui);
 		
 		/*Set up parameters of query.  Each subclass will require that we
 		   set the "value" parameter of the unique identifier property to
@@ -39,11 +39,11 @@ public abstract class EntityNodePersister {
 		
 		//run the query.
 		Result er = graphDb.execute( query, parameters );
-		System.out.println(er.toString());
-		List<String> cs = er.columns();
-		for (String c : cs) {
-			System.out.println(c);
-		}
+		//System.out.println(er.toString());
+		//List<String> cs = er.columns();
+		//for (String c : cs) {
+		//	System.out.println(c);
+		//}
 		//ResourceIterator<Node> resultIterator = ee.execute( query, parameters ).columnAs( "n" );
 	    //n = resultIterator.next();
 	    n = (Node) er.columnAs("n").next();

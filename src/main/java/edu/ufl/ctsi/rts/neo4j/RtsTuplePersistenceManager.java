@@ -2,23 +2,33 @@ package edu.ufl.ctsi.rts.neo4j;
 
 
 import java.io.File;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import neo4jtest.test.App;
 
+import org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
+import edu.uams.dbmi.rts.persist.RtsStore;
+import edu.uams.dbmi.rts.query.TupleQuery;
 import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.rts.tuple.ATuple;
@@ -29,8 +39,14 @@ import edu.uams.dbmi.rts.tuple.PtoLackUTuple;
 import edu.uams.dbmi.rts.tuple.PtoPTuple;
 import edu.uams.dbmi.rts.tuple.PtoUTuple;
 import edu.uams.dbmi.rts.tuple.RtsTuple;
+import edu.uams.dbmi.rts.tuple.RtsTupleType;
+import edu.uams.dbmi.rts.tuple.component.RelationshipPolarity;
+import edu.uams.dbmi.rts.uui.Uui;
+import edu.uams.dbmi.util.iso8601.Iso8601DateParseException;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTime;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
+import edu.uams.dbmi.util.iso8601.Iso8601DateTimeParser;
+import edu.uams.dbmi.util.iso8601.Iso8601TimeParseException;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.EntityNodePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.ATuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.MetadataTuplePersister;
@@ -41,7 +57,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoPTuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoUTuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.TemporalRegionPersister;
 
-public class RtsTuplePersistenceManager {
+public class RtsTuplePersistenceManager implements RtsStore {
 
 	static String CNODE_QUERY = "MERGE (n:change_reason { c: {value} }) return n";
 	static String CTNODE_QUERY = "MERGE (n:change_type { ct: {value} }) return n";
@@ -112,7 +128,7 @@ public class RtsTuplePersistenceManager {
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
 	
-	public void addTuple(RtsTuple t) {
+	protected void addTuple(RtsTuple t) {
 		if (t instanceof ATuple) {
 			ATuple at = (ATuple)t;
 			iuiToItsAssignmentTuple.put(at.getReferentIui().toString(), t);
@@ -385,7 +401,7 @@ public class RtsTuplePersistenceManager {
 	}
 
 	//static String tupleByIuiQuery = "START n=node:nodes(iui = {value}) RETURN n";
-	static String tupleByIuiQuery = "MATCH (n:tuple { ui : {value} }) return n";
+	static String tupleByIuiQuery = "MATCH (n:tuple { iui : {value} }) return n, labels(n)";
 	
 	boolean isTupleInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
@@ -573,5 +589,255 @@ public class RtsTuplePersistenceManager {
 	
 	public void addTemporalRegion(TemporalRegion t) {
 		tempRegions.add(t);
+	}
+
+	@Override
+	public boolean saveTuple(RtsTuple Tuple) {
+		addTuple(Tuple);
+		return true;
+	}
+
+	@Override
+	public RtsTuple getTuple(Iui iui) {
+		try ( Transaction tx = graphDb.beginTx() ) {
+		
+			HashMap<String, Object> parameters = new HashMap<String, Object>();
+			parameters.put("value", iui.toString().toLowerCase());
+			Result r = graphDb.execute(tupleByIuiQuery, parameters);
+			//System.out.println(r.resultAsString());
+			Node n = null; 
+			String label = null;
+			while (r.hasNext()) {
+				Map<String, Object> rNext = r.next();
+				Object nAsO = rNext.get("n");
+				n = (Node)nAsO;
+				Object labelsAsO = rNext.get("labels(n)");
+				@SuppressWarnings("unchecked")
+				Iterable<String> labelsAsSet = (Iterable<String>)labelsAsO;
+				for (String s : labelsAsSet) {
+					if (!s.equals("tuple")) { label = s; break; }
+				}
+			}
+			
+			tx.success();
+			
+			return reconstituteTuple(n, label, iui);
+		}
+	}
+
+	private RtsTuple reconstituteTuple(Node n, String label, Iui iuit) {
+		RtsTuple tuple = null;
+		Iui iuip, iuia, iuid, iuics, iuins, iuioU, iuioR, about;
+		List<Iui> s;
+		List<ParticularReference> p;
+		Uui uui;
+		URI r; 
+		TemporalRegion ta, tr;
+		Iso8601DateTime tap;
+		String co;
+		String dr;
+		switch (label) {
+			case "A":
+				ATuple a = new ATuple();
+				a.setTupleIui(iuit);
+				iuip = getIuipFromDb(n);
+				a.setReferentIui(iuip);
+				iuia = getIuiaFromDb(n);
+				a.setAuthorIui(iuia);
+				tap = getTapFromDb(n);
+				a.setAuthoringTimestamp(tap);
+				tuple = a;
+				break;
+			case "U":
+			case "U_":
+				PtoUTuple ptou = new PtoUTuple();
+				ptou.setTupleIui(iuit);
+				iuip = getIuipFromDb(n);
+				ptou.setReferentIui(iuip);
+				iuia = getIuiaFromDb(n);
+				ptou.setAuthorIui(iuia);
+				uui = getUuiFromDb(n);
+				ptou.setUniversalUui(uui);
+				iuioU = getIuioForUuiFromDb(n);
+				ptou.setUniversalOntologyIui(iuioU);
+				ta = getTaFromDb(n);
+				tr = getTrFromDb(n);
+				ptou.setAuthoringTimeReference(ta.getTemporalReference());
+				ptou.setTemporalReference(tr.getTemporalReference());
+				r = getRFromDb(n);
+				ptou.setRelationshipURI(r);
+				iuioR = getIuioForRFromDb(n);
+				ptou.setRelationshipOntologyIui(iuioR);
+				if (label.equals("U_")) ptou.setRelationshipPolarity(RelationshipPolarity.NEGATED);
+				tuple = ptou;
+				break;
+			case "P":
+			case "P_":
+				//TODO
+				PtoPTuple ptop = new PtoPTuple();
+				ptop.setTupleIui(iuit);
+				iuia = getIuiaFromDb(n);
+				ptop.setAuthorIui(iuia);
+				ta = getTaFromDb(n);
+				tr = getTrFromDb(n);
+				ptop.setAuthoringTimeReference(ta.getTemporalReference());
+				ptop.setTemporalReference(tr.getTemporalReference());
+				r = getRFromDb(n);
+				ptop.setRelationshipURI(r);
+				iuioR = getIuioForRFromDb(n);
+				ptop.setRelationshipOntologyIui(iuioR);
+				p = getPFromDb(n);
+				ptop.setParticulars(p);
+				if (label.equals("P_")) ptop.setRelationshipPolarity(RelationshipPolarity.NEGATED);
+				tuple = ptop;
+				break;
+			case "L":
+				//TODO
+				break;
+			case "E":
+				//TODO
+				break;
+			case "D":
+				//TODO
+				break;
+			case "C":
+				//TODO
+				break;
+		}
+		
+		return tuple;
+	}
+
+	private Iui getIuipFromDb(Node n) {
+		String iuipTxt = (String)n.getRelationships(RtsRelationshipType.iuip).iterator().next().getEndNode().getProperty("iui");
+		Iui iuip = Iui.createFromString(iuipTxt);
+		return iuip;
+	}
+	
+	private Iui getIuiaFromDb(Node n) {
+		String iuipTxt = (String)n.getRelationships(RtsRelationshipType.iuia).iterator().next().getEndNode().getProperty("iui");
+		Iui iuip = Iui.createFromString(iuipTxt);
+		return iuip;
+	}
+	
+	private Iso8601DateTime getTapFromDb(Node n) {
+		String tapTxt = (String)n.getProperty("tap");
+		Iso8601DateTimeParser p = new Iso8601DateTimeParser();
+		Iso8601DateTime t = null;
+		try {
+			t = p.parse(tapTxt);
+		} catch (Iso8601DateParseException | Iso8601TimeParseException e) {
+			e.printStackTrace();
+		}
+		return t;
+	}
+	
+	private Uui getUuiFromDb(Node n) {
+		String uuiTxt = (String)n.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode().getProperty("uui");
+		return Uui.createFromString(uuiTxt);
+	}
+	
+	private Iui getIuioForUuiFromDb(Node n) {
+		String iuipTxt = (String)n.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode(). 
+				getRelationships(RtsRelationshipType.iuio).iterator().next().getEndNode().getProperty("iui");
+		Iui iuioU = Iui.createFromString(iuipTxt);
+		return iuioU;
+	}
+	
+	private TemporalRegion getTaFromDb(Node n) {
+		Node ta = n.getRelationships(RtsRelationshipType.ta).iterator().next().getEndNode(); 
+		String trefTxt = (String)ta.getProperty("tref");
+		boolean isIso = (boolean)ta.getProperty("isIso"); 
+		Node nsNode = ta.getRelationships(RtsRelationshipType.iuins).iterator().next().getEndNode();
+		String iuinsTxt = (String)nsNode.getProperty("iui");
+		Iui iuins = Iui.createFromString(iuinsTxt);
+		Node uuiNode = ta.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode();
+		String uuiTxt = (String)uuiNode.getProperty("uui");
+		Uui uui = Uui.createFromString(uuiTxt);
+		
+		TemporalReference tRef = new TemporalReference(trefTxt, isIso);
+		TemporalRegion tr = new TemporalRegion(tRef, uui, iuins);
+		return tr;
+	}
+
+	private TemporalRegion getTrFromDb(Node n) {
+		Node ta = n.getRelationships(RtsRelationshipType.tr).iterator().next().getEndNode(); 
+		String trefTxt = (String)ta.getProperty("tref");
+		boolean isIso = (boolean)ta.getProperty("isIso"); 
+		Node nsNode = ta.getRelationships(RtsRelationshipType.iuins).iterator().next().getEndNode();
+		String iuinsTxt = (String)nsNode.getProperty("iui");
+		Iui iuins = Iui.createFromString(iuinsTxt);
+		Node uuiNode = ta.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode();
+		String uuiTxt = (String)uuiNode.getProperty("uui");
+		Uui uui = Uui.createFromString(uuiTxt);
+		
+		TemporalReference tRef = new TemporalReference(trefTxt, isIso);
+		TemporalRegion tr = new TemporalRegion(tRef, uui, iuins);
+		return tr;		
+	}
+	
+	private URI getRFromDb(Node n) {
+		String rTxt = (String)n.getRelationships(RtsRelationshipType.r).iterator().next().getEndNode().getProperty("rui");
+		URI r = URI.create(rTxt);
+		return r;
+	}
+	
+	private Iui getIuioForRFromDb(Node n) {
+		String iuipTxt = (String)n.getRelationships(RtsRelationshipType.r).iterator().next().getEndNode(). 
+				getRelationships(RtsRelationshipType.iuio).iterator().next().getEndNode().getProperty("iui");
+		Iui iuioR = Iui.createFromString(iuipTxt);
+		return iuioR;
+	}
+	
+	private List<ParticularReference> getPFromDb(Node n) {
+		Iterable<Relationship> rs = n.getRelationships(RtsRelationshipType.p);
+		ArrayList<ParticularReference> pList = new ArrayList<ParticularReference>();
+		ParticularReference[] pRefs = new ParticularReference[10];
+		int maxOrder = Integer.MIN_VALUE;
+		for (Relationship r : rs) {
+			Node end = r.getEndNode();
+			int rOrder = Integer.parseInt((String)r.getProperty("relation order"));
+			if (rOrder > maxOrder) maxOrder = rOrder;
+			int index = rOrder - 1;
+			if (end.hasProperty("iui")) {
+				Iui iui = Iui.createFromString((String)end.getProperty("iui"));
+				pRefs[index] = iui;
+			} else if (end.hasProperty("tref")) {
+				String trefTxt = (String)end.getProperty("tref");
+				boolean isIso = (boolean)end.getProperty("isIso");
+				TemporalReference tref = new TemporalReference(trefTxt, isIso);
+				pRefs[index] = tref;
+			} else {
+				System.err.println("WTF. Particular reference node should have either iui or tref property!");
+			}
+		}
+		for (int i=0; i<maxOrder; i++)
+			pList.add(pRefs[i]);
+		
+		return pList;
+	}
+	
+	@Override
+	public Set<RtsTuple> getByReferentIui(Iui iui) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<RtsTuple> getByAuthorIui(Iui iui) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Iui getAvailableIui() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<RtsTuple> runQuery(TupleQuery TupleQuery, RtsTupleType TupleType) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
