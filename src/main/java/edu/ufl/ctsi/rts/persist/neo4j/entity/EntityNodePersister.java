@@ -6,6 +6,7 @@ import java.util.List;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 
 public abstract class EntityNodePersister {
 	
@@ -38,6 +39,9 @@ public abstract class EntityNodePersister {
 		
 		
 		//run the query.
+		System.out.println(query);
+		System.out.println(ui);
+		//try  ( Transaction tx = graphDb.beginTx() ) { 
 		Result er = graphDb.execute( query, parameters );
 		//System.out.println(er.toString());
 		//List<String> cs = er.columns();
@@ -50,6 +54,8 @@ public abstract class EntityNodePersister {
 	    
 	    //add node to cache. TODO: if overall transaction fails, then we need to clear this cache 
 	    uiNode.put(ui, n);
+	    //tx.success();
+		//}
 	    
 	    return n;
 	}

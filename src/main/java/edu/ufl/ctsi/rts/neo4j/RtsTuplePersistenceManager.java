@@ -13,9 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import neo4jtest.test.App;
-
-import org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -24,6 +21,7 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.TransactionFailureException;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.ParticularReference;
@@ -105,8 +103,10 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	MetadataTuplePersister mp;
 	
 	TemporalRegionPersister trp;
+	String dbPath;
 	
-	public RtsTuplePersistenceManager() {
+	public RtsTuplePersistenceManager(String dbPath) {
+		this.dbPath = dbPath;
 		tuples = new HashSet<RtsTuple>();
 		metadata = new HashSet<MetadataTuple>();
 		tempReferences = new HashSet<TemporalReference>();
@@ -117,10 +117,9 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		iuisInPtoPTuples = new HashSet<String>();
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(App.DB_PATH) );
+		createDb();
 		setupSchema();
-		setupMetadata();
-
+		
 		atp = new ATuplePersister(graphDb);
 		pup = new PtoUTuplePersister(graphDb);
 		ppp = new PtoPTuplePersister(graphDb);
@@ -167,6 +166,11 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		}
 	}
 	
+	@Override
+	public void commit() {
+		commitTuples();
+	}
+	
 	
 	public void commitTuples() {
 		try (Transaction tx = graphDb.beginTx() ) {
@@ -206,7 +210,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				d.setAuthoringTimestamp(dt);
 				mp.persistTuple(d);
 			}
-			
+		
 			tx.success();
 			//tx.close();
 			
@@ -221,6 +225,14 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			tempReferences.clear();
 			tempRegions.clear();
 			EntityNodePersister.clearCache();
+		} catch (Throwable t) {
+			if ( t instanceof TransactionFailureException )
+	        {
+	            TransactionFailureException tfe = (TransactionFailureException)t;
+	            System.err.println(tfe.getLocalizedMessage());
+	            tfe.printStackTrace();
+	        }
+
 		}
 	}
 	
@@ -487,13 +499,14 @@ public class RtsTuplePersistenceManager implements RtsStore {
     	instanceLabel = Label.label("instance");
     	typeLabel = Label.label("universal");
     	relationLabel = Label.label("relation");
-    	temporalRegionLabel = Label.label("temporal_region");
+    	temporalRegionLabel = Label.label("temporal region");
     	dataLabel = Label.label("data");
     	metadataLabel = Label.label("metadata");
     	
   	
         try ( Transaction tx2 = graphDb.beginTx() )
         {
+
             graphDb.schema()
                     .constraintFor( tupleLabel )
                     .assertPropertyIsUnique( "iui" )
@@ -538,7 +551,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
         }
     }
     
-    void setupMetadata() {
+    //void setupMetadata() {
     	/*
     	 * Experimented with representing change types and reasons as nodes.  Seems like
     	 * too much overhead.
@@ -586,7 +599,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
     		
     		tx3.success();
     	}*/
-    }
+    //}
     
 	public void addTemporalReference(TemporalReference t) {
 		tempReferences.add(t);
@@ -1022,4 +1035,45 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+    public void createDb() {
+    	deleteFileOrDirectory( new File(dbPath) );
+        // START SNIPPET: startDb
+       graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(dbPath) );
+        registerShutdownHook( graphDb );
+     // END SNIPPET: startDb
+    }
+    
+    @Override
+    public void shutDown() {
+    	//graphDb.
+        System.out.println();
+        System.out.println( "Shutting down database ..." );
+        // START SNIPPET: shutdownServer
+        graphDb.shutdown();
+        // END SNIPPET: shutdownServer
+    }
+    
+    private void registerShutdownHook( final GraphDatabaseService graphDb ) {
+        // Registers a shutdown hook for the Neo4j instance so that it
+        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
+        // running application).
+        Runtime.getRuntime().addShutdownHook( new Thread() {
+            @Override
+            public void run() {
+                graphDb.shutdown();
+            }
+        } );
+    }
+
+    private static void deleteFileOrDirectory( File file ) {
+        if ( file.exists() ) {
+            if ( file.isDirectory() ) {
+                for ( File child : file.listFiles() ) {
+                    deleteFileOrDirectory( child );
+                }
+            }
+            file.delete();
+        }
+    }
 }

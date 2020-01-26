@@ -118,6 +118,8 @@ public class App
 	    public static void main( final String[] args )
 	    {
 	        App hello = new App();
+	       //hello.deleteFileOrDirectory( new File(DB_PATH) );
+	       //System.exit(1);
 	        hello.createDb();
 	        hello.addData();
 	        hello.removeData();
@@ -148,7 +150,7 @@ public class App
             String wHoganNameTxt = "William Hogan";
             Iui wh = Iui.createRandomIui();
 	       
-            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager();
+            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager(App.DB_PATH);
             
             /*
              * Time of assertion of this set of tuples
@@ -547,7 +549,7 @@ public class App
     		parameters.put("idValue", "321454");
     		hello.runQueryWithParametersAndDisplayResults(queryTemplateTxt, parameters);
             
-            hello.shutDown();
+            rpm.shutDown();
 	    }
 
 		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTuple(
