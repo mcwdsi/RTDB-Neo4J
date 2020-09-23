@@ -25,6 +25,7 @@ import org.neo4j.graphdb.TransactionFailureException;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import edu.uams.dbmi.rts.ParticularReference;
+import edu.uams.dbmi.rts.RtsDeclaration;
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeReason;
@@ -118,7 +119,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
 		createDb();
-		setupSchema();
+		//setupSchema();
 		
 		atp = new ATuplePersister(graphDb);
 		pup = new PtoUTuplePersister(graphDb);
@@ -173,7 +174,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	
 	
 	public void commitTuples() {
-		try (Transaction tx = graphDb.beginTx() ) {
+		System.err.println("committing " + tuples.size() + " tuples and " +  tempRegions.size() + " temporal regions.");
+		try ( Transaction tx = graphDb.beginTx() ) {
 			
 			/*
 			 * Before we begin, let's be sure that we either have assignment tuples
@@ -209,31 +211,37 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			for (MetadataTuple d : metadata) {
 				d.setAuthoringTimestamp(dt);
 				mp.persistTuple(d);
-			}
-		
+			}	
+
 			tx.success();
 			//tx.close();
-			
+			tuples.clear();
+			metadata.clear();
+			tempReferences.clear();
+			tempRegions.clear();
 			/*
 			 * We've sent them all to db, so we can clear.  In the future, we will
 			 *  likely want to send them to some cache first.  But this class isn't the 
 			 *  cache, it is merely the thing that submits a chunk of related 
 			 *  tuples as one transaction.
 			 */
-			tuples.clear();
-			metadata.clear();
-			tempReferences.clear();
-			tempRegions.clear();
-			EntityNodePersister.clearCache();
+
+			
 		} catch (Throwable t) {
 			if ( t instanceof TransactionFailureException )
 	        {
 	            TransactionFailureException tfe = (TransactionFailureException)t;
 	            System.err.println(tfe.getLocalizedMessage());
 	            tfe.printStackTrace();
+	        } else if ( t instanceof Exception) {
+	        	System.err.println("Exception during transaction.");
+	        	t.printStackTrace();
 	        }
 
-		}
+		} /*finally {
+			tx.close();
+
+		}*/
 	}
 	
 	private void checkIuisInPtoP() {
@@ -613,6 +621,21 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	public boolean saveTuple(RtsTuple Tuple) {
 		addTuple(Tuple);
 		return true;
+	}
+	
+	@Override
+	public boolean saveRtsDeclaration(RtsDeclaration rd) {
+		boolean success;
+		if (rd instanceof TemporalRegion) {
+			addTemporalRegion((TemporalRegion)rd);
+			success = true;
+		} else if (rd instanceof RtsTuple) {
+			addTuple((RtsTuple)rd);
+			success = true;
+		} else {
+			success = false;
+		}
+		return success;
 	}
 
 	@Override

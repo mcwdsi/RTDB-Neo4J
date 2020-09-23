@@ -79,8 +79,16 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 		 * Get all previous about (aka iuit) relationships.
 		 */
 		Iterator<Relationship> i = target.getRelationships(RtsRelationshipType.about).iterator();
-		
-		
+		/*
+		int szAbout = 0;
+		while (i.hasNext()) {
+			szAbout++;
+			i.next();
+		}
+		if (szAbout >= 1) System.err.println("there are " + szAbout + " metadata tuples about this tuple: " + d.getReferent());
+		else System.err.println("Inserting first metadata tuple about " + d.getReferent());
+		i = target.getRelationships(RtsRelationshipType.about).iterator();
+		*/
 		/*
 		 * If there are no previous about relationships, then the change type 
 		 *   must be I(nsert).

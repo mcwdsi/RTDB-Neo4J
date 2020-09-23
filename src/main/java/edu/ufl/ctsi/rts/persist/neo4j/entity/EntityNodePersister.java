@@ -39,8 +39,8 @@ public abstract class EntityNodePersister {
 		
 		
 		//run the query.
-		System.out.println(query);
-		System.out.println(ui);
+		//System.out.println(query);
+		//System.out.println(ui);
 		//try  ( Transaction tx = graphDb.beginTx() ) { 
 		Result er = graphDb.execute( query, parameters );
 		//System.out.println(er.toString());

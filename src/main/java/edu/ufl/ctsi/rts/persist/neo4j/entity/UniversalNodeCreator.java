@@ -10,7 +10,6 @@ public class UniversalNodeCreator extends EntityNodePersister {
 
 	public UniversalNodeCreator(GraphDatabaseService db) {
 		super(db);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
