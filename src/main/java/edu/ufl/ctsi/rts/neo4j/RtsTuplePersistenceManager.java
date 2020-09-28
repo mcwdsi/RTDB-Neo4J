@@ -119,7 +119,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
 		createDb();
-		//setupSchema();
+		setupSchema();
 		
 		atp = new ATuplePersister(graphDb);
 		pup = new PtoUTuplePersister(graphDb);
