@@ -1139,7 +1139,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				String nodeName = "p" + Integer.toString(pSeq);
 				RtsNodeLabel rnl;
 				String propName;
-				if (p instanceof Iui) {
+				ParticularReference pr = p.next();
+				if (pr instanceof Iui) {
 					rnl = RtsNodeLabel.INSTANCE; // : ;
 					propName = "iui";
 				} else {
@@ -1147,7 +1148,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 					propName = "tref";
 				}
 				buildCondition(matchConditions, RtsRelationshipType.p.toString(), nodeName, rnl.toString());
-				buildWhere(matchWhere, nodeName, propName, p.toString());
+				buildWhere(matchWhere, nodeName, propName, pr.toString());
 			}
 		}
 		
