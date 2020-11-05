@@ -106,6 +106,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	TemporalRegionPersister trp;
 	String dbPath;
 	
+	HashMap<RtsTupleType, RtsTupleNodeLabel> rttTypeToNodeLabel;
+	
 	public RtsTuplePersistenceManager(String dbPath) {
 		this.dbPath = dbPath;
 		tuples = new HashSet<RtsTuple>();
@@ -129,6 +131,16 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		pcp = new PtoCTuplePersister(graphDb);
 		mp = new MetadataTuplePersister(graphDb);
 		trp = new TemporalRegionPersister(graphDb);
+		
+		
+		rttTypeToNodeLabel = new HashMap<RtsTupleType, RtsTupleNodeLabel>();
+		rttTypeToNodeLabel.put(RtsTupleType.ATUPLE, RtsTupleNodeLabel.A);
+		rttTypeToNodeLabel.put(RtsTupleType.METADATATUPLE, RtsTupleNodeLabel.D);
+		rttTypeToNodeLabel.put(RtsTupleType.PTOCTUPLE, RtsTupleNodeLabel.C);
+		rttTypeToNodeLabel.put(RtsTupleType.PTODETUPLE, RtsTupleNodeLabel.E);
+		rttTypeToNodeLabel.put(RtsTupleType.PTOLACKUTUPLE, RtsTupleNodeLabel.L);
+		rttTypeToNodeLabel.put(RtsTupleType.PTOPTUPLE, RtsTupleNodeLabel.P);
+		rttTypeToNodeLabel.put(RtsTupleType.PTOUTUPLE, RtsTupleNodeLabel.U);
 	}
 	
 	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
@@ -1054,9 +1066,162 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	}
 
 	@Override
-	public Set<RtsTuple> runQuery(TupleQuery TupleQuery, RtsTupleType TupleType) {
-		// TODO Auto-generated method stub
-		return null;
+	public Set<RtsTuple> runQuery(TupleQuery TupleQuery) {
+		StringBuilder matchConditions = new StringBuilder();
+		StringBuilder matchWhere = new StringBuilder();
+		Iui authorTimeIui = TupleQuery.getAuthoringTimeIui();
+		if (authorTimeIui != null) {
+			String nodeName = "nta";
+			buildCondition(matchConditions, RtsRelationshipType.ta.toString(), nodeName, RtsNodeLabel.TEMPORAL_REGION.toString());
+			buildWhere(matchWhere, nodeName, "tref", authorTimeIui.toString());
+		}
+		Iui authorIui = TupleQuery.getAuthorIui();
+		if (authorIui != null) {
+			String nodeName = "niuia";
+			buildCondition(matchConditions, RtsRelationshipType.iuia.toString(), nodeName, RtsNodeLabel.INSTANCE.toString());
+			buildWhere(matchWhere, nodeName, "iui", authorIui.toString());
+		}
+		Iso8601DateTime beginTimestamp = TupleQuery.getBeginTimestamp();
+		//TODO
+		RtsChangeReason rcr = TupleQuery.getChangeReason();
+		if (rcr != null) {
+			buildWhere(matchWhere, "n", "c", rcr.toString());
+		}
+		byte[] data = TupleQuery.getData();
+		if (data != null && data.length > 0) {
+			String nodeName = "ndr";
+			String dataAsString = new String(data);
+			buildCondition(matchConditions, RtsRelationshipType.dr.toString(), nodeName, RtsNodeLabel.DATA.toString());
+			buildWhere(matchWhere, nodeName, "dr", dataAsString);
+		}
+		Uui dtUui = TupleQuery.getDatatypeUui();
+		if (dtUui != null) {
+			String nodeName = "nuui";
+			buildCondition(matchConditions, RtsRelationshipType.uui.toString(), nodeName, RtsNodeLabel.TYPE.toString());
+			buildWhere(matchWhere, nodeName, "uui", dtUui.toString());
+		}
+		Iso8601DateTime endTimestamp = TupleQuery.getEndTimestamp();
+		//TODO
+		RtsErrorCode rec = TupleQuery.getErrorCode();
+		if (rec != null) {
+			buildWhere(matchWhere, "n", "e", rec.toString());
+		}
+		Iui nsIui = TupleQuery.getNamingSystemIui();
+		if (nsIui != null) {
+			String nodeName = "niuins";
+			buildCondition(matchConditions, RtsRelationshipType.iuins.toString(), nodeName, RtsNodeLabel.INSTANCE.toString());
+			buildWhere(matchWhere, nodeName, "iui", nsIui.toString());
+		}
+		Iui referentIui = TupleQuery.getReferentIui();
+		if (referentIui != null) {
+			String nodeName = "niuip";
+			buildCondition(matchConditions, RtsRelationshipType.iuip.toString(), nodeName, RtsNodeLabel.INSTANCE.toString());
+			buildWhere(matchWhere, nodeName, "iui", referentIui.toString());
+			System.out.println("referentIui is not null, and match conditions = " + matchConditions.toString());
+		}
+		URI relUri = TupleQuery.getRelationshipURI();
+		if (relUri != null) {
+			String nodeName = "nr";
+			buildCondition(matchConditions, RtsRelationshipType.r.toString(), nodeName, RtsNodeLabel.RELATION.toString());
+			buildWhere(matchWhere, nodeName, "rui", relUri.toString());
+		}
+		TemporalReference tr = TupleQuery.getTemporalReference();
+		Uui uui = TupleQuery.getUniversalUui();
+		if (uui != null) {
+			String nodeName = "nuui";
+			buildCondition(matchConditions, RtsRelationshipType.uui.toString(), nodeName, RtsNodeLabel.TYPE.toString());
+			buildWhere(matchWhere, nodeName, "uui", uui.toString());
+		}
+		Iterator<ParticularReference> p = TupleQuery.iteratorP();
+		if (p != null) {
+			int pSeq = 1;
+			while (p.hasNext()) {
+				String nodeName = "p" + Integer.toString(pSeq);
+				RtsNodeLabel rnl;
+				String propName;
+				if (p instanceof Iui) {
+					rnl = RtsNodeLabel.INSTANCE; // : ;
+					propName = "iui";
+				} else {
+					rnl = RtsNodeLabel.TEMPORAL_REGION;
+					propName = "tref";
+				}
+				buildCondition(matchConditions, RtsRelationshipType.p.toString(), nodeName, rnl.toString());
+				buildWhere(matchWhere, nodeName, propName, p.toString());
+			}
+		}
+		
+		Iterator<RtsTupleType> i = TupleQuery.getTypes();
+		StringBuilder queryMatch = new StringBuilder();
+		if (i.hasNext()) {
+			while (i.hasNext()) {
+				queryMatch.append("match (n:");
+				String tupTypeTxt = rttTypeToNodeLabel.get(i.next()).toString();
+				queryMatch.append(tupTypeTxt);
+				queryMatch.append(")");
+				queryMatch.append(matchConditions);
+				if (matchWhere.length() > 0)
+					queryMatch.append(" WHERE ");
+					queryMatch.append(matchWhere);
+				if (i.hasNext())
+					queryMatch.append(" UNION ");
+			}
+		} else {
+			queryMatch.append("match (n:tuple)");
+			queryMatch.append(matchConditions);
+			if (matchWhere.length() > 0)
+				queryMatch.append(" WHERE ");
+				queryMatch.append(matchWhere);
+		}
+		queryMatch.append(" return n");
+		String query = queryMatch.toString();
+		System.out.println("CYPHER QUERY FOR TUPLE IS: \n\t"+query);
+	
+		HashSet<RtsTuple> resultSet = new HashSet<RtsTuple>();
+		try ( Transaction tx = graphDb.beginTx() ) {
+			Result r = graphDb.execute(query);
+			//System.out.println(r.resultAsString());
+			Node n = null; 
+			String label = null;
+			while (r.hasNext()) {
+				Map<String, Object> rNext = r.next();
+				Object nAsO = rNext.get("n");
+				n = (Node)nAsO;
+				Iterable<Label> labels = n.getLabels();
+				for (Label labeli : labels) {
+					if (!labeli.toString().equals("tuple")) { label = labeli.toString(); break; }
+				}
+				Object iuiasO = n.getProperty("iui");
+				String iuiTxt = (String)iuiasO;
+				RtsTuple t = reconstituteTuple(n, label, Iui.createFromString(iuiTxt));
+				resultSet.add(t);
+			}
+			
+			tx.success();
+		}
+		
+		return resultSet;
+	}
+	
+	protected void buildCondition(StringBuilder c, String rel, String nodeName, String nodeLabel) {
+		c.append(",");
+		c.append("(n)-[:");
+		c.append(rel);
+		c.append("]-(");
+		c.append(nodeName);
+		c.append(":");
+		c.append(nodeLabel);
+		c.append(")");
+	}
+	
+	protected void buildWhere(StringBuilder w, String nodeName, String property, String value) {
+		if (w.length() > 0) w.append(" and ");
+		w.append(nodeName);
+		w.append(".");
+		w.append(property);
+		w.append("='");
+		w.append(value);
+		w.append("'");
 	}
 	
     public void createDb() {

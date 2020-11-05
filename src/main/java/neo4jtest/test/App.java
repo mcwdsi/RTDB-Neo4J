@@ -33,6 +33,7 @@ import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeReason;
 import edu.uams.dbmi.rts.metadata.RtsChangeType;
 import edu.uams.dbmi.rts.metadata.RtsErrorCode;
+import edu.uams.dbmi.rts.query.TupleQuery;
 import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.rts.tuple.ATuple;
 import edu.uams.dbmi.rts.tuple.MetadataTuple;
@@ -41,6 +42,7 @@ import edu.uams.dbmi.rts.tuple.PtoDETuple;
 import edu.uams.dbmi.rts.tuple.PtoPTuple;
 import edu.uams.dbmi.rts.tuple.PtoUTuple;
 import edu.uams.dbmi.rts.tuple.RtsTuple;
+import edu.uams.dbmi.rts.tuple.RtsTupleType;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.uams.dbmi.util.iso8601.Iso8601Date;
 import edu.uams.dbmi.util.iso8601.Iso8601Date.DateConfiguration;
@@ -340,6 +342,22 @@ public class App
             RtsTuple tuple7 = rpm.getTuple(d4.getTupleIui());
             System.out.println("\t" + tuple7.toString());
             System.out.println("End Getting Tuple by Iui per RtsStore Interface");
+            
+            System.out.println("Getting all the PtoDE tuples per RtsStore Interface");
+            TupleQuery tq = new TupleQuery();
+            tq.addType(RtsTupleType.PTODETUPLE);
+            Set<RtsTuple> result = rpm.runQuery(tq);
+            for (RtsTuple rt : result) {
+            	System.out.println("\t" + rt.toString());
+            }
+            
+            System.out.println("Getting all the tuples that have referent of IUI for wh");
+            TupleQuery tq2 = new TupleQuery();
+            tq2.setReferentIui(wh);
+            result = rpm.runQuery(tq2);
+            for (RtsTuple rt : result) {
+            	System.out.println("\t" + rt.toString());
+            }
             
            
             hello.graphDb = rpm.graphDb;

@@ -13,7 +13,7 @@ public abstract class RtsTuplePersister {
 	
 	static final String TUPLE_BY_IUI_QUERY = "MATCH (n:" + RtsNodeLabel.TUPLE.getLabelText() + " { iui : {value} }) return n";
 	
-	static final String TUPLE_TYPE_PROPERTY_NAME = "type";
+	//static final String TUPLE_TYPE_PROPERTY_NAME = "type";
 	
 	GraphDatabaseService graphDb;
 	
