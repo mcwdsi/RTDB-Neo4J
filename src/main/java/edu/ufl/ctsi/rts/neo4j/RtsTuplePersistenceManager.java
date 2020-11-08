@@ -121,7 +121,6 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
 		createDb();
-		setupSchema();
 		
 		atp = new ATuplePersister(graphDb);
 		pup = new PtoUTuplePersister(graphDb);
@@ -1225,11 +1224,25 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		w.append("'");
 	}
 	
-    public void createDb() {
-    	deleteFileOrDirectory( new File(dbPath) );
+    public void createDb(boolean clearDb) {
+    	if (clearDb) { 
+    		deleteFileOrDirectory( new File(dbPath) );
+    		setupSchema();
+    	}
         // START SNIPPET: startDb
        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(dbPath) );
         registerShutdownHook( graphDb );
+     // END SNIPPET: startDb
+    }
+    
+    public void createDb() {
+    	File f = new File(dbPath);
+    	boolean setupSchema = !f.exists();
+    	//if (clearDb) deleteFileOrDirectory( new File(dbPath) );
+        // START SNIPPET: startDb
+       graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(dbPath) );
+        registerShutdownHook( graphDb );
+        if (setupSchema) setupSchema();
      // END SNIPPET: startDb
     }
     

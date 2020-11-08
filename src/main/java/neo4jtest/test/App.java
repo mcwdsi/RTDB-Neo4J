@@ -358,7 +358,16 @@ public class App
             for (RtsTuple rt : result) {
             	System.out.println("\t" + rt.toString());
             }
-            
+
+            System.out.println("Getting all the PtoU and PtoDE tuples that have referent of IUI for wh");
+            TupleQuery tq3 = new TupleQuery();
+            tq3.setReferentIui(wh);
+            tq3.addType(RtsTupleType.PTOUTUPLE);
+            tq3.addType(RtsTupleType.PTODETUPLE);
+            result = rpm.runQuery(tq3);
+            for (RtsTuple rt : result) {
+            	System.out.println("\t" + rt.toString());
+            }
            
             hello.graphDb = rpm.graphDb;
             
