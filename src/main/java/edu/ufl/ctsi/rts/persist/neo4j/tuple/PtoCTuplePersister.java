@@ -2,6 +2,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
@@ -29,17 +30,17 @@ public class PtoCTuplePersister extends AssertionalTuplePersister {
 	}
 	
 	@Override
-	public void handleTupleSpecificParameters() {
+	public void handleTupleSpecificParameters(Transaction tx) {
 		/* 
 		 * superclass handles iuit, iuip, iuia, ta, tr
 		 */
-		super.handleTupleSpecificParameters();
+		super.handleTupleSpecificParameters(tx);
 		
 		getParametersFromTuple();
 		
-		connectToConceptNode();
+		connectToConceptNode(tx);
 		
-		connectToConceptSystemNode();
+		connectToConceptSystemNode(tx);
 	}
 
 	private void getParametersFromTuple() {
@@ -48,20 +49,21 @@ public class PtoCTuplePersister extends AssertionalTuplePersister {
 		conceptSystemIui = ptoc.getConceptSystemIui();
 	}
 
-	private void connectToConceptNode() {
-		Node target = cnc.persistEntity(cui.toString());
+	private void connectToConceptNode(Transaction tx) {
+		Node target = cnc.persistEntity(cui.toString(), tx);
 		n.createRelationshipTo(target, RtsRelationshipType.co);
 	}
 
-	private void connectToConceptSystemNode() {
-		Node target = inc.persistEntity(conceptSystemIui.toString());
+	private void connectToConceptSystemNode(Transaction tx) {
+		Node target = inc.persistEntity(conceptSystemIui.toString(), tx);
 		n.createRelationshipTo(target, RtsRelationshipType.cs);
 	}
 	
 	@Override
-	protected void connectToReferent() {
+	protected void connectToReferent(Transaction tx) {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((PtoCTuple)tupleToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(
+			((PtoCTuple)tupleToPersist).getReferentIui().toString(), tx);
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

@@ -3,6 +3,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.tuple.PtoUTuple;
 import edu.uams.dbmi.rts.tuple.component.RelationshipPolarity;
@@ -31,20 +32,20 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 	}
 	
 	@Override
-	public void handleTupleSpecificParameters() {
-		super.handleTupleSpecificParameters();
+	public void handleTupleSpecificParameters(Transaction tx) {
+		super.handleTupleSpecificParameters(tx);
 		/* by now, we've already handled iuit, iuia, iuip, ta, tr, and r, which 
 		 *   leaves ptou, and should we choose to do something with it someday,
 		 *   iuio. 
 		 */
-		connectToUniversalNode();
+		connectToUniversalNode(tx);
 	}
 
-	private void connectToUniversalNode() {
+	private void connectToUniversalNode(Transaction tx) {
 		PtoUTuple ptou = (PtoUTuple)tupleToPersist;
-		Node target = unc.persistEntity(ptou.getUniversalUui().toString());
+		Node target = unc.persistEntity(ptou.getUniversalUui().toString(), tx);
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
-		Node ontology = inc.persistEntity(ontologyForUui.toString());
+		Node ontology = inc.persistEntity(ontologyForUui.toString(), tx);
 		Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
 		boolean hasOntologyTarget = false;
 		for (Relationship rel : ontologyRels) {
@@ -56,9 +57,10 @@ public class PtoUTuplePersister extends AssertionalTuplePersister {
 	}
 	
 	@Override
-	protected void connectToReferent() {
+	protected void connectToReferent(Transaction tx) {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((PtoUTuple)tupleToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(
+			((PtoUTuple)tupleToPersist).getReferentIui().toString(), tx);
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}

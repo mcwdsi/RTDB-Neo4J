@@ -3,6 +3,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.time.TemporalReference;
@@ -40,11 +41,11 @@ public abstract class AssertionalTuplePersister extends
 	}
 	
 	@Override
-	public void handleTupleSpecificParameters() {
+	public void handleTupleSpecificParameters(Transaction tx) {
 		getAssertionalParametersFromTuple();
-		connectToTimeOfAssertion();
-		connectToTimeInReality();
-		connectToRelation();
+		connectToTimeOfAssertion(tx);
+		connectToTimeInReality(tx);
+		connectToRelation(tx);
 	}
 
 	private void getAssertionalParametersFromTuple() {
@@ -91,18 +92,18 @@ public abstract class AssertionalTuplePersister extends
 		
 	}
 
-	private void connectToTimeOfAssertion() {
+	private void connectToTimeOfAssertion(Transaction tx) {
 		/*
 		 * First, persist (or get already persisted) temporal reference node
 		 */
 		//trp.persistTemporalRegion(taRef);
 		
-		Node target = tnc.persistEntity(taRef.toString());
+		Node target = tnc.persistEntity(taRef.toString(), tx);
 		//Then, create relationship from this tuple to that node
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
 
-	private void connectToTimeInReality() {
+	private void connectToTimeInReality(Transaction tx) {
 		/* 
 		 * If it is null, it is because we are persisting a PtoDETuple, which
 		 *   doesn't have a tr parameter.		
@@ -112,21 +113,21 @@ public abstract class AssertionalTuplePersister extends
 			 * First, persist (or get already persisted) temporal reference node
 			 */
 			//trp.persistTemporalRegion(trRef);
-			Node target = tnc.persistEntity(trRef.toString());  // trp.getNode();
+			Node target = tnc.persistEntity(trRef.toString(), tx);  // trp.getNode();
 			//Then, create relationship from this tuple to that node
 			n.createRelationshipTo(target, RtsRelationshipType.tr);
 		}
 	}
 
-	private void connectToRelation() {
+	private void connectToRelation(Transaction tx) {
 		/*
 		 * If it is null, it is because we are persisting a PtoCoTuple, which
 		 *   doesn't have an r parameter.
 		 */
 		if (rui != null) {
-			Node target = rnc.persistEntity(rui);
+			Node target = rnc.persistEntity(rui, tx);
 			n.createRelationshipTo(target, RtsRelationshipType.r);
-			Node ontology = inc.persistEntity(ontologyForRui.toString());
+			Node ontology = inc.persistEntity(ontologyForRui.toString(), tx);
 			Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
 			boolean hasOntologyTarget = false;
 			for (Relationship rel : ontologyRels) {

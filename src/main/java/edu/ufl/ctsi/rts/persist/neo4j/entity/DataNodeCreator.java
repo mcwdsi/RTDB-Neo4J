@@ -10,7 +10,8 @@ public class DataNodeCreator extends EntityNodePersister {
 		super(db);
 	}
 
-	static final String QUERY = "MERGE (n:" + RtsNodeLabel.DATA.getLabelText() + " { dr: $value }) return n";
+	static final String QUERY = 
+		"MERGE (n:" + RtsNodeLabel.DATA.getLabelText() + " { dr: $value }) return n";
 
 	@Override
 	protected String setupQuery() {

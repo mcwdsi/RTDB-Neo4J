@@ -10,7 +10,8 @@ public class ConceptNodeCreator extends EntityNodePersister {
 		super(db);
 	}
 
-	static final String QUERY = "MERGE (n:" + RtsNodeLabel.CONCEPT.getLabelText() + " { cui: $value }) return n";
+	static final String QUERY = 
+		"MERGE (n:" + RtsNodeLabel.CONCEPT.getLabelText() + " { cui: $value }) return n";
 
 	@Override
 	protected String setupQuery() {

@@ -6,6 +6,7 @@ import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeType;
@@ -28,12 +29,12 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 	}
 
 	@Override
-	protected void completeTuple(RtsTuple t) {
+	protected void completeTuple(RtsTuple t, Transaction tx) {
 		d = (MetadataTuple)t;
 
-		connectToTuple();
+		connectToTuple(tx);
 		
-		connectToActor();
+		connectToActor(tx);
 
 		//td
 		Iso8601DateTimeFormatter dtf = new Iso8601DateTimeFormatter();
@@ -51,18 +52,18 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 		
 		//replacements (s parameter)
 		Set<Iui> r = d.getReplacementTupleIuis();
-		if (r.size() > 0) connectToReplacements(r.iterator());
+		if (r.size() > 0) connectToReplacements(r.iterator(), tx);
 	}
 
 	/* connect the metadata tuple to the tuple it is about
 	 * 
 	 */
-	private void connectToTuple() {
+	private void connectToTuple(Transaction tx) {
 		/*
 		 * The target node is the tuple node, which for metadata tuples
 		 *   is the referent.
 		 */
-		Node target = tnc.persistEntity(d.getReferent().toString());
+		Node target = tnc.persistEntity(d.getReferent().toString(), tx);
 		
 		/*
 		 * This is the td parameter.  This time either starts or ends 
@@ -146,15 +147,15 @@ public class MetadataTuplePersister extends RtsTuplePersister {
 	 * Could use a better name, but basically connect metadata tuple to the
 	 * 	entity that acted on it.  Actions = insert, invalidate, revalidate.
 	 */
-	private void connectToActor() {
-		Node target = inc.persistEntity(d.getAuthorIui().toString());
+	private void connectToActor(Transaction tx) {
+		Node target = inc.persistEntity(d.getAuthorIui().toString(), tx);
 		n.createRelationshipTo(target, RtsRelationshipType.iuid);		
 	}
 	
-	private void connectToReplacements(Iterator<Iui> i) {
+	private void connectToReplacements(Iterator<Iui> i, Transaction tx) {
 		while (i.hasNext()) {
 			String iuiTxt = i.next().toString();
-			Node target = tnc.persistEntity(iuiTxt);
+			Node target = tnc.persistEntity(iuiTxt, tx);
 			n.createRelationshipTo(target, RtsRelationshipType.s);
 		}
 	}

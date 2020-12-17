@@ -6,7 +6,8 @@ import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
 public class RelationNodeCreator extends EntityNodePersister {
 
-	static final String QUERY = "MERGE (n:" + RtsNodeLabel.RELATION.getLabelText() + " { rui: $value }) return n";
+	static final String QUERY = 
+		"MERGE (n:" + RtsNodeLabel.RELATION.getLabelText() + " { rui: $value }) return n";
 
 	public RelationNodeCreator(GraphDatabaseService db) {
 		super(db);

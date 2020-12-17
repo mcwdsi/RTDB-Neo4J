@@ -2,6 +2,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.tuple.TenTemplate;
 import edu.ufl.ctsi.rts.neo4j.RtsRelationshipType;
@@ -20,7 +21,7 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	public void handleTupleSpecificParameters() {
+	public void handleTupleSpecificParameters(Transaction tx) {
 		// TODO Auto-generated method stub
 		/*
 		 * iuit, iuip, iuia already handled, which leaves iuite, iuins, name,
@@ -28,11 +29,11 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 		 */
 		getParametersFromTemplate();
 		
-		connectToTimeOfAssertion();
+		connectToTimeOfAssertion(tx);
 		
-		connectToTemporalEntity();
+		connectToTemporalEntity(tx);
 		
-		connectToNamespace();
+		connectToNamespace(tx);
 		
 		addNameAsProperty();
 	}
@@ -47,18 +48,18 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 		name = ten.getName();
 	}
 
-	private void connectToTimeOfAssertion() {
-		Node target = inc.persistEntity(taRef);
+	private void connectToTimeOfAssertion(Transaction tx) {
+		Node target = inc.persistEntity(taRef, tx);
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
 	
-	private void connectToTemporalEntity() {
-		Node target = inc.persistEntity(teRef);
+	private void connectToTemporalEntity(Transaction tx) {
+		Node target = inc.persistEntity(teRef, tx);
 		n.createRelationshipTo(target, RtsRelationshipType.iuite);
 	}
 	
-	private void connectToNamespace() {
-		Node target = inc.persistEntity(nsIui);
+	private void connectToNamespace(Transaction tx) {
+		Node target = inc.persistEntity(nsIui, tx);
 		n.createRelationshipTo(target, RtsRelationshipType.iuins);
 	}
 
@@ -73,7 +74,7 @@ public class TenTemplatePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	protected void connectToReferent() {
+	protected void connectToReferent(Transaction tx) {
 		// TODO Auto-generated method stub
 		throw new IllegalStateException("TenTemplatePersister is deprecated.");
 	}

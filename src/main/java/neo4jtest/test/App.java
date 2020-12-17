@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -26,7 +27,12 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+//import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.dbms.api.DatabaseManagementService;
+import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
+import org.neo4j.dbms.api.DatabaseNotFoundException;
+import org.neo4j.io.fs.FileUtils;
+import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
@@ -79,24 +85,30 @@ public class App
 	 * specific language governing permissions and limitations
 	 * under the License.
 	 */
-
+    private static final Path dbDirectory = Path.of( "target/neo4j-test-db" );
 
 	    //public static final String DB_PATH = "target/neo4j-hello-db";
-		public static final String DB_PATH = "/Users/hoganwr/Documents/Neo4j/databases/rtdb";
 
 	    public String greeting;
 
 	    // START SNIPPET: vars
 	    GraphDatabaseService graphDb;
+        DatabaseManagementService mgmtSvc;
+        DatabaseManagementServiceBuilder dbMgmtSvcBuilder;
 	    Node firstNode;
 	    Node secondNode;
 	    Relationship relationship;
+        Node n1;
+        Node n2;
+        Relationship rel;
+        
 	    // END SNIPPET: vars
 
 	    // START SNIPPET: createReltype
 	    private static enum RelTypes implements RelationshipType
 	    {
-	        KNOWS
+	        KNOWS,
+            ISA
 	    }
 	    // END SNIPPET: createReltype
 	    
@@ -152,7 +164,7 @@ public class App
             String wHoganNameTxt = "William Hogan";
             Iui wh = Iui.createRandomIui();
 	       
-            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager(App.DB_PATH);
+            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager(App.dbDirectory);
             
             /*
              * Time of assertion of this set of tuples
@@ -458,7 +470,10 @@ public class App
             rpm.saveTuple(dCorrection);
             
             try {
-  				FileWriter fw = new FileWriter("/Users/hoganwr/rtstuples.txt", true);
+                File f = new File("src/test/output");
+                if (!f.exists()) f.mkdir();
+
+  				FileWriter fw = new FileWriter("src/test/output/rtstuples.txt", true);
   				RtsTupleTextWriter rw = new RtsTupleTextWriter(fw);
   				
   				try {
@@ -470,7 +485,7 @@ public class App
   					e.printStackTrace();
   				}
   				
-  				FileReader fr_test = new FileReader("/Users/hoganwr/rtstuples_old");
+  				FileReader fr_test = new FileReader("src/test/resources/rtstuples_old");
   				BufferedReader br_test = new BufferedReader(fr_test);
   				char[] read = new char[64];
   				
@@ -535,7 +550,7 @@ public class App
             
             try {
 				//RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/rtstuples.txt")));
-            	RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("/Users/hoganwr/devel/repos/software/rts_core/src/test/resources/test-tuple-generation.out")));
+            	RtsTupleTextParser ttr = new RtsTupleTextParser(new BufferedReader(new FileReader("src/test/resources/test-tuple-generation.out")));
 				ttr.parseTuples();
 				
 				Set<TemporalRegion> time = ttr.getTemporalRegions();
@@ -899,106 +914,99 @@ public class App
 
 	    void createDb()
 	    {
-	    	deleteFileOrDirectory( new File( DB_PATH ) );
-	        // START SNIPPET: startDb
-	        graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(DB_PATH) );
-	        registerShutdownHook( graphDb );
-	     // END SNIPPET: startDb
+            //FileUtils.deleteDirectory( dbDirectory );
+            try {
+                FileUtils.deleteRecursively( dbDirectory.toFile() );
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+            // tag::startDb[]
+            mgmtSvc = new DatabaseManagementServiceBuilder( dbDirectory.toFile() ).build();
+            graphDb = mgmtSvc.database( DEFAULT_DATABASE_NAME );
+            registerShutdownHook( mgmtSvc );
+            // end::startDb[]
 	    }
 	    
 	    void addData() {
 	        
-	        // START SNIPPET: transaction
-	        try ( Transaction tx = graphDb.beginTx() )
-	        {
-	            // Database operations go here
-	            // END SNIPPET: transaction
-	            // START SNIPPET: addData
-	            firstNode = graphDb.createNode();
-	            firstNode.setProperty( "message", "Hello, " );
-	            secondNode = graphDb.createNode();
-	            secondNode.setProperty( "message", "World!" );
+	             // tag::transaction[]
+            try ( Transaction tx = graphDb.beginTx() )
+            {
+                // Database operations go here
+                // end::transaction[]
+                // tag::addData[]
+                n1 = tx.createNode();
+                n1.setProperty( "label", "electromagnetic force" );
+                n2 = tx.createNode();
+                n2.setProperty( "label", "fundamental physical force" );
 
-	            relationship = firstNode.createRelationshipTo( secondNode, RelTypes.KNOWS );
-	            relationship.setProperty( "message", "brave Neo4j " );
-	            // END SNIPPET: addData
+                rel = n1.createRelationshipTo( n2, RelTypes.ISA );
+                rel.setProperty( "label", "(shown by science)" );
+                // end::addData[]
 
-	            // START SNIPPET: readData
-	            System.out.print( firstNode.getProperty( "message" ) );
-	            System.out.print( relationship.getProperty( "message" ) );
-	            System.out.print( secondNode.getProperty( "message" ) );
-	            // END SNIPPET: readData
+                // tag::readData[]
+                System.out.print( n1.getProperty( "label" ) );
+                System.out.print(" ");
+                System.out.print(rel.getType().toString());
+                System.out.print(" ");
+                System.out.print( rel.getProperty( "label" ) );
+                System.out.print(" ");
+                System.out.print( n2.getProperty( "label" ) );
+                // end::readData[]
 
-	            greeting = ( (String) firstNode.getProperty( "message" ) )
-	                       + ( (String) relationship.getProperty( "message" ) )
-	                       + ( (String) secondNode.getProperty( "message" ) );
-	            
-	            System.out.println(greeting);
+                String stmt = ( (String) n1.getProperty( "label" ) )
+                    + " " + rel.getType().toString() + " " 
+                    + ( (String) rel.getProperty( "label" ) )
+                    + " "+ ( (String) n2.getProperty( "label" ) );
 
-	            // START SNIPPET: transaction
-	            tx.success();
-
-	        }
-	        // END SNIPPET: transaction
-
+                // tag::transaction[]
+                tx.commit();
+            }
 	    }
 
-	    void removeData()
-	    {
-	        try ( Transaction tx = graphDb.beginTx() )
-	        {
-	            // START SNIPPET: removingData
-	            // let's remove the data
-	            firstNode.getSingleRelationship( RelTypes.KNOWS, Direction.OUTGOING ).delete();
-	            firstNode.delete();
-	            secondNode.delete();
-	            // END SNIPPET: removingData
+    void removeData()
+    {
+        try ( Transaction tx = graphDb.beginTx() )
+        {
+            // tag::removingData[]
+            // let's remove the data
+            n1 = tx.getNodeById( n1.getId() );
+            n2 = tx.getNodeById( n2.getId() );
+            n1.getSingleRelationship( RelTypes.ISA, Direction.OUTGOING ).delete();
+            n1.delete();
+            n2.delete();
+            // end::removingData[]
 
-	            tx.success();
-	        }
-	    }
+            tx.commit();
+        }
+    }
 
-	    void shutDown()
-	    {
-	    	//graphDb.
-	        System.out.println();
-	        System.out.println( "Shutting down database ..." );
-	        // START SNIPPET: shutdownServer
-	        graphDb.shutdown();
-	        // END SNIPPET: shutdownServer
-	    }
+   void shutDown()
+    {
+        System.out.println();
+        System.out.println( "Shutting down database ..." );
+        // tag::shutdownServer[]
+        mgmtSvc.shutdown();
+        // end::shutdownServer[]
+    }
 
-	    // START SNIPPET: shutdownHook
-	    private static void registerShutdownHook( final GraphDatabaseService graphDb )
-	    {
-	        // Registers a shutdown hook for the Neo4j instance so that it
-	        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
-	        // running application).
-	        Runtime.getRuntime().addShutdownHook( new Thread()
-	        {
-	            @Override
-	            public void run()
-	            {
-	                graphDb.shutdown();
-	            }
-	        } );
-	    }
-	    // END SNIPPET: shutdownHook
+    // tag::shutdownHook[]
+    private static void registerShutdownHook( final DatabaseManagementService mgmtSvc )
+    {
+        // Registers a shutdown hook for the Neo4j instance so that it
+        // shuts down nicely when the VM exits (even if you "Ctrl-C" the
+        // running application).
+        Runtime.getRuntime().addShutdownHook( new Thread()
+        {
+            @Override
+            public void run()
+            {
+                mgmtSvc.shutdown();
+            }
+        } );
+    }
+    // end::shutdownHook[]
 
-	    private static void deleteFileOrDirectory( File file )
-	    {
-	        if ( file.exists() )
-	        {
-	            if ( file.isDirectory() )
-	            {
-	                for ( File child : file.listFiles() )
-	                {
-	                    deleteFileOrDirectory( child );
-	                }
-	            }
-	            file.delete();
-	        }
-	    }
 	    
 	    void queryRtsForEverythingAndDisplay() {
    
@@ -1006,7 +1014,7 @@ public class App
             
             try ( Transaction tx = graphDb.beginTx() ) {
             	
-            	Result result = graphDb.execute(query);
+            	Result result = tx.execute(query);
             	//ResourceIterator<Map<String, Object>> i = result.iterator();
             	while (result.hasNext()) {
             		Map<String, Object> entry = result.next();
@@ -1075,7 +1083,7 @@ public class App
             		}
             	}
             	
-            	tx.success();
+            	tx.close();
             
             }
 	    }
@@ -1084,7 +1092,7 @@ public class App
 	    	
 	    	   try ( Transaction tx = graphDb.beginTx() ) {
 	            	
-	            	Result result = graphDb.execute(query);
+	            	Result result = tx.execute(query);
 	            	//ResourceIterator<Map<String, Object>> i = result.iterator();
 	            	while (result.hasNext()) {
 	            		Map<String, Object> entry = result.next();
@@ -1160,7 +1168,7 @@ public class App
 	            	}
 	    	
 	            	
-	            	tx.success();
+	            	tx.commit();
 	            }
 	    }
 	    
@@ -1168,7 +1176,7 @@ public class App
   	
 	    	   try ( Transaction tx = graphDb.beginTx() ) {
 	            	
-	            	Result result = graphDb.execute(queryTemplateTxt, parameters);
+	            	Result result = tx.execute(queryTemplateTxt, parameters);
 	            	//ResourceIterator<Map<String, Object>> i = result.iterator();
 	            	while (result.hasNext()) {
 	            		Map<String, Object> entry = result.next();
@@ -1241,10 +1249,8 @@ public class App
 	            			
 	            			}
 	            		}
-	            	}
-	    	
-	            	
-	            	tx.success();
+	            	}  	
+	            	tx.commit();
 	            }
 	    }
 }

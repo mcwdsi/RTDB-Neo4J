@@ -2,6 +2,8 @@ package edu.ufl.ctsi.rts.neo4j;
 
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -22,7 +25,11 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.TransactionFailureException;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+//import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.dbms.api.DatabaseManagementService;
+import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
+import org.neo4j.dbms.api.DatabaseNotFoundException;
+import org.neo4j.io.fs.FileUtils;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.RtsDeclaration;
@@ -63,8 +70,8 @@ import edu.ufl.ctsi.rts.persist.neo4j.tuple.TemporalRegionPersister;
 
 public class RtsTuplePersistenceManager implements RtsStore {
 
-	static String CNODE_QUERY = "MERGE (n:change_reason { c: {value} }) return n";
-	static String CTNODE_QUERY = "MERGE (n:change_type { ct: {value} }) return n";
+	static String CNODE_QUERY = "MERGE (n:change_reason { c: $value }) return n";
+	static String CTNODE_QUERY = "MERGE (n:change_type { ct: $value }) return n";
 	
 	public GraphDatabaseService graphDb;
 	
@@ -104,11 +111,14 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	MetadataTuplePersister mp;
 	
 	TemporalRegionPersister trp;
-	String dbPath;
+	Path dbPath;
+	String dbName;
 	
 	HashMap<RtsTupleType, RtsTupleNodeLabel> rttTypeToNodeLabel;
+
+	DatabaseManagementService dbMgmtSvc;
 	
-	public RtsTuplePersistenceManager(String dbPath) {
+	public RtsTuplePersistenceManager(Path dbPath) {
 		this.dbPath = dbPath;
 		tuples = new HashSet<RtsTuple>();
 		metadata = new HashSet<MetadataTuple>();
@@ -142,7 +152,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		rttTypeToNodeLabel.put(RtsTupleType.PTOUTUPLE, RtsTupleNodeLabel.U);
 	}
 	
-	static final String queryInstanceNode = "match (n) where n.iui={value} return n;";
+	static final String queryInstanceNode = "match (n) where n.iui=$value return n;";
 	
 	protected void addTuple(RtsTuple t) {
 		if (t instanceof ATuple) {
@@ -200,31 +210,31 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			//String iuid = dtf.format(dt);
 			
 			for (TemporalRegion r : tempRegions) {
-				trp.persistTemporalRegion(r);
+				trp.persistTemporalRegion(r, tx);
 			}
 			
 			for (RtsTuple t : tuples) {
 				if (t instanceof ATuple) {
-					atp.persistTuple(t);
+					atp.persistTuple(t, tx);
 				} else if (t instanceof PtoUTuple) {
-					pup.persistTuple(t);
+					pup.persistTuple(t, tx);
 				} else if (t instanceof PtoLackUTuple) {
-					plup.persistTuple(t);
+					plup.persistTuple(t, tx);
 				} else if (t instanceof PtoDETuple) {
-					pdrp.persistTuple(t);
+					pdrp.persistTuple(t, tx);
 				} else if (t instanceof PtoPTuple) {
-					ppp.persistTuple(t);
+					ppp.persistTuple(t, tx);
 				} else if (t instanceof PtoCTuple) {
-					pcp.persistTuple(t);
+					pcp.persistTuple(t, tx);
 				} 
 			}
 			
 			for (MetadataTuple d : metadata) {
 				d.setAuthoringTimestamp(dt);
-				mp.persistTuple(d);
+				mp.persistTuple(d, tx);
 			}	
 
-			tx.success();
+			tx.commit();
 			//tx.close();
 			tuples.clear();
 			metadata.clear();
@@ -260,11 +270,13 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			if (!iuiToItsAssignmentTuple.containsKey(iui)) {
 				HashMap<String, Object> params = new HashMap<String, Object>();
 				params.put("value", iui);
-				ResourceIterator<Node> rin = graphDb.execute(queryInstanceNode, params).columnAs("n");
-				if (!rin.hasNext()) {
-					System.err.println("Iui " + iui + " is referenced in a PtoP tuple but has " +
-							"no assignment tuple in the cache and there is no node for it already "
-							+ "in the database.");
+				try (Transaction tx = graphDb.beginTx()) {
+					ResourceIterator<Node> rin = tx.execute(queryInstanceNode, params).columnAs("n");
+					if (!rin.hasNext()) {
+						System.err.println("Iui " + iui + " is referenced in a PtoP tuple but has " +
+								"no assignment tuple in the cache and there is no node for it already "
+								+ "in the database.");
+					}
 				}
 				/*else {
 					Node n = rin.next();
@@ -286,20 +298,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		
 	}
 
-	static String createTupleQuery = "CREATE (n:tuple { iui : {value}})";
+	static String createTupleQuery = "CREATE (n:tuple { iui : $value})";
 	
-	/*
-	 * Above, we made sure that a tuple with this tuple IUI didn't exist already.
-	 *  So we're clear to add it de novo without worrying about violating a unique
-	 *  constraint on tuple IUIs.
-	 */
-	@SuppressWarnings("unused")
-	private Node createTupleNode(RtsTuple t) {
-		Node n = graphDb.createNode(tupleLabel);
-		n.setProperty("ui", t.getTupleIui().toString());
-		return n;
-	}
-
 	public Iterator<RtsTuple> getTupleIterator() {
 		return tuples.iterator();
 	}
@@ -359,7 +359,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	}
 	*/
 	
-	static String TYPE_QUERY = "MERGE (n:universal {ui : {value}})"
+	static String TYPE_QUERY = "MERGE (n:universal {ui : $value})"
 			//+ "ON CREATE "
 			+ "RETURN n";
 
@@ -408,7 +408,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		sourceNode.createRelationshipTo(target, relType);
 	}
 	
-	static String nodeQueryBase = "MERGE (n:[label] { ui : {value} }) return n";
+	static String nodeQueryBase = "MERGE (n:[label] { ui : $value }) return n";
 	
 	private Node getOrCreateNode(RtsNodeLabel targetNodeLabel,
 			String targetNodeUi) {
@@ -418,45 +418,53 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		parameters.put("value", targetNodeUi);
 	    
 		//run the query.
-	    ResourceIterator<Node> resultIterator = graphDb.execute( query, parameters ).columnAs( "n" );
-	    Node n = resultIterator.next();
+		try (Transaction tx = graphDb.beginTx()) {
+	    	ResourceIterator<Node> resultIterator = tx.execute( query, parameters ).columnAs( "n" );
+	    	Node n = resultIterator.next();
 	    
-	    //add node to cache
-	    uiNode.put(targetNodeUi, n);
+	    	//add node to cache
+	    	uiNode.put(targetNodeUi, n);
 	    
-	    //TODO change this to also throw a new type of exception, and transaction 
-	    //	should roll back
-	    if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ) {
-	    	if ( !iuiToItsAssignmentTuple.containsKey(targetNodeUi) ) {
-		    	System.err.println("ERROR: creating new entity with IUI " + targetNodeUi +
+	    	//TODO change this to also throw a new type of exception, and transaction 
+	    	//	should roll back
+	    	if ( targetNodeLabel.equals(RtsNodeLabel.INSTANCE) ) {
+	    		if ( !iuiToItsAssignmentTuple.containsKey(targetNodeUi) ) {
+		    		System.err.println("ERROR: creating new entity with IUI " + targetNodeUi +
 		    			" but this IUI has no corresponding assignment tuple!");
+	    		}
 	    	}
+	    	tx.close();
+	    	return n;
 	    }
-		
-		return n;
 	}
 
-	//static String tupleByIuiQuery = "START n=node:nodes(iui = {value}) RETURN n";
-	static String tupleByIuiQuery = "MATCH (n:tuple { iui : {value} }) return n, labels(n)";
+	//static String tupleByIuiQuery = "START n=node:nodes(iui = $value) RETURN n";
+	static String tupleByIuiQuery = "MATCH (n:tuple { iui : $value }) return n, labels(n)";
 	
 	boolean isTupleInDb(RtsTuple t) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		parameters.put("value", t.getTupleIui().toString());
-		return graphDb.execute(tupleByIuiQuery, parameters).hasNext();
+		try (Transaction tx = graphDb.beginTx()) {
+			Result r = tx.execute(tupleByIuiQuery, parameters);
+			boolean exists = r.hasNext();
+			tx.close();
+			return exists;
+			//return graphDb.executeTransactionally(tupleByIuiQuery, parameters).hasNext();
+		}
 	}
 	
 	/*
-	static String INST_QUERY = "MERGE (n:instance {ui : {value}})"
+	static String INST_QUERY = "MERGE (n:instance {ui : $value})"
 			//+ "ON CREATE "
 			+ "RETURN n";
 			
 	
-	static String TR_QUERY = "MERGE (n:temporal_region {ui : {value}})"
+	static String TR_QUERY = "MERGE (n:temporal_region {ui : $value})"
 			//+ "ON CREATE "
 			+ "RETURN n";
 			//*/
 	
-	static String ENTITY_QUERY = "MERGE (n:[label] {ui : {value}})"
+	static String ENTITY_QUERY = "MERGE (n:[label] {ui : $value})"
 			//+ "ON CREATE "
 			+ "RETURN n";
 	
@@ -467,7 +475,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	    parameters.put( "value", iui.toString() );
 	    
 	    //run the query.
-	    ResourceIterator<Node> resultIterator = ee.execute( query, parameters ).columnAs( "n" );
+	    ResourceIterator<Node> resultIterator = ee.executeTransactionally( query, parameters ).columnAs( "n" );
 	    Node result = resultIterator.next();
 	    
 	    //add the node to the cache
@@ -486,7 +494,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	    parameters.put( "value", universalUui.toString() );
 	    
 	    //run the query.
-	    ResourceIterator<Node> resultIterator = ee.execute( TYPE_QUERY, parameters ).columnAs( "n" );
+	    ResourceIterator<Node> resultIterator = ee.executeTransactionally( TYPE_QUERY, parameters ).columnAs( "n" );
 	    Node result = resultIterator.next();
 	    
 	    return result;	
@@ -526,47 +534,47 @@ public class RtsTuplePersistenceManager implements RtsStore {
         try ( Transaction tx2 = graphDb.beginTx() )
         {
 
-            graphDb.schema()
+            tx2.schema()
                     .constraintFor( tupleLabel )
                     .assertPropertyIsUnique( "iui" )
                     .create();
             
-            graphDb.schema()
+            tx2.schema()
             		.constraintFor( instanceLabel )
             		.assertPropertyIsUnique( "iui" )
             		.create();
             
-            graphDb.schema()
+            tx2.schema()
             		.constraintFor( typeLabel )
             		.assertPropertyIsUnique( "uui" )
             		.create();
             
-            graphDb.schema()
+            tx2.schema()
             		.constraintFor( relationLabel )
             		.assertPropertyIsUnique( "rui" )
             		.create();
             
-            graphDb.schema()
+            tx2.schema()
     				.constraintFor( dataLabel )
     				.assertPropertyIsUnique( "dr" )
     				.create();
             
-            graphDb.schema()
+            tx2.schema()
             		.constraintFor( metadataLabel )
             		.assertPropertyIsUnique("c")
             		.create();
             
-            graphDb.schema()
+            tx2.schema()
     				.constraintFor( metadataLabel )
     				.assertPropertyIsUnique("ct")
     				.create();         
             
-            graphDb.schema()
+            tx2.schema()
     				.constraintFor( temporalRegionLabel )
     				.assertPropertyIsUnique("tref")
     				.create();   
             
-            tx2.success();
+            tx2.commit();
         }
     }
     
@@ -587,7 +595,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
     			parameters.put("value", value);
     			
     			//run the query.
-    			ExecutionResult er = ee.execute( CNODE_QUERY, parameters );
+    			ExecutionResult er = ee.executeTransactionally( CNODE_QUERY, parameters );
     			System.out.println(er.dumpToString());
     			List<String> cs = er.columns();
     			for (String c : cs) {
@@ -606,7 +614,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
     			parameters.put("value", value);
     			
     			//run the query.
-    			ExecutionResult er = ee.execute( CTNODE_QUERY, parameters );
+    			ExecutionResult er = ee.executeTransactionally( CTNODE_QUERY, parameters );
     			System.out.println(er.dumpToString());
     			List<String> cs = er.columns();
     			for (String c : cs) {
@@ -616,7 +624,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
     		    //Node n = (Node) er.columnAs("n").next();
     		}
     		
-    		tx3.success();
+    		tx3.commit();
     	}*/
     //}
     
@@ -655,7 +663,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		
 			HashMap<String, Object> parameters = new HashMap<String, Object>();
 			parameters.put("value", iui.toString().toLowerCase());
-			Result r = graphDb.execute(tupleByIuiQuery, parameters);
+			Result r = tx.execute(tupleByIuiQuery, parameters);
 			//System.out.println(r.resultAsString());
 			Node n = null; 
 			String label = null;
@@ -671,9 +679,9 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				}
 			}
 			
-			tx.success();
-			
-			return reconstituteTuple(n, label, iui);
+			RtsTuple tuple = reconstituteTuple(n, label, iui);
+			tx.commit();
+			return tuple;
 		}
 	}
 
@@ -947,7 +955,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	private ParticularReference getPrForDeFromDb(Node n) {
 		// We built the iuip relationship as incoming, because the PtoDE tuple says how the 
 		//  particular is concretized
-		Iterable<Relationship> rs = n.getRelationships(RtsRelationshipType.iuip, Direction.INCOMING);
+		Iterable<Relationship> rs = n.getRelationships(Direction.INCOMING, RtsRelationshipType.iuip);
 		int cR = 0;
 		Node instNode = null;
 		for (Relationship r : rs) {
@@ -1160,32 +1168,36 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				queryMatch.append(tupTypeTxt);
 				queryMatch.append(")");
 				queryMatch.append(matchConditions);
-				if (matchWhere.length() > 0)
+				if (matchWhere.length() > 0) {
 					queryMatch.append(" WHERE ");
 					queryMatch.append(matchWhere);
+				}
+				queryMatch.append(" return n as aResult");
 				if (i.hasNext())
 					queryMatch.append(" UNION ");
 			}
 		} else {
 			queryMatch.append("match (n:tuple)");
 			queryMatch.append(matchConditions);
-			if (matchWhere.length() > 0)
+			if (matchWhere.length() > 0) {
 				queryMatch.append(" WHERE ");
 				queryMatch.append(matchWhere);
+			}
+			queryMatch.append(" return n as aResult");
 		}
-		queryMatch.append(" return n");
+		
 		String query = queryMatch.toString();
 		System.out.println("CYPHER QUERY FOR TUPLE IS: \n\t"+query);
 	
 		HashSet<RtsTuple> resultSet = new HashSet<RtsTuple>();
 		try ( Transaction tx = graphDb.beginTx() ) {
-			Result r = graphDb.execute(query);
+			Result r = tx.execute(query);
 			//System.out.println(r.resultAsString());
 			Node n = null; 
 			String label = null;
 			while (r.hasNext()) {
 				Map<String, Object> rNext = r.next();
-				Object nAsO = rNext.get("n");
+				Object nAsO = rNext.get("aResult");
 				n = (Node)nAsO;
 				Iterable<Label> labels = n.getLabels();
 				for (Label labeli : labels) {
@@ -1197,7 +1209,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				resultSet.add(t);
 			}
 			
-			tx.success();
+			tx.commit();
 		}
 		
 		return resultSet;
@@ -1224,58 +1236,50 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		w.append("'");
 	}
 	
-    public void createDb(boolean clearDb) {
-    	if (clearDb) { 
-    		deleteFileOrDirectory( new File(dbPath) );
-    		setupSchema();
-    	}
-        // START SNIPPET: startDb
-       graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(dbPath) );
-        registerShutdownHook( graphDb );
-     // END SNIPPET: startDb
-    }
+	void createDb(boolean clearFirst) {
+		if (clearFirst) {
+			//FileUtils.deleteDirectory( dbPath );
+			try {
+				FileUtils.deleteRecursively( dbPath.toFile() );
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
+		// tag::startDb[]
+		dbMgmtSvc = new DatabaseManagementServiceBuilder( dbPath.toFile() ).build();
+		graphDb = dbMgmtSvc.database( DEFAULT_DATABASE_NAME );
+		registerShutdownHook(dbMgmtSvc);
+		// end::startDb[]
+	}
     
     public void createDb() {
-    	File f = new File(dbPath);
-    	boolean setupSchema = !f.exists();
-    	//if (clearDb) deleteFileOrDirectory( new File(dbPath) );
-        // START SNIPPET: startDb
-       graphDb = new GraphDatabaseFactory().newEmbeddedDatabase( new File(dbPath) );
-        registerShutdownHook( graphDb );
-        if (setupSchema) setupSchema();
-     // END SNIPPET: startDb
+    	//by default, create the database without clearing it first
+    	createDb(false);
     }
     
     @Override
-    public void shutDown() {
-    	//graphDb.
+   public void shutDown() {
         System.out.println();
         System.out.println( "Shutting down database ..." );
-        // START SNIPPET: shutdownServer
-        graphDb.shutdown();
-        // END SNIPPET: shutdownServer
+        // tag::shutdownServer[]
+        dbMgmtSvc.shutdown();
+        // end::shutdownServer[]
     }
     
-    private void registerShutdownHook( final GraphDatabaseService graphDb ) {
+    // tag::shutdownHook[]
+    private static void registerShutdownHook( final DatabaseManagementService mgmtSvc )
+    {
         // Registers a shutdown hook for the Neo4j instance so that it
         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
         // running application).
-        Runtime.getRuntime().addShutdownHook( new Thread() {
+        Runtime.getRuntime().addShutdownHook( new Thread()
+        {
             @Override
-            public void run() {
-                graphDb.shutdown();
+            public void run()
+            {
+                mgmtSvc.shutdown();
             }
         } );
     }
-
-    private static void deleteFileOrDirectory( File file ) {
-        if ( file.exists() ) {
-            if ( file.isDirectory() ) {
-                for ( File child : file.listFiles() ) {
-                    deleteFileOrDirectory( child );
-                }
-            }
-            file.delete();
-        }
-    }
+    // end::shutdownHook[]
 }

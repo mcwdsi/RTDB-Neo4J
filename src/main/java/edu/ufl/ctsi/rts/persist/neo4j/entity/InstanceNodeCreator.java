@@ -8,7 +8,8 @@ import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
 
 public class InstanceNodeCreator extends EntityNodePersister {
 
-	static final String QUERY = "MERGE (n:" + RtsNodeLabel.INSTANCE.getLabelText() + " { iui: $value }) return n";
+	static final String QUERY = 
+		"MERGE (n:" + RtsNodeLabel.INSTANCE.getLabelText() + " { iui: $value }) return n";
 
 	public InstanceNodeCreator(GraphDatabaseService db) {
 		super(db);

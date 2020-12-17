@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.iui.Iui;
@@ -34,26 +35,26 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 	}
 	
 	@Override
-	public void handleTupleSpecificParameters() {
-		super.handleTupleSpecificParameters();
+	public void handleTupleSpecificParameters(Transaction tx) {
+		super.handleTupleSpecificParameters(tx);
 		/*
 		 * At this point, we've already handled iuit, iuip, iuia, ta, tr, and r.
 		 */
 		
 		//connect to universal for data
-		connectToUniversalNode();
+		connectToUniversalNode(tx);
 		
 		//connect to data
-		connectToDataNode();
+		connectToDataNode(tx);
 	}
 
-	private void connectToUniversalNode() {
+	private void connectToUniversalNode(Transaction tx) {
 		PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
-		Node target = unc.persistEntity(ptodr.getDatatypeUui().toString());
+		Node target = unc.persistEntity(ptodr.getDatatypeUui().toString(), tx);
 		n.createRelationshipTo(target, RtsRelationshipType.uui);
 		
 		if (ontologyForUui == null) System.out.println(new String(ptodr.getData()));
-		Node ontology = inc.persistEntity(ontologyForUui.toString());
+		Node ontology = inc.persistEntity(ontologyForUui.toString(), tx);
 		Iterable<Relationship> ontologyRels = target.getRelationships(RtsRelationshipType.iuio);
 		boolean hasOntologyTarget = false;
 		for (Relationship rel : ontologyRels) {
@@ -64,26 +65,27 @@ public class PtoDETuplePersister extends AssertionalTuplePersister {
 			target.createRelationshipTo(ontology, RtsRelationshipType.iuio);	
 	}
 
-	private void connectToDataNode() {
+	private void connectToDataNode(Transaction tx) {
 		PtoDETuple ptodr = (PtoDETuple)tupleToPersist;
 		String dataAsString = new String(ptodr.getData(), Charset.forName("UTF-8"));
-		Node target = dnc.persistEntity(dataAsString);
+		Node target = dnc.persistEntity(dataAsString, tx);
 		n.createRelationshipTo(target, RtsRelationshipType.dr);
 	}
 	
 	@Override
-	protected void connectToReferent() {
+	protected void connectToReferent(Transaction tx) {
 		ParticularReference p = ((PtoDETuple)tupleToPersist).getReferent();
 		Node referentNode = null; 
 		if (p instanceof Iui) {
 			InstanceNodeCreator inc = new InstanceNodeCreator(graphDb);
-			referentNode = inc.persistEntity(((PtoDETuple)tupleToPersist).getReferent().toString());
+			referentNode = inc.persistEntity(
+				((PtoDETuple)tupleToPersist).getReferent().toString(), tx);
 		} else if (p instanceof TemporalReference) {
 			//TemporalRegionPersister trp = new TemporalRegionPersister(this.graphDb);
 			//referentNode = trp.persistTemporalRegion((TemporalRegion)p);
 			
 			TemporalNodeCreator tnc = new TemporalNodeCreator(this.graphDb);
-			referentNode = tnc.persistEntity(((TemporalReference)p).toString());
+			referentNode = tnc.persistEntity(((TemporalReference)p).toString(), tx);
 		}
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);

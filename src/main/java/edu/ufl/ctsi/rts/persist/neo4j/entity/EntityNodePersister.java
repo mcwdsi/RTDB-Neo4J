@@ -19,10 +19,10 @@ public abstract class EntityNodePersister {
 		this.graphDb = db;
 	}
 
-	public Node persistEntity(String ui) {
+	public Node persistEntity(String ui, Transaction tx) {
 		//check the cache first
-		Node n = getFromCache(ui);
-		if (n!=null) return n;
+		//Node n = getFromCache(ui);
+		//if (n!=null) return n;
 		
 		//Each subclass will have slightly different query to run
 		String query = setupQuery();
@@ -41,19 +41,20 @@ public abstract class EntityNodePersister {
 		//run the query.
 		//System.out.println(query);
 		//System.out.println(ui);
-		//try  ( Transaction tx = graphDb.beginTx() ) { 
-		Result er = graphDb.execute( query, parameters );
-		//System.out.println(er.toString());
-		//List<String> cs = er.columns();
-		//for (String c : cs) {
-		//	System.out.println(c);
-		//}
-		//ResourceIterator<Node> resultIterator = ee.execute( query, parameters ).columnAs( "n" );
-	    //n = resultIterator.next();
-	    n = (Node) er.columnAs("n").next();
+		
+		Result er = tx.execute( query, parameters );
+			//System.out.println(er.toString());
+			//List<String> cs = er.columns();
+			//for (String c : cs) {
+			//	System.out.println(c);
+			//}
+			//ResourceIterator<Node> resultIterator = ee.execute( query, parameters ).columnAs( "n" );
+	    	//n = resultIterator.next();
+	    Node n = (Node) er.columnAs("n").next();
+
 	    
 	    //add node to cache. TODO: if overall transaction fails, then we need to clear this cache 
-	    uiNode.put(ui, n);
+	    //uiNode.put(ui, n);
 	    //tx.success();
 		//}
 	    

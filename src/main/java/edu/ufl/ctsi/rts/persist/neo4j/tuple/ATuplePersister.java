@@ -2,6 +2,7 @@ package edu.ufl.ctsi.rts.persist.neo4j.tuple;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.tuple.ATuple;
 import edu.uams.dbmi.util.iso8601.Iso8601DateTimeFormatter;
@@ -19,7 +20,7 @@ public class ATuplePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	public void handleTupleSpecificParameters() {
+	public void handleTupleSpecificParameters(Transaction tx) {
 		//superclass handles iuit, iuip, and iuia, so only one left is tap
 		setTapProperty();
 	}
@@ -35,9 +36,10 @@ public class ATuplePersister extends RepresentationalTuplePersister {
 	}
 
 	@Override
-	protected void connectToReferent() {
+	protected void connectToReferent(Transaction tx) {
 		InstanceNodeCreator inc = new InstanceNodeCreator(this.graphDb);
-		Node referentNode = inc.persistEntity(((ATuple)tupleToPersist).getReferentIui().toString());
+		Node referentNode = inc.persistEntity(
+			((ATuple)tupleToPersist).getReferentIui().toString(), tx);
 		//This directionality is what I did on the Confluence page and it seems to make sense.
 		referentNode.createRelationshipTo(n, RtsRelationshipType.iuip);
 	}
