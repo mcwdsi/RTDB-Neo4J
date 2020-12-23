@@ -521,6 +521,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
     	dataLabel = DynamicLabel.label("data");
     	metadataLabel = DynamicLabel.label("metadata");
     	*/
+    	System.out.print("Creating RTDB schema in Neo4J...");
     	
     	tupleLabel = Label.label("tuple");
     	instanceLabel = Label.label("instance");
@@ -576,6 +577,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
             
             tx2.commit();
         }
+
+        System.out.println("done.");
     }
     
     //void setupMetadata() {
@@ -1248,6 +1251,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		// tag::startDb[]
 		dbMgmtSvc = new DatabaseManagementServiceBuilder( dbPath.toFile() ).build();
 		graphDb = dbMgmtSvc.database( DEFAULT_DATABASE_NAME );
+		setupSchema();
 		registerShutdownHook(dbMgmtSvc);
 		// end::startDb[]
 	}
