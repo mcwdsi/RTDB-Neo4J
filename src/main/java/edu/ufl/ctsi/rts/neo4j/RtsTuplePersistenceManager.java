@@ -25,6 +25,7 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.TransactionFailureException;
+import org.neo4j.graphdb.schema.ConstraintDefinition;
 //import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
@@ -534,6 +535,13 @@ public class RtsTuplePersistenceManager implements RtsStore {
   	
         try ( Transaction tx2 = graphDb.beginTx() )
         {
+        	Iterator<ConstraintDefinition> constraints = tx2.schema().getConstraints().iterator();
+   			if (constraints.hasNext()) {
+   				tx2.close();
+   			} else {
+
+        	System.out.print("no constraints in db...adding...");
+
 
             tx2.schema()
                     .constraintFor( tupleLabel )
@@ -577,8 +585,9 @@ public class RtsTuplePersistenceManager implements RtsStore {
             
             tx2.commit();
         }
-
-        System.out.println("done.");
+        
+        }
+        System.out.print("done...");
     }
     
     //void setupMetadata() {
