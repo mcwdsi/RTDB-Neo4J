@@ -196,7 +196,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	
 	
 	public void commitTuples() {
-		System.err.println("committing " + tuples.size() + " tuples and " +  tempRegions.size() + " temporal regions.");
+		//System.err.println("committing " + tuples.size() + " tuples and " +  tempRegions.size() + " temporal regions.");
 		try ( Transaction tx = graphDb.beginTx() ) {
 			
 			/*
@@ -537,6 +537,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
         {
         	Iterator<ConstraintDefinition> constraints = tx2.schema().getConstraints().iterator();
    			if (constraints.hasNext()) {
+   				System.out.print("...constraints already present...");
    				tx2.close();
    			} else {
 
@@ -1034,21 +1035,21 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	private RtsChangeReason getCrFromDb(Node n) {
 		String crTxt = (String)n.getProperty("c");
 		RtsChangeReason cr = RtsChangeReason.valueOf(crTxt);
-		System.out.println("CHANGE REASON = " + cr);
+		//System.out.println("CHANGE REASON = " + cr);
 		return cr;
 	}
 	
 	private RtsChangeType getCtFromDb(Node n) {
 		String ctTxt = (String)n.getProperty("ct");
 		RtsChangeType ct = RtsChangeType.valueOf(ctTxt);
-		System.out.println("CHANGE TYPE = " + ct);
+		//System.out.println("CHANGE TYPE = " + ct);
 		return ct;
 	}
 	
 	private RtsErrorCode getEFromDb(Node n) {
 		String eTxt = (String)n.getProperty("e");
 		RtsErrorCode e = RtsErrorCode.valueOf(eTxt);
-		System.out.println("ERROR CODE = " + e);
+		//System.out.println("ERROR CODE = " + e);
 		return e;
 	}
 	
@@ -1199,7 +1200,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		}
 		
 		String query = queryMatch.toString();
-		System.out.println("CYPHER QUERY FOR TUPLE IS: \n\t"+query);
+		//System.out.println("CYPHER QUERY FOR TUPLE IS: \n\t"+query);
 	
 		HashSet<RtsTuple> resultSet = new HashSet<RtsTuple>();
 		try ( Transaction tx = graphDb.beginTx() ) {

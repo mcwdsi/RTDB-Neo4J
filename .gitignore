@@ -6,3 +6,4 @@ src/target
 target/
 /bin/
 *~
+.DS_Store
