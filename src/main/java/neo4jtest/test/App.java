@@ -593,6 +593,9 @@ public class App
 
             Set<ParticularReference> prs = rpm.getReferentsByTypeAndDesignatorType(null, new Uui("http://purl.obolibrary.org/obo/IAO_0020015"), "William Hogan");
             System.out.println(prs.size());
+            Iterator<ParticularReference> pri = prs.iterator();
+            while (pri.hasNext())
+                System.out.println(pri.next());
             
             hello.shutDown();
 	    }
