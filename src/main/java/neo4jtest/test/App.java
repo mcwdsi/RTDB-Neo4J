@@ -31,9 +31,9 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
-import org.neo4j.io.fs.FileUtils;
 import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 
+import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.cui.Cui;
 import edu.uams.dbmi.rts.iui.Iui;
 import edu.uams.dbmi.rts.metadata.RtsChangeReason;
@@ -164,7 +164,7 @@ public class App
             String wHoganNameTxt = "William Hogan";
             Iui wh = Iui.createRandomIui();
 	       
-            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager(App.dbDirectory);
+            RtsTuplePersistenceManager rpm = new RtsTuplePersistenceManager(App.dbDirectory, true);
             
             /*
              * Time of assertion of this set of tuples
@@ -590,8 +590,11 @@ public class App
     		parameters.put("idTypeIri", patidIriTxt);
     		parameters.put("idValue", "321454");
     		hello.runQueryWithParametersAndDisplayResults(queryTemplateTxt, parameters);
+
+            Set<ParticularReference> prs = rpm.getReferentsByTypeAndDesignatorType(null, new Uui("http://purl.obolibrary.org/obo/IAO_0020015"), "William Hogan");
+            System.out.println(prs.size());
             
-            rpm.shutDown();
+            hello.shutDown();
 	    }
 
 		private static TemporalRegion createIndividualWithBirthdateAndReturnLifeIntervalTuple(
@@ -914,14 +917,8 @@ public class App
 
 	    void createDb()
 	    {
-            //FileUtils.deleteDirectory( dbDirectory );
-            try {
-                FileUtils.deleteRecursively( dbDirectory.toFile() );
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
             // tag::startDb[]
-            mgmtSvc = new DatabaseManagementServiceBuilder( dbDirectory.toFile() ).build();
+            mgmtSvc = new DatabaseManagementServiceBuilder( dbDirectory ).build();
             graphDb = mgmtSvc.database( DEFAULT_DATABASE_NAME );
             registerShutdownHook( mgmtSvc );
             // end::startDb[]

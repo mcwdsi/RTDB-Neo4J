@@ -30,7 +30,7 @@ import org.neo4j.graphdb.schema.ConstraintDefinition;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
-import org.neo4j.io.fs.FileUtils;
+import org.neo4j.dbms.api.DatabaseManagementException;
 
 import edu.uams.dbmi.rts.ParticularReference;
 import edu.uams.dbmi.rts.RtsDeclaration;
@@ -120,6 +120,10 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	DatabaseManagementService dbMgmtSvc;
 	
 	public RtsTuplePersistenceManager(Path dbPath) {
+		this(dbPath, false);
+	}
+
+	public RtsTuplePersistenceManager(Path dbPath, boolean clearFirst) {
 		this.dbPath = dbPath;
 		tuples = new HashSet<RtsTuple>();
 		metadata = new HashSet<MetadataTuple>();
@@ -131,7 +135,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		iuisInPtoPTuples = new HashSet<String>();
 		iuiToNodeLabel = new HashMap<String, String>();
 		dttmFormatter = new Iso8601DateTimeFormatter();
-		createDb();
+		if (clearFirst) createDb(true); else createDb();
 		
 		atp = new ATuplePersister(graphDb);
 		pup = new PtoUTuplePersister(graphDb);
@@ -1086,6 +1090,67 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	}
 
 	@Override
+	public Set<ParticularReference> getReferentsByTypeAndDesignatorType(Uui referentType, Uui designatorType, String designatorTxt) {
+		//first we need a condition to match PtoDE on designatorType (I think) and designatorTxt (for sure)
+		TupleQuery tq = new TupleQuery();
+        tq.addType(RtsTupleType.PTODETUPLE);
+        tq.setData(designatorTxt.getBytes());
+        tq.setDatatypeUui(new Uui("https://www.ietf.org/rfc/rfc3629.txt"));
+
+		//then we need a condition to match a PtoP tuple with the IUI from the PtoDE tuple and the "denotes" or "designates" relation
+		//then from all the results we get back, we need the target IUIs from the PtoP
+		// is there an example in the big blob of code testing everything out with me, grandpa, chairs, etc.
+
+		// n = the instance of designator, o is the node representing the universal the designator instantiates
+		// n is part of PtoP tuple n2, related to n4 via that tuple, and the relation of n2 is n3
+		// n is concretized via PtoDE tuple n5, which has data n6
+		String queryTemplateTxt = "match (n:instance)-[r1:iuip]-(o:U)-[uui]->(q:universal), (n)-[p1:p]-(n2:P)-[r]->(n3:relation), (n2)-[p2:p]->(n4), (n)-[r2:iuip]-(n5:E)-[r3:dr]->(n6:data) where q.uui = $designatorType and n3.rui=\"http://purl.obolibrary.org/obo/IAO_0000219\" and n6.dr = $designatorTxt  return n4;";
+		//}void runQueryWithParametersAndDisplayResults(String queryTemplateTxt, HashMap<String, Object> parameters) {
+
+		HashMap<String, Object> parameters = new HashMap<String, Object>();
+		parameters.put("designatorType", designatorType.toString());
+		parameters.put("designatorTxt", designatorTxt.toString());
+  	
+  		HashSet<ParticularReference> prResults = new HashSet<ParticularReference>();
+	    try ( Transaction tx = graphDb.beginTx() ) {
+	            	
+	       	Result result = tx.execute(queryTemplateTxt, parameters);
+	      	while (result.hasNext()) {
+	      		Map<String, Object> entry = result.next();
+	            System.out.println(entry.size());
+	            Set<String> keys = entry.keySet();
+	            for (String key : keys) {
+	            	System.out.print("\t" + key);
+	            	Object o = entry.get(key);
+	            	if (o instanceof Node) {
+						Node n = (Node)o;
+	            			
+          				System.out.print("\t" + n.getId());
+	            			
+           				Iterator<Label> labels = n.getLabels().iterator();
+           				String label =labels.next().toString();
+           				System.out.print("\t" + label);
+           				if (label.equals("instance")) {
+           					String iuiTxt = (String)n.getProperty("iui");
+           					System.out.print("\tiui = "+ iuiTxt);
+           					Iui iui = Iui.createFromString(iuiTxt);
+           					prResults.add(iui);
+           				} else if (label.equals("temporal_region")) { 
+           					String trefTxt = (String)n.getProperty("tref");
+           					String isIsoTxt = (String)n.getProperty("isIso");
+           					System.out.print("\ttref = " + trefTxt);
+           					System.out.print("\tisIso = " + isIsoTxt);
+           					TemporalReference tr = new TemporalReference(trefTxt, Boolean.parseBoolean("isIsoTxt"));
+           					prResults.add(tr);
+           				}
+	            	}
+	            }
+	      	}
+	    }
+	    return prResults;
+	 }
+
+	@Override
 	public Set<RtsTuple> runQuery(TupleQuery TupleQuery) {
 		StringBuilder matchConditions = new StringBuilder();
 		StringBuilder matchWhere = new StringBuilder();
@@ -1250,17 +1315,30 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	}
 	
 	void createDb(boolean clearFirst) {
+		dbMgmtSvc = new DatabaseManagementServiceBuilder( dbPath ).build();
+		graphDb = dbMgmtSvc.database( DEFAULT_DATABASE_NAME );
 		if (clearFirst) {
-			//FileUtils.deleteDirectory( dbPath );
-			try {
-				FileUtils.deleteRecursively( dbPath.toFile() );
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
+				System.out.println("attempting to clear database first");
+				/*try ( Transaction tx = graphDb.beginTx() )
+            	{
+					Result r = tx.execute("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS;");
+					System.out.println(r.toString() + "\t" + r.hasNext());
+					while (r.hasNext()) {
+            			Map<String, Object> entry = r.next();
+            			System.out.println(entry.size());
+            			Set<String> keys = entry.keySet();
+            			for (String key : keys) {
+            				System.out.print("\t" + key);
+            				System.out.println("\t" + entry.get(key).toString());
+            		}
+					tx.close();
+				}
+
+			} */
+			graphDb.executeTransactionally("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS;");
 		}
 		// tag::startDb[]
-		dbMgmtSvc = new DatabaseManagementServiceBuilder( dbPath.toFile() ).build();
-		graphDb = dbMgmtSvc.database( DEFAULT_DATABASE_NAME );
+		
 		setupSchema();
 		registerShutdownHook(dbMgmtSvc);
 		// end::startDb[]
