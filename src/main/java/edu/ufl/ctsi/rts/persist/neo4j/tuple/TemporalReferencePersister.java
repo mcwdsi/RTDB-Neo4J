@@ -10,6 +10,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 
 import edu.uams.dbmi.rts.iui.Iui;
+import edu.uams.dbmi.rts.time.TemporalReference;
 import edu.uams.dbmi.rts.time.TemporalRegion;
 import edu.uams.dbmi.rts.uui.Uui;
 import edu.ufl.ctsi.rts.neo4j.RtsNodeLabel;
@@ -18,7 +19,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.entity.InstanceNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.TemporalNodeCreator;
 import edu.ufl.ctsi.rts.persist.neo4j.entity.UniversalNodeCreator;
 
-public class TemporalRegionPersister {
+public class TemporalReferencePersister {
 
 	static final String TEMPORAL_REGION_BY_TEMPORAL_REFERENCE_QUERY = 
 			"MATCH (n:" + RtsNodeLabel.TEMPORAL_REGION.getLabelText() + 
@@ -38,19 +39,25 @@ public class TemporalRegionPersister {
 	
 	Node n;
 
-	protected TemporalRegion temporalReferenceToPersist;
+	protected TemporalReference temporalReferenceToPersist;
 	protected Transaction tx;
 		
-	public TemporalRegionPersister(GraphDatabaseService db) {
+	public TemporalReferencePersister(GraphDatabaseService db) {
 		this.graphDb = db;
 		tnc = new TemporalNodeCreator(this.graphDb);
 		inc = new InstanceNodeCreator(this.graphDb);
 		unc = new UniversalNodeCreator(this.graphDb);
 	}
 	
-	public Node persistTemporalRegion(TemporalRegion t, Transaction tx) {
+	public Node persistTemporalRegion(TemporalReference t, Transaction tx) {
 		//check to see if temporal reference exists already, if so, then grab the node and return
 		if (existsInDb(t, tx)) {
+			if (t instanceof TemporalRegion) {
+				if (!n.hasRelationship(RtsRelationshipType.uui)) {
+					TemporalRegion tr = (TemporalRegion)t;
+					connectToType(tr.getTemporalType(), tx);
+				}
+			}
 			return n;
 		}
 		/* 
@@ -60,22 +67,18 @@ public class TemporalRegionPersister {
 		temporalReferenceToPersist = t;
 			
 		//if not in database already, then create the temporal node
-		n = tnc.persistEntity(t.getTemporalReference().toString(), tx);
+		n = tnc.persistEntity(t.toString(), tx);
 			
 		//connect temporal entity to its type (0D vs. 1D)
 		//System.out.println("Connecting temporal region to its type:");
-		connectToType(t.getTemporalType(), tx);
+		if (t instanceof TemporalRegion) {
+			connectToType(((TemporalRegion)t).getTemporalType(), tx);
+		}
 			
 		//connect temporal entity to calendaring system
 		//System.out.println("Connecting temporal region to its calendaring system:");
 		connectToCalendaringSystem(t.getCalendarSystemIui(), tx);
 		
-		//add isIso flag
-		//System.out.println("Adding ISO flag");
-		n.setProperty("isIso", t.isISO());
-		
-		//n.setProperty("system iui", t.getCalendarSystemIui());
-	
 		return n;			
 	}
 	
@@ -91,9 +94,9 @@ public class TemporalRegionPersister {
 		n.createRelationshipTo(target, RtsRelationshipType.iuins);
 	}
 
-	protected boolean existsInDb(TemporalRegion t, Transaction tx) {
+	protected boolean existsInDb(TemporalReference t, Transaction tx) {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		parameters.put("value", t.getTemporalReference().toString());
+		parameters.put("value", t.toString());
 	
 		Result r = 
 			tx.execute(TEMPORAL_REGION_BY_TEMPORAL_REFERENCE_QUERY, parameters);
