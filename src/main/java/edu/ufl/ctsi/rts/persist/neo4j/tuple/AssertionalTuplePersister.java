@@ -24,7 +24,7 @@ public abstract class AssertionalTuplePersister extends
 	TemporalReference taRef;
 	TemporalReference trRef;
 
-	TemporalNodeCreator tnc;
+	TemporalReferencePersister trp;
 	
 	String rui;
 	Iui ontologyForRui;
@@ -37,7 +37,7 @@ public abstract class AssertionalTuplePersister extends
 		rnc = new RelationNodeCreator(this.graphDb);
 		rui = null;
 		uui = null;
-		tnc = new TemporalNodeCreator(this.graphDb);
+		trp = new TemporalReferencePersister(this.graphDb);
 	}
 	
 	@Override
@@ -96,9 +96,8 @@ public abstract class AssertionalTuplePersister extends
 		/*
 		 * First, persist (or get already persisted) temporal reference node
 		 */
-		//trp.persistTemporalRegion(taRef);
 		
-		Node target = tnc.persistEntity(taRef.toString(), tx);
+		Node target = trp.persistTemporalReference(taRef, tx);
 		//Then, create relationship from this tuple to that node
 		n.createRelationshipTo(target, RtsRelationshipType.ta);
 	}
@@ -113,7 +112,7 @@ public abstract class AssertionalTuplePersister extends
 			 * First, persist (or get already persisted) temporal reference node
 			 */
 			//trp.persistTemporalRegion(trRef);
-			Node target = tnc.persistEntity(trRef.toString(), tx);  // trp.getNode();
+			Node target = trp.persistTemporalReference(trRef, tx);
 			//Then, create relationship from this tuple to that node
 			n.createRelationshipTo(target, RtsRelationshipType.tr);
 		}

@@ -215,7 +215,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			//String iuid = dtf.format(dt);
 			
 			for (TemporalRegion r : tempRegions) {
-				trp.persistTemporalRegion(r, tx);
+				trp.persistTemporalReference(r, tx);
 			}
 			
 			for (RtsTuple t : tuples) {

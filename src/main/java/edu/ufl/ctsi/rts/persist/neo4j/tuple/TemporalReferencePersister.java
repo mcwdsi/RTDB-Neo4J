@@ -49,7 +49,7 @@ public class TemporalReferencePersister {
 		unc = new UniversalNodeCreator(this.graphDb);
 	}
 	
-	public Node persistTemporalRegion(TemporalReference t, Transaction tx) {
+	public Node persistTemporalReference(TemporalReference t, Transaction tx) {
 		//check to see if temporal reference exists already, if so, then grab the node and return
 		if (existsInDb(t, tx)) {
 			if (t instanceof TemporalRegion) {
