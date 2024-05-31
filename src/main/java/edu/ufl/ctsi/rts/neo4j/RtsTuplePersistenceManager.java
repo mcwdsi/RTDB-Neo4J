@@ -67,7 +67,7 @@ import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoDETuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoLackUTuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoPTuplePersister;
 import edu.ufl.ctsi.rts.persist.neo4j.tuple.PtoUTuplePersister;
-import edu.ufl.ctsi.rts.persist.neo4j.tuple.TemporalRegionPersister;
+import edu.ufl.ctsi.rts.persist.neo4j.tuple.TemporalReferencePersister;
 
 public class RtsTuplePersistenceManager implements RtsStore {
 
@@ -111,7 +111,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 	PtoCTuplePersister pcp;
 	MetadataTuplePersister mp;
 	
-	TemporalRegionPersister trp;
+	TemporalReferencePersister trp;
 	Path dbPath;
 	String dbName;
 	
@@ -144,7 +144,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		pdrp = new PtoDETuplePersister(graphDb);
 		pcp = new PtoCTuplePersister(graphDb);
 		mp = new MetadataTuplePersister(graphDb);
-		trp = new TemporalRegionPersister(graphDb);
+		trp = new TemporalReferencePersister(graphDb);
 		
 		
 		rttTypeToNodeLabel = new HashMap<RtsTupleType, RtsTupleNodeLabel>();
@@ -215,7 +215,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			//String iuid = dtf.format(dt);
 			
 			for (TemporalRegion r : tempRegions) {
-				trp.persistTemporalRegion(r, tx);
+				trp.persistTemporalReference(r, tx);
 			}
 			
 			for (RtsTuple t : tuples) {
@@ -709,7 +709,7 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		List<ParticularReference> p;
 		Uui uui;
 		URI r; 
-		TemporalRegion ta, tr;
+		TemporalReference ta, tr;
 		Iso8601DateTime tap, td;
 		Cui co;
 		ParticularReference prForDE;
@@ -737,10 +737,10 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				ptou.setUniversalUui(uui);
 				iuioU = getIuioForUuiFromDb(n);
 				ptou.setUniversalOntologyIui(iuioU);
-				ta = getTaFromDb(n);
-				tr = getTrFromDb(n);
-				ptou.setAuthoringTimeReference(ta.getTemporalReference());
-				ptou.setTemporalReference(tr.getTemporalReference());
+				ta = getTemporalReferenceFromDb(n, RtsRelationshipType.ta);
+				tr = getTemporalReferenceFromDb(n, RtsRelationshipType.tr);
+				ptou.setAuthoringTimeReference(ta);
+				ptou.setTemporalReference(tr);
 				r = getRFromDb(n);
 				ptou.setRelationshipURI(r);
 				iuioR = getIuioForRFromDb(n);
@@ -754,10 +754,10 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				ptop.setTupleIui(iuit);
 				iuia = getIuiaFromDb(n);
 				ptop.setAuthorIui(iuia);
-				ta = getTaFromDb(n);
-				tr = getTrFromDb(n);
-				ptop.setAuthoringTimeReference(ta.getTemporalReference());
-				ptop.setTemporalReference(tr.getTemporalReference());
+				ta = getTemporalReferenceFromDb(n, RtsRelationshipType.ta);
+				tr = getTemporalReferenceFromDb(n, RtsRelationshipType.tr);
+				ptop.setAuthoringTimeReference(ta);
+				ptop.setTemporalReference(tr);
 				r = getRFromDb(n);
 				ptop.setRelationshipURI(r);
 				iuioR = getIuioForRFromDb(n);
@@ -778,10 +778,10 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				ptolacku.setUniversalUui(uui);
 				iuioU = getIuioForUuiFromDb(n);
 				ptolacku.setUniversalOntologyIui(iuioU);
-				ta = getTaFromDb(n);
-				tr = getTrFromDb(n);
-				ptolacku.setAuthoringTimeReference(ta.getTemporalReference());
-				ptolacku.setTemporalReference(tr.getTemporalReference());
+				ta = getTemporalReferenceFromDb(n, RtsRelationshipType.ta);
+				tr = getTemporalReferenceFromDb(n, RtsRelationshipType.tr);
+				ptolacku.setAuthoringTimeReference(ta);
+				ptolacku.setTemporalReference(tr);
 				r = getRFromDb(n);
 				ptolacku.setRelationshipURI(r);
 				iuioR = getIuioForRFromDb(n);
@@ -794,8 +794,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				iuia = getIuiaFromDb(n);
 				ptode.setAuthorIui(iuia);
 				//no tr, just ta
-				ta = getTaFromDb(n);
-				ptode.setAuthoringTimeReference(ta.getTemporalReference());
+				ta = getTemporalReferenceFromDb(n, RtsRelationshipType.ta);
+				ptode.setAuthoringTimeReference(ta);
 				r = getRFromDb(n);
 				ptode.setRelationshipURI(r);
 				iuioR = getIuioForRFromDb(n);
@@ -845,10 +845,10 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				ptoc.setAuthorIui(iuia);
 				co = getCuiFromDb(n);
 				ptoc.setConceptCui(co);
-				ta = getTaFromDb(n);
-				tr = getTrFromDb(n);
-				ptoc.setAuthoringTimeReference(ta.getTemporalReference());
-				ptoc.setTemporalReference(tr.getTemporalReference());
+				ta = getTemporalReferenceFromDb(n, RtsRelationshipType.ta);
+				tr = getTemporalReferenceFromDb(n, RtsRelationshipType.tr);
+				ptoc.setAuthoringTimeReference(ta);
+				ptoc.setTemporalReference(tr);
 				iuics = getIuiCsFromDb(n);
 				ptoc.setConceptSystemIui(iuics);
 				tuple = ptoc;
@@ -896,29 +896,35 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		return iuioU;
 	}
 	
-	private TemporalRegion getTaFromDb(Node n) {
-		Node ta = n.getRelationships(RtsRelationshipType.ta).iterator().next().getEndNode(); 
-		String trefTxt = (String)ta.getProperty("tref");
-		boolean isIso = (boolean)ta.getProperty("isIso"); 
-		Node nsNode = ta.getRelationships(RtsRelationshipType.iuins).iterator().next().getEndNode();
-		String iuinsTxt = (String)nsNode.getProperty("iui");
+	private TemporalReference getTemporalReferenceFromDb(Node n, RtsRelationshipType parameter) {
+		//if we pass in a null parameter, then the node itself is the temporal reference node,
+		// otherwise the temporal refernce node is at the other end of the relationship with the type specified by parameter
+		Node tempRefNode = (parameter != null) ? n.getRelationships(parameter).iterator().next().getEndNode() : n; 
+		String trefTxt = (String)tempRefNode.getProperty("tref");
+		Node csNode = tempRefNode.getRelationships(RtsRelationshipType.iuins).iterator().next().getEndNode();
+		String iuinsTxt = (String)csNode.getProperty("iui");
 		Iui iuins = Iui.createFromString(iuinsTxt);
-		Node uuiNode = ta.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode();
-		String uuiTxt = (String)uuiNode.getProperty("uui");
-		Uui uui = Uui.createFromString(uuiTxt);
-		
-		TemporalReference tRef = new TemporalReference(trefTxt, isIso);
-		TemporalRegion tr = new TemporalRegion(tRef, uui, iuins);
+
+		TemporalReference tr = null;
+		if (tempRefNode.hasRelationship(RtsRelationshipType.uui)) {
+			Node uuiNode = tempRefNode.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode();
+			String uuiTxt = (String)uuiNode.getProperty("uui");
+			Uui uui = Uui.createFromString(uuiTxt);
+			tr = new TemporalRegion(trefTxt, iuins, uui);
+		}  else {
+			tr = new TemporalReference(trefTxt, iuins);
+		}
 		return tr;
 	}
 
+/*
 	private TemporalRegion getTrFromDb(Node n) {
 		Node ta = n.getRelationships(RtsRelationshipType.tr).iterator().next().getEndNode(); 
 		String trefTxt = (String)ta.getProperty("tref");
-		boolean isIso = (boolean)ta.getProperty("isIso"); 
 		Node nsNode = ta.getRelationships(RtsRelationshipType.iuins).iterator().next().getEndNode();
 		String iuinsTxt = (String)nsNode.getProperty("iui");
 		Iui iuins = Iui.createFromString(iuinsTxt);
+
 		Node uuiNode = ta.getRelationships(RtsRelationshipType.uui).iterator().next().getEndNode();
 		String uuiTxt = (String)uuiNode.getProperty("uui");
 		Uui uui = Uui.createFromString(uuiTxt);
@@ -927,7 +933,8 @@ public class RtsTuplePersistenceManager implements RtsStore {
 		TemporalRegion tr = new TemporalRegion(tRef, uui, iuins);
 		return tr;		
 	}
-	
+*/
+
 	private URI getRFromDb(Node n) {
 		String rTxt = (String)n.getRelationships(RtsRelationshipType.r).iterator().next().getEndNode().getProperty("rui");
 		URI r = URI.create(rTxt);
@@ -955,9 +962,9 @@ public class RtsTuplePersistenceManager implements RtsStore {
 				Iui iui = Iui.createFromString((String)end.getProperty("iui"));
 				pRefs[index] = iui;
 			} else if (end.hasProperty("tref")) {
-				String trefTxt = (String)end.getProperty("tref");
-				boolean isIso = (boolean)end.getProperty("isIso");
-				TemporalReference tref = new TemporalReference(trefTxt, isIso);
+				// sending null just means that the node we're passing (Here the node "end") is the 
+				//  node that is the temporal reference
+				TemporalReference tref = getTemporalReferenceFromDb(end, null);
 				pRefs[index] = tref;
 			} else {
 				System.err.println("WTF. Particular reference node should have either iui or tref property!");
@@ -987,10 +994,9 @@ public class RtsTuplePersistenceManager implements RtsStore {
 			Iui iui = Iui.createFromString((String)instNode.getProperty("iui"));
 			pr = iui;
 		} else if (instNode.hasProperty("tref")) {
-			String trefTxt = (String)instNode.getProperty("tref");
-			boolean isIso = (boolean)instNode.getProperty("isIso");
-			TemporalReference tref = new TemporalReference(trefTxt, isIso);
-			pr = tref;
+			// sending null just means that the node we're passing (Here the node "end") is the 
+			//  node that is the temporal reference
+			pr = getTemporalReferenceFromDb(instNode, null);
 		} else {
 			System.err.println("Incompatible node for reference of PtoDE tuple.");
 		}
@@ -1136,11 +1142,9 @@ public class RtsTuplePersistenceManager implements RtsStore {
            					Iui iui = Iui.createFromString(iuiTxt);
            					prResults.add(iui);
            				} else if (label.equals("temporal_region")) { 
-           					String trefTxt = (String)n.getProperty("tref");
-           					String isIsoTxt = (String)n.getProperty("isIso");
-           					System.out.print("\ttref = " + trefTxt);
-           					System.out.print("\tisIso = " + isIsoTxt);
-           					TemporalReference tr = new TemporalReference(trefTxt, Boolean.parseBoolean("isIsoTxt"));
+							// sending null just means that the node we're passing (Here the node "end") is the 
+							//  node that is the temporal reference
+							TemporalReference tr = getTemporalReferenceFromDb(n, null);
            					prResults.add(tr);
            				}
 	            	}

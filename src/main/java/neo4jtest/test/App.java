@@ -182,7 +182,7 @@ public class App
             ten.setData(ta_name.getBytes());
             ten.setNamingSystem(gregorianIui);
             ten.setReferent(Iui.createRandomIui());
-            ten.setAuthoringTimeReference(ta.getTemporalReference());  
+            ten.setAuthoringTimeReference(ta);  
             try {
 				ten.setRelationshipURI(new URI("http://purl.obolibrary.org/obo/BFO_0000058"));
 				ten.setRelationshipOntologyIui(bfoIui);
@@ -194,7 +194,7 @@ public class App
             ten.setDatatypeOntologyIui(characterEncodingsIui);
             //ten.setNamingSystem(gregorianIui);
                         
-            rpm.addTemporalReference(ta.getTemporalReference());
+            rpm.addTemporalReference(ta);
             rpm.saveTuple(ten);
             
             //Metadata tuple for ten
@@ -232,10 +232,10 @@ public class App
             ptoc.setTupleIui(Iui.createRandomIui());
             ptoc.setReferentIui(wh);
             //ptoc.setAuthoringTimeIui(t.getReferentIui());
-            ptoc.setAuthoringTimeReference(ta.getTemporalReference());
+            ptoc.setAuthoringTimeReference(ta);
             ptoc.setAuthorIui(wh);
             ptoc.setConceptCui(new Cui("66839005"));
-            ptoc.setTemporalReference(t3.getTemporalReference());  //the temporal region when a concept annotation "holds" is fairly meaningless
+            ptoc.setTemporalReference(t3);  //the temporal region when a concept annotation "holds" is fairly meaningless
             ptoc.setConceptSystemIui(snctCsIui);  
             rpm.saveTuple(ptoc);
             
@@ -264,9 +264,9 @@ public class App
             ptouBad.setRelationshipURI(instance_of);
             ptouBad.setRelationshipOntologyIui(roIui);
             //ptouBad.setAuthoringTimeIui(t.getReferentIui());
-            ptouBad.setAuthoringTimeReference(ta.getTemporalReference());
+            ptouBad.setAuthoringTimeReference(ta);
             ptouBad.setAuthorIui(wh);
-            ptouBad.setTemporalReference(t3.getTemporalReference());
+            ptouBad.setTemporalReference(t3);
             ptouBad.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9615"));
             ptouBad.setUniversalOntologyIui(ncbiTaxonIui);
             rpm.saveTuple(ptouBad);
@@ -293,7 +293,7 @@ public class App
             TemporalRegion t5 = createIndividualWithBirthdateAndReturnLifeIntervalTuple(
 					tb_name, tzNewYork, wHoganNameTxt,	wfh, wh, rpm, ta, ten, td_name, tzNewYork);
 
-            System.out.println("temporal reference t5: " + t5.getTemporalReference().toString());
+            System.out.println("temporal reference t5: " + t5.toString());
             
             try {
 				FileWriter fw = new FileWriter("/Users/hoganwr/rtstuples.txt");
@@ -670,9 +670,9 @@ public class App
              */
             PtoDETuple ten2 = new PtoDETuple();
             ten2.setTupleIui(Iui.createRandomIui());
-            ten2.setReferent(t4.getTemporalReference());
+            ten2.setReferent(t4);
             //ten2.setAuthoringTimeIui(t.getReferentIui());
-            ten2.setAuthoringTimeReference(ta.getTemporalReference());
+            ten2.setAuthoringTimeReference(ta);
             ten2.setAuthorIui(authorIui);
             ten2.setData(tb_name.getBytes());
             ten2.setNamingSystem(gregorianIui);
@@ -713,9 +713,9 @@ public class App
                 ten3 = new PtoDETuple();
                 ten3.setTupleIui(Iui.createRandomIui());
                 //ten3.setTemporalEntityIui(t4.getReferentIui());
-                ten3.setReferent(t7.getTemporalReference());
+                ten3.setReferent(t7);
                 //ten3.setAuthoringTimeIui(t.getReferentIui());
-                ten3.setAuthoringTimeReference(ta.getTemporalReference());
+                ten3.setAuthoringTimeReference(ta);
                 ten3.setAuthorIui(authorIui);
                 ten3.setData(td_name.getBytes());
                 ten3.setNamingSystem(gregorianIui);
@@ -738,9 +738,9 @@ public class App
                 ptop4.setTupleIui(Iui.createRandomIui());
                 ptop4.setAuthorIui(authorIui);
                 //ptop4.setAuthoringTimeIui(t.getReferentIui());
-                ptop4.setAuthoringTimeReference(ta.getTemporalReference());
-                ptop4.setReferent(t3.getTemporalReference());
-                ptop4.addParticular(t7.getTemporalReference());
+                ptop4.setAuthoringTimeReference(ta);
+                ptop4.setReferent(t3);
+                ptop4.addParticular(t7);
                 try {
                 	ptop4.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
                 	ptop4.setRelationshipOntologyIui(roIui);
@@ -748,7 +748,7 @@ public class App
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
-                ptop4.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION.getTemporalReference());
+                ptop4.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION);
                 rpm.addTemporalRegion(TemporalRegion.MAX_TEMPORAL_REGION);
                 trefPtop = ptop4;
                 
@@ -756,7 +756,7 @@ public class App
                 tset.add(ten3);
                 tset.add(ptop4);
                 
-                rpm.addTemporalReference(t7.getTemporalReference());
+                rpm.addTemporalReference(t7);
                 rpm.saveTuple(ten3);
                 rpm.saveTuple(ptop4);
             }
@@ -775,10 +775,10 @@ public class App
 				e.printStackTrace();
 			}
             //ptop.setAuthoringTimeIui(t.getReferentIui());
-            ptop.setAuthoringTimeReference(ta.getTemporalReference());
+            ptop.setAuthoringTimeReference(ta);
             ptop.addParticular(wh);
             ptop.setTupleIui(Iui.createRandomIui());
-            ptop.setTemporalReference(t2.getTemporalReference());
+            ptop.setTemporalReference(t2);
             ownsPtoP = ptop;
             //ptop.setTemporalEntityIui(t2.getReferent());
           
@@ -791,10 +791,10 @@ public class App
             ptou.setRelationshipURI(instance_of);
             ptou.setRelationshipOntologyIui(roIui);
             //ptou.setAuthoringTimeIui(t.getReferentIui());
-            ptou.setAuthoringTimeReference(ta.getTemporalReference());
+            ptou.setAuthoringTimeReference(ta);
             ptou.setAuthorIui(authorIui);
             //ptou.setTemporalEntityIui(t3.getReferent());
-            ptou.setTemporalReference(t3.getTemporalReference());
+            ptou.setTemporalReference(t3);
             ptou.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/NCBITaxon_9606"));
             ptou.setUniversalOntologyIui(ncbiTaxonIui);
        
@@ -807,10 +807,10 @@ public class App
             ptou3.setRelationshipURI(instance_of);
             ptou3.setRelationshipOntologyIui(roIui);
             //ptou3.setAuthoringTimeIui(t.getReferentIui());
-            ptou3.setAuthoringTimeReference(ta.getTemporalReference());
+            ptou3.setAuthoringTimeReference(ta);
             ptou3.setAuthorIui(authorIui);
             //ptou3.setTemporalEntityIui(t3.getReferent());
-            ptou3.setTemporalReference(t3.getTemporalReference());
+            ptou3.setTemporalReference(t3);
             ptou3.setUniversalUui(new Uui("http://purl.obolibrary.org/obo/IAO_0020015"));
             ptou3.setUniversalOntologyIui(pnoIui);
             
@@ -828,11 +828,11 @@ public class App
 				e.printStackTrace();
 			}
             //ptop2.setAuthoringTimeIui(t.getReferentIui());
-            ptop2.setAuthoringTimeReference(ta.getTemporalReference());
+            ptop2.setAuthoringTimeReference(ta);
             ptop2.addParticular(wh);
             ptop2.setTupleIui(Iui.createRandomIui());
             //ptop2.setTemporalEntityIui(t3.getReferent());  
-            ptop2.setTemporalReference(t3.getTemporalReference());
+            ptop2.setTemporalReference(t3);
             designatesPtoP = ptop2;
             
             /*
@@ -842,7 +842,7 @@ public class App
             ptodr.setTupleIui(Iui.createRandomIui());
             ptodr.setAuthorIui(authorIui);
             //ptodr.setAuthoringTimeIui(t.getReferentIui());
-            ptodr.setAuthoringTimeReference(ta.getTemporalReference());
+            ptodr.setAuthoringTimeReference(ta);
             ptodr.setReferent(wh_name);
             ptodr.setData(personsName.getBytes());
             try {
@@ -866,9 +866,9 @@ public class App
             ptop3.setTupleIui(Iui.createRandomIui());
             ptop3.setAuthorIui(authorIui);
             //ptop3.setAuthoringTimeIui(t.getReferentIui());
-            ptop3.setAuthoringTimeReference(ta.getTemporalReference());
-            ptop3.setReferent(t4.getTemporalReference());
-            ptop3.addParticular(t3.getTemporalReference());
+            ptop3.setAuthoringTimeReference(ta);
+            ptop3.setReferent(t4);
+            ptop3.addParticular(t3);
             try {
 				ptop3.setRelationshipURI(new URI("http://ctsi.ufl.edu/rts/overlaps"));
 				ptop3.setRelationshipOntologyIui(roIui);  //FIX
@@ -877,7 +877,7 @@ public class App
 				e.printStackTrace();
 			}
             //ptop3.setTemporalEntityIui(maxTimeIntervalIui);
-            ptop3.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION.getTemporalReference());
+            ptop3.setTemporalReference(TemporalRegion.MAX_TEMPORAL_REGION);
             
             tset.add(a1);
             tset.add(a2);
